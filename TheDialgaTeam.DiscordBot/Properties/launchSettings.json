@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "TheDialgaTeam.DiscordBot": {
+      "commandName": "Project",
+      "workingDirectory": "C:\\Users\\jianmingyong\\Documents\\GitHub\\TheDialgaTeam\\TheDialgaTeam.DiscordBot\\bin\\Debug\\netcoreapp2.0"
+    }
+  }
+}
