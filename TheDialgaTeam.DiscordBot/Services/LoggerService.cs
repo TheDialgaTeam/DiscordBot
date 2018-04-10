@@ -1,7 +1,8 @@
-﻿using System;
+﻿using Discord;
+using System;
 using System.IO;
 using System.Threading.Tasks;
-using TheDialgaTeam.Modules.System.IO;
+using TheDialgaTeam.DiscordBot.Extension.System.IO;
 
 namespace TheDialgaTeam.DiscordBot.Services
 {
@@ -11,7 +12,11 @@ namespace TheDialgaTeam.DiscordBot.Services
 
         Task LogMessageAsync(string message);
 
+        Task LogMessageAsync(LogMessage logMessage);
+
         Task LogErrorMessageAsync(string message);
+
+        Task LogErrorMessageAsync(Exception exception);
     }
 
     internal sealed class LoggerService : ILoggerService
@@ -40,9 +45,22 @@ namespace TheDialgaTeam.DiscordBot.Services
             await InternalMessageAsync(Console.Out, message);
         }
 
+        public async Task LogMessageAsync(LogMessage logMessage)
+        {
+            if (logMessage.Exception != null)
+                await InternalMessageAsync(Console.Error, logMessage.Exception.ToString());
+            else
+                await InternalMessageAsync(Console.Out, logMessage.Message);
+        }
+
         public async Task LogErrorMessageAsync(string message)
         {
             await InternalMessageAsync(Console.Error, message);
+        }
+
+        public async Task LogErrorMessageAsync(Exception exception)
+        {
+            await InternalMessageAsync(Console.Error, exception.ToString());
         }
 
         private async Task InternalMessageAsync(TextWriter writer, string message)

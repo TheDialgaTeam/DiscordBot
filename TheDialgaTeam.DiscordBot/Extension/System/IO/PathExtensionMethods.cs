@@ -1,8 +1,8 @@
 ﻿using System.IO;
 
-namespace TheDialgaTeam.Modules.System.IO
+namespace TheDialgaTeam.DiscordBot.Extension.System.IO
 {
-    public static class PathExtensionMethods
+    internal static class PathExtensionMethods
     {
         public static string ResolveFullPath(this string filePath)
         {

@@ -2,9 +2,9 @@
 using Discord.WebSocket;
 using System;
 using System.Threading.Tasks;
-using TheDialgaTeam.DiscordBot.Model.SQLite.Table;
+using TheDialgaTeam.DiscordBot.Model.SQLite;
 
-namespace TheDialgaTeam.DiscordBot.Services.Discord
+namespace TheDialgaTeam.DiscordBot.Model.Discord
 {
     public interface IDiscordSocketClientModel
     {
@@ -82,14 +82,14 @@ namespace TheDialgaTeam.DiscordBot.Services.Discord
 
         DiscordSocketClient DiscordSocketClient { get; }
 
-        IBotInstanceModel BotInstanceModel { get; }
+        IDiscordTableModel DiscordTableModel { get; }
 
         Task StartListening();
 
         Task StopListening();
     }
 
-    internal class DiscordSocketClientModel : IDiscordSocketClientModel
+    internal sealed class DiscordSocketClientModel : IDiscordSocketClientModel
     {
         public event Func<IDiscordSocketClientModel, LogMessage, Task> Log;
 
@@ -165,17 +165,11 @@ namespace TheDialgaTeam.DiscordBot.Services.Discord
 
         public DiscordSocketClient DiscordSocketClient { get; }
 
-        public IBotInstanceModel BotInstanceModel { get; }
+        public IDiscordTableModel DiscordTableModel { get; }
 
-        private ILoggerService LoggerService { get; }
-
-        private ISQLiteService SQLiteService { get; }
-
-        public DiscordSocketClientModel(ILoggerService loggerService, ISQLiteService sqliteService, IBotInstanceModel botInstanceModel)
+        public DiscordSocketClientModel(IDiscordTableModel discordTableModel)
         {
-            LoggerService = loggerService;
-            SQLiteService = sqliteService;
-            BotInstanceModel = botInstanceModel;
+            DiscordTableModel = discordTableModel;
             DiscordSocketClient = new DiscordSocketClient();
         }
 
@@ -223,7 +217,7 @@ namespace TheDialgaTeam.DiscordBot.Services.Discord
                 DiscordSocketClient.ChannelUpdated += DiscordSocketClientOnChannelUpdated;
                 DiscordSocketClient.RecipientAdded += DiscordSocketClientOnRecipientAdded;
 
-                await DiscordSocketClient.LoginAsync(TokenType.Bot, BotInstanceModel.BotToken);
+                await DiscordSocketClient.LoginAsync(TokenType.Bot, DiscordTableModel.DiscordAppModel.GetBotToken());
                 await DiscordSocketClient.StartAsync();
             }
         }
@@ -235,6 +229,9 @@ namespace TheDialgaTeam.DiscordBot.Services.Discord
 
             if (DiscordSocketClient.LoginState == LoginState.LoggedIn && DiscordSocketClient.ConnectionState == ConnectionState.Connected)
             {
+                await DiscordSocketClient.LogoutAsync();
+                await DiscordSocketClient.StopAsync();
+
                 DiscordSocketClient.Log -= DiscordSocketClientOnLog;
                 DiscordSocketClient.LoggedIn -= DiscordSocketClientOnLoggedIn;
                 DiscordSocketClient.LoggedOut -= DiscordSocketClientOnLoggedOut;
@@ -271,10 +268,6 @@ namespace TheDialgaTeam.DiscordBot.Services.Discord
                 DiscordSocketClient.ChannelDestroyed -= DiscordSocketClientOnChannelDestroyed;
                 DiscordSocketClient.ChannelUpdated -= DiscordSocketClientOnChannelUpdated;
                 DiscordSocketClient.RecipientAdded -= DiscordSocketClientOnRecipientAdded;
-
-                await LoggerService.LogMessageAsync($"{DiscordSocketClient.CurrentUser.Username} has stopped!");
-                await DiscordSocketClient.LogoutAsync();
-                await DiscordSocketClient.StopAsync();
             }
         }
 
@@ -460,8 +453,6 @@ namespace TheDialgaTeam.DiscordBot.Services.Discord
 
         private async Task DiscordSocketClientOnReady()
         {
-            await LoggerService.LogMessageAsync($"{DiscordSocketClient.CurrentUser.Username} has started!");
-
             if (Ready != null)
                 await Ready.Invoke(this);
         }

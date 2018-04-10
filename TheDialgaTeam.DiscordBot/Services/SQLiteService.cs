@@ -2,8 +2,8 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using TheDialgaTeam.DiscordBot.Extension.System.IO;
 using TheDialgaTeam.DiscordBot.Model.SQLite.Table;
-using TheDialgaTeam.Modules.System.IO;
 
 namespace TheDialgaTeam.DiscordBot.Services
 {
@@ -14,7 +14,7 @@ namespace TheDialgaTeam.DiscordBot.Services
         Task InitializeDatabaseAsync();
     }
 
-    internal sealed class SQLiteService : ISQLiteService
+    internal sealed class SQLiteService : ISQLiteService, IDisposable
     {
         public SQLiteAsyncConnection SQLiteAsyncConnection { get; private set; }
 
@@ -29,15 +29,33 @@ namespace TheDialgaTeam.DiscordBot.Services
 
         public async Task InitializeDatabaseAsync()
         {
-            var directory = $"{Environment.CurrentDirectory}/Data".ResolveFullPath();
+            try
+            {
+                var directory = $"{Environment.CurrentDirectory}/Data".ResolveFullPath();
 
-            if (!Directory.Exists(directory))
-                Directory.CreateDirectory(directory);
+                if (!Directory.Exists(directory))
+                    Directory.CreateDirectory(directory);
 
-            SQLiteAsyncConnection = new SQLiteAsyncConnection(SQLiteDataBasePath);
-            await SQLiteAsyncConnection.CreateTableAsync<BotInstanceModel>();
+                SQLiteAsyncConnection = new SQLiteAsyncConnection(SQLiteDataBasePath);
 
-            await LoggerService.LogMessageAsync($"Database created at: {SQLiteDataBasePath}");
+                await SQLiteAsyncConnection.CreateTableAsync<DiscordAppOwnerModel>();
+                await SQLiteAsyncConnection.CreateTableAsync<DiscordAppModel>();
+                await SQLiteAsyncConnection.CreateTableAsync<DiscordChannelModeratorModel>();
+                await SQLiteAsyncConnection.CreateTableAsync<DiscordGuildModel>();
+                await SQLiteAsyncConnection.CreateTableAsync<DiscordGuildModeratorModel>();
+                await SQLiteAsyncConnection.CreateTableAsync<DiscordGuildModuleModel>();
+
+                await LoggerService.LogMessageAsync($"Database created at: {SQLiteDataBasePath}");
+            }
+            catch (Exception ex)
+            {
+                await LoggerService.LogErrorMessageAsync(ex);
+            }
+        }
+
+        public void Dispose()
+        {
+            SQLiteAsyncConnection.CloseAsync().GetAwaiter().GetResult();
         }
     }
 }
