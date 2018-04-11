@@ -2,23 +2,18 @@
 
 namespace TheDialgaTeam.DiscordBot.Model.SQLite.Table
 {
-    public interface IDiscordAppOwnerModel
+    public interface IDiscordAppOwnerModel : IBaseTable
     {
-        int Id { get; }
+        string ClientId { get; }
 
         string UserId { get; }
     }
 
     [Table("DiscordAppOwners")]
-    internal sealed class DiscordAppOwnerModel : IDiscordAppOwnerModel
+    internal sealed class DiscordAppOwnerModel : BaseTable, IDiscordAppOwnerModel
     {
-        [PrimaryKey]
-        [AutoIncrement]
-        public int Id { get; set; }
-
         public string ClientId { get; set; }
 
-        [Unique]
         public string UserId { get; set; }
     }
 }

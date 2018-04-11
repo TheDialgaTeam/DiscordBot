@@ -121,22 +121,24 @@ namespace TheDialgaTeam.DiscordBot
 
         private async Task AddDiscordAppOwner(ICommandProcessorModel commandProcessorModel)
         {
-            var paramObject = commandProcessorModel.GetCommandParamenterTypeObjects(new[] { CommandProcessorModel.ParamenterType.ULong, CommandProcessorModel.ParamenterType.ULong });
+            var paramObject = commandProcessorModel.GetCommandParamenterTypeObjects(new[] { CommandProcessorModel.ParamenterType.ULong });
+            var paramObject2 = commandProcessorModel.GetCommandParamenterTypeObjects(new[] { CommandProcessorModel.ParamenterType.ULong, CommandProcessorModel.ParamenterType.ULong });
 
-            if (paramObject?[0] == null || paramObject[1] == null)
+            if (paramObject2?[0] != null && paramObject2[1] != null)
+                await DiscordAppService.AddDiscordAppOwner((ulong)paramObject2[0], (ulong)paramObject2[1]);
+            else if (paramObject?[0] != null)
                 await DiscordAppService.AddDiscordAppOwner((ulong)paramObject[0]);
-            else
-                await DiscordAppService.AddDiscordAppOwner((ulong)paramObject[0], (ulong)paramObject[1]);
         }
 
         private async Task RemoveDiscordAppOwner(ICommandProcessorModel commandProcessorModel)
         {
-            var paramObject = commandProcessorModel.GetCommandParamenterTypeObjects(new[] { CommandProcessorModel.ParamenterType.ULong, CommandProcessorModel.ParamenterType.ULong });
+            var paramObject = commandProcessorModel.GetCommandParamenterTypeObjects(new[] { CommandProcessorModel.ParamenterType.ULong });
+            var paramObject2 = commandProcessorModel.GetCommandParamenterTypeObjects(new[] { CommandProcessorModel.ParamenterType.ULong, CommandProcessorModel.ParamenterType.ULong });
 
-            if (paramObject?[0] == null || paramObject[1] == null)
+            if (paramObject2?[0] != null && paramObject2[1] != null)
+                await DiscordAppService.RemoveDiscordAppOwner((ulong)paramObject2[0], (ulong)paramObject2[1]);
+            else if (paramObject?[0] != null)
                 await DiscordAppService.RemoveDiscordAppOwner((ulong)paramObject[0]);
-            else
-                await DiscordAppService.RemoveDiscordAppOwner((ulong)paramObject[0], (ulong)paramObject[1]);
         }
 
         private async Task ListDiscordApp()

@@ -2,31 +2,25 @@
 
 namespace TheDialgaTeam.DiscordBot.Model.SQLite.Table
 {
-    public interface IDiscordChannelModeratorModel
+    public interface IDiscordChannelModeratorModel : IBaseTable
     {
-        int Id { get; }
-
         string ClientId { get; }
 
         string ChannelId { get; }
 
-        string MentionId { get; }
+        string RoleId { get; }
 
         string UserId { get; }
     }
 
     [Table("DiscordChannelModerators")]
-    internal sealed class DiscordChannelModeratorModel : IDiscordChannelModeratorModel
+    internal sealed class DiscordChannelModeratorModel : BaseTable, IDiscordChannelModeratorModel
     {
-        [PrimaryKey]
-        [AutoIncrement]
-        public int Id { get; set; }
-
         public string ClientId { get; set; }
 
         public string ChannelId { get; set; }
 
-        public string MentionId { get; set; }
+        public string RoleId { get; set; }
 
         public string UserId { get; set; }
     }

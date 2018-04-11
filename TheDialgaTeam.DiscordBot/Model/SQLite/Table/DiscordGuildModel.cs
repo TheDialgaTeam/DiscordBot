@@ -2,10 +2,8 @@
 
 namespace TheDialgaTeam.DiscordBot.Model.SQLite.Table
 {
-    public interface IDiscordGuildModel
+    public interface IDiscordGuildModel : IBaseTable
     {
-        int Id { get; }
-
         string ClientId { get; }
 
         string GuildId { get; }
@@ -14,12 +12,8 @@ namespace TheDialgaTeam.DiscordBot.Model.SQLite.Table
     }
 
     [Table("DiscordGuilds")]
-    internal sealed class DiscordGuildModel : IDiscordGuildModel
+    internal sealed class DiscordGuildModel : BaseTable, IDiscordGuildModel
     {
-        [PrimaryKey]
-        [AutoIncrement]
-        public int Id { get; set; }
-
         public string ClientId { get; set; }
 
         public string GuildId { get; set; }

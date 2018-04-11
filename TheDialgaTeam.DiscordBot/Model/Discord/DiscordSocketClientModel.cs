@@ -2,7 +2,7 @@
 using Discord.WebSocket;
 using System;
 using System.Threading.Tasks;
-using TheDialgaTeam.DiscordBot.Model.SQLite;
+using TheDialgaTeam.DiscordBot.Model.SQLite.Table;
 
 namespace TheDialgaTeam.DiscordBot.Model.Discord
 {
@@ -82,7 +82,7 @@ namespace TheDialgaTeam.DiscordBot.Model.Discord
 
         DiscordSocketClient DiscordSocketClient { get; }
 
-        IDiscordTableModel DiscordTableModel { get; }
+        IDiscordAppModel DiscordAppModel { get; }
 
         Task StartListening();
 
@@ -165,11 +165,11 @@ namespace TheDialgaTeam.DiscordBot.Model.Discord
 
         public DiscordSocketClient DiscordSocketClient { get; }
 
-        public IDiscordTableModel DiscordTableModel { get; }
+        public IDiscordAppModel DiscordAppModel { get; }
 
-        public DiscordSocketClientModel(IDiscordTableModel discordTableModel)
+        public DiscordSocketClientModel(IDiscordAppModel discordAppModel)
         {
-            DiscordTableModel = discordTableModel;
+            DiscordAppModel = discordAppModel;
             DiscordSocketClient = new DiscordSocketClient();
         }
 
@@ -217,7 +217,7 @@ namespace TheDialgaTeam.DiscordBot.Model.Discord
                 DiscordSocketClient.ChannelUpdated += DiscordSocketClientOnChannelUpdated;
                 DiscordSocketClient.RecipientAdded += DiscordSocketClientOnRecipientAdded;
 
-                await DiscordSocketClient.LoginAsync(TokenType.Bot, DiscordTableModel.DiscordAppModel.GetBotToken());
+                await DiscordSocketClient.LoginAsync(TokenType.Bot, DiscordAppModel.GetBotToken());
                 await DiscordSocketClient.StartAsync();
             }
         }

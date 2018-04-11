@@ -4,6 +4,7 @@ using System.IO;
 using System.Threading.Tasks;
 using TheDialgaTeam.DiscordBot.Extension.System.IO;
 using TheDialgaTeam.DiscordBot.Model.SQLite.Table;
+using TheDialgaTeam.DiscordBot.Model.SQLite.Table.Modules;
 
 namespace TheDialgaTeam.DiscordBot.Services
 {
@@ -44,6 +45,10 @@ namespace TheDialgaTeam.DiscordBot.Services
                 await SQLiteAsyncConnection.CreateTableAsync<DiscordGuildModel>();
                 await SQLiteAsyncConnection.CreateTableAsync<DiscordGuildModeratorModel>();
                 await SQLiteAsyncConnection.CreateTableAsync<DiscordGuildModuleModel>();
+
+                await SQLiteAsyncConnection.CreateTableAsync<FreeGameNotificationModel>();
+
+                await SQLiteAsyncConnection.ExecuteAsync("VACUUM");
 
                 await LoggerService.LogMessageAsync($"Database created at: {SQLiteDataBasePath}");
             }

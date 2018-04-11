@@ -3,28 +3,24 @@ using TheDialgaTeam.DiscordBot.Extension.System.Security.Cryptography;
 
 namespace TheDialgaTeam.DiscordBot.Model.SQLite.Table
 {
-    public interface IDiscordAppModel
+    public interface IDiscordAppModel : IBaseTable
     {
-        int Id { get; }
+        string ClientId { get; }
 
-        string ClientId { get; set; }
+        bool Verified { get; set; }
 
         string GetBotToken();
-
-        void SetBotToken(string botToken);
     }
 
     [Table("DiscordApps")]
-    internal sealed class DiscordAppModel : IDiscordAppModel
+    internal sealed class DiscordAppModel : BaseTable, IDiscordAppModel
     {
-        [PrimaryKey]
-        [AutoIncrement]
-        public int Id { get; set; }
-
         [Unique]
         public string ClientId { get; set; }
 
         public string BotToken { get; set; }
+
+        public bool Verified { get; set; }
 
         public string GetBotToken()
         {
