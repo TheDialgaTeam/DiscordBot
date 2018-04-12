@@ -1,4 +1,5 @@
 ﻿using Discord.Commands;
+using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Threading.Tasks;
@@ -11,6 +12,9 @@ namespace TheDialgaTeam.DiscordBot.Model.Discord.Command
     {
         public override async Task<PreconditionResult> CheckPermissionsAsync(ICommandContext context, CommandInfo command, IServiceProvider services)
         {
+            if (context.Message.Channel is SocketDMChannel || context.Message.Channel is SocketGroupChannel)
+                return PreconditionResult.FromSuccess();
+
             var sqliteService = services.GetRequiredService<ISQLiteService>();
 
             var clientId = context.Client.CurrentUser.Id.ToString();

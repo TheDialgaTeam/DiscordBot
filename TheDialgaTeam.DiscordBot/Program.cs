@@ -54,15 +54,15 @@ namespace TheDialgaTeam.DiscordBot
                 await LoggerService.LogMessageAsync("==================================================");
                 await LoggerService.LogMessageAsync("The Dialga Team Discord Bot (.NET Core)");
                 await LoggerService.LogMessageAsync("==================================================");
-                await LoggerService.LogMessageAsync("Please wait while the bot is initializing...");
+                await LoggerService.LogMessageAsync("Please wait while the bot is initializing...\n");
 
                 SQLiteService = ServiceProvider.GetRequiredService<ISQLiteService>();
                 await SQLiteService.InitializeDatabaseAsync();
 
-                await LoggerService.LogMessageAsync("Done initializing!");
-
                 DiscordAppService = ServiceProvider.GetRequiredService<IDiscordAppService>();
-                await DiscordAppService.StartDiscordApps();
+
+                await LoggerService.LogMessageAsync("\nDone initializing!");
+                await LoggerService.LogMessageAsync("Use StartDiscordApp or StartDiscordApps to start the bot instances.");
             }
             catch (Exception ex)
             {
@@ -80,27 +80,27 @@ namespace TheDialgaTeam.DiscordBot
                         break;
 
                     if (commandProcessorModel.Command.Equals("ListDiscordAppOwner", StringComparison.OrdinalIgnoreCase))
-                        await ListDiscordAppOwner(commandProcessorModel);
+                        await ListDiscordAppOwnerAsync(commandProcessorModel);
                     else if (commandProcessorModel.Command.Equals("AddDiscordAppOwner", StringComparison.OrdinalIgnoreCase))
-                        await AddDiscordAppOwner(commandProcessorModel);
+                        await AddDiscordAppOwnerAsync(commandProcessorModel);
                     else if (commandProcessorModel.Command.Equals("RemoveDiscordAppOwner", StringComparison.OrdinalIgnoreCase))
-                        await RemoveDiscordAppOwner(commandProcessorModel);
+                        await RemoveDiscordAppOwnerAsync(commandProcessorModel);
                     else if (commandProcessorModel.Command.Equals("ListDiscordApp", StringComparison.OrdinalIgnoreCase))
-                        await ListDiscordApp();
+                        await ListDiscordAppAsync();
                     else if (commandProcessorModel.Command.Equals("AddDiscordApp", StringComparison.OrdinalIgnoreCase))
-                        await AddDiscordApp(commandProcessorModel);
+                        await AddDiscordAppAsync(commandProcessorModel);
                     else if (commandProcessorModel.Command.Equals("RemoveDiscordApp", StringComparison.OrdinalIgnoreCase))
-                        await RemoveDiscordApp(commandProcessorModel);
+                        await RemoveDiscordAppAsync(commandProcessorModel);
                     else if (commandProcessorModel.Command.Equals("ListRunningDiscordApp", StringComparison.OrdinalIgnoreCase))
-                        await ListRunningDiscordApp();
+                        await ListRunningDiscordAppAsync();
                     else if (commandProcessorModel.Command.Equals("StartDiscordApp", StringComparison.OrdinalIgnoreCase))
-                        await StartDiscordApp(commandProcessorModel);
+                        await StartDiscordAppAsync(commandProcessorModel);
                     else if (commandProcessorModel.Command.Equals("StartDiscordApps", StringComparison.OrdinalIgnoreCase))
-                        await StartDiscordApps();
+                        await StartDiscordAppsAsync();
                     else if (commandProcessorModel.Command.Equals("StopDiscordApp", StringComparison.OrdinalIgnoreCase))
-                        await StopDiscordApp(commandProcessorModel);
+                        await StopDiscordAppAsync(commandProcessorModel);
                     else if (commandProcessorModel.Command.Equals("StopDiscordApps", StringComparison.OrdinalIgnoreCase))
-                        await StopDiscordApps();
+                        await StopDiscordAppsAsync();
                 }
                 catch (Exception ex)
                 {
@@ -109,96 +109,96 @@ namespace TheDialgaTeam.DiscordBot
             }
         }
 
-        private async Task ListDiscordAppOwner(ICommandProcessorModel commandProcessorModel)
+        private async Task ListDiscordAppOwnerAsync(ICommandProcessorModel commandProcessorModel)
         {
             var paramObject = commandProcessorModel.GetCommandParamenterTypeObjects(new[] { CommandProcessorModel.ParamenterType.ULong });
 
             if (paramObject?[0] == null)
-                await DiscordAppService.ListDiscordAppOwner();
+                await DiscordAppService.ListDiscordAppOwnerAsync();
             else
-                await DiscordAppService.ListDiscordAppOwner((ulong)paramObject[0]);
+                await DiscordAppService.ListDiscordAppOwnerAsync((ulong)paramObject[0]);
         }
 
-        private async Task AddDiscordAppOwner(ICommandProcessorModel commandProcessorModel)
+        private async Task AddDiscordAppOwnerAsync(ICommandProcessorModel commandProcessorModel)
         {
             var paramObject = commandProcessorModel.GetCommandParamenterTypeObjects(new[] { CommandProcessorModel.ParamenterType.ULong });
             var paramObject2 = commandProcessorModel.GetCommandParamenterTypeObjects(new[] { CommandProcessorModel.ParamenterType.ULong, CommandProcessorModel.ParamenterType.ULong });
 
             if (paramObject2?[0] != null && paramObject2[1] != null)
-                await DiscordAppService.AddDiscordAppOwner((ulong)paramObject2[0], (ulong)paramObject2[1]);
+                await DiscordAppService.AddDiscordAppOwnerAsync((ulong)paramObject2[0], (ulong)paramObject2[1]);
             else if (paramObject?[0] != null)
-                await DiscordAppService.AddDiscordAppOwner((ulong)paramObject[0]);
+                await DiscordAppService.AddDiscordAppOwnerAsync((ulong)paramObject[0]);
         }
 
-        private async Task RemoveDiscordAppOwner(ICommandProcessorModel commandProcessorModel)
+        private async Task RemoveDiscordAppOwnerAsync(ICommandProcessorModel commandProcessorModel)
         {
             var paramObject = commandProcessorModel.GetCommandParamenterTypeObjects(new[] { CommandProcessorModel.ParamenterType.ULong });
             var paramObject2 = commandProcessorModel.GetCommandParamenterTypeObjects(new[] { CommandProcessorModel.ParamenterType.ULong, CommandProcessorModel.ParamenterType.ULong });
 
             if (paramObject2?[0] != null && paramObject2[1] != null)
-                await DiscordAppService.RemoveDiscordAppOwner((ulong)paramObject2[0], (ulong)paramObject2[1]);
+                await DiscordAppService.RemoveDiscordAppOwnerAsync((ulong)paramObject2[0], (ulong)paramObject2[1]);
             else if (paramObject?[0] != null)
-                await DiscordAppService.RemoveDiscordAppOwner((ulong)paramObject[0]);
+                await DiscordAppService.RemoveDiscordAppOwnerAsync((ulong)paramObject[0]);
         }
 
-        private async Task ListDiscordApp()
+        private async Task ListDiscordAppAsync()
         {
-            await DiscordAppService.ListDiscordApp();
+            await DiscordAppService.ListDiscordAppAsync();
         }
 
-        private async Task AddDiscordApp(ICommandProcessorModel commandProcessorModel)
+        private async Task AddDiscordAppAsync(ICommandProcessorModel commandProcessorModel)
         {
             var paramObject = commandProcessorModel.GetCommandParamenterTypeObjects(new[] { CommandProcessorModel.ParamenterType.ULong, CommandProcessorModel.ParamenterType.String });
 
             if (paramObject?[0] == null || paramObject[1] == null)
                 return;
 
-            await DiscordAppService.AddDiscordApp((ulong)paramObject[0], paramObject[1].ToString());
+            await DiscordAppService.AddDiscordAppAsync((ulong)paramObject[0], paramObject[1].ToString());
         }
 
-        private async Task RemoveDiscordApp(ICommandProcessorModel commandProcessorModel)
+        private async Task RemoveDiscordAppAsync(ICommandProcessorModel commandProcessorModel)
         {
             var paramObject = commandProcessorModel.GetCommandParamenterTypeObjects(new[] { CommandProcessorModel.ParamenterType.ULong });
 
             if (paramObject?[0] == null)
                 return;
 
-            await DiscordAppService.RemoveDiscordApp((ulong)paramObject[0]);
+            await DiscordAppService.RemoveDiscordAppAsync((ulong)paramObject[0]);
         }
 
-        private async Task ListRunningDiscordApp()
+        private async Task ListRunningDiscordAppAsync()
         {
-            await DiscordAppService.ListRunningDiscordApp();
+            await DiscordAppService.ListRunningDiscordAppAsync();
         }
 
-        private async Task StartDiscordApp(ICommandProcessorModel commandProcessorModel)
-        {
-            var paramObject = commandProcessorModel.GetCommandParamenterTypeObjects(new[] { CommandProcessorModel.ParamenterType.ULong });
-
-            if (paramObject?[0] == null)
-                return;
-
-            await DiscordAppService.StartDiscordApp((ulong)paramObject[0]);
-        }
-
-        private async Task StartDiscordApps()
-        {
-            await DiscordAppService.StartDiscordApps();
-        }
-
-        private async Task StopDiscordApp(ICommandProcessorModel commandProcessorModel)
+        private async Task StartDiscordAppAsync(ICommandProcessorModel commandProcessorModel)
         {
             var paramObject = commandProcessorModel.GetCommandParamenterTypeObjects(new[] { CommandProcessorModel.ParamenterType.ULong });
 
             if (paramObject?[0] == null)
                 return;
 
-            await DiscordAppService.StopDiscordApp((ulong)paramObject[0]);
+            await DiscordAppService.StartDiscordAppAsync((ulong)paramObject[0]);
         }
 
-        private async Task StopDiscordApps()
+        private async Task StartDiscordAppsAsync()
         {
-            await DiscordAppService.StopDiscordApps();
+            await DiscordAppService.StartDiscordAppsAsync();
+        }
+
+        private async Task StopDiscordAppAsync(ICommandProcessorModel commandProcessorModel)
+        {
+            var paramObject = commandProcessorModel.GetCommandParamenterTypeObjects(new[] { CommandProcessorModel.ParamenterType.ULong });
+
+            if (paramObject?[0] == null)
+                return;
+
+            await DiscordAppService.StopDiscordAppAsync((ulong)paramObject[0]);
+        }
+
+        private async Task StopDiscordAppsAsync()
+        {
+            await DiscordAppService.StopDiscordAppsAsync();
         }
     }
 }

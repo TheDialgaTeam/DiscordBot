@@ -1,6 +1,5 @@
 ﻿using Discord;
 using Discord.Commands;
-using Discord.WebSocket;
 using System;
 using System.Text;
 using System.Threading.Tasks;
@@ -19,22 +18,22 @@ namespace TheDialgaTeam.DiscordBot.Modules
         }
 
         [Command("Help")]
-        public async Task Help()
+        public async Task HelpAsync()
         {
             var helpMessage = new EmbedBuilder()
                               .WithTitle("Available Command:")
                               .WithColor(Color.Orange)
-                              .WithDescription($"To find out more about each command, use {Context.Client.CurrentUser.Mention} help \"CommandName\"");
+                              .WithDescription($"To find out more about each command, use {Context.Client.CurrentUser.Mention} help <CommandName>");
 
-            foreach (var commandServiceModule in CommandService.Modules)
+            foreach (var module in CommandService.Modules)
             {
-                var moduleName = $"{commandServiceModule.Name} Module";
+                var moduleName = $"{module.Name} Module";
                 var commandInfo = new StringBuilder();
 
                 if (moduleName == "Help Module")
                     continue;
 
-                foreach (var preconditionAttribute in commandServiceModule.Preconditions)
+                foreach (var preconditionAttribute in module.Preconditions)
                 {
                     if (!(preconditionAttribute is RequireActiveModuleAttribute))
                         continue;
@@ -42,24 +41,28 @@ namespace TheDialgaTeam.DiscordBot.Modules
                     moduleName += " (Subscribers only)";
                 }
 
-                foreach (var command in commandServiceModule.Commands)
-                    commandInfo.AppendLine($"`{command.Name}`: {command.Summary}");
+                foreach (var command in module.Commands)
+                {
+                    commandInfo.Append($"`{command.Name}`");
+
+                    if (command.Aliases.Count > 0)
+                    {
+                        foreach (var commandAliase in command.Aliases)
+                            commandInfo.Append($" `{commandAliase}`");
+                    }
+
+                    commandInfo.AppendLine($": {command.Summary}");
+                }
 
                 if (commandInfo.Length > 0)
                     helpMessage = helpMessage.AddField(moduleName, commandInfo.ToString());
             }
 
-            if (Context.Message.Channel is SocketDMChannel || Context.Message.Channel is SocketGroupChannel)
-                await ReplyAsync("", false, helpMessage.Build());
-            else
-            {
-                var dmChannel = await Context.Message.Author.GetOrCreateDMChannelAsync();
-                await dmChannel.SendMessageAsync("", false, helpMessage.Build());
-            }
+            await ReplyDMAsync("", false, helpMessage.Build());
         }
 
         [Command("Help")]
-        public async Task Help([Remainder] string commandName)
+        public async Task HelpAsync([Remainder] string commandName)
         {
             foreach (var commandServiceModule in CommandService.Modules)
             {
@@ -76,7 +79,7 @@ namespace TheDialgaTeam.DiscordBot.Modules
                     var helpMessage = new EmbedBuilder()
                                       .WithTitle("Command Info:")
                                       .WithColor(Color.Orange)
-                                      .WithDescription($"To find out more about each command, use {Context.Client.CurrentUser.Mention} help \"CommandName\"");
+                                      .WithDescription($"To find out more about each command, use {Context.Client.CurrentUser.Mention} help <CommandName>");
 
                     var requiredPermission = RequiredPermissions.GuildMember;
                     var requiredContext = ContextType.Guild | ContextType.DM | ContextType.Group;
@@ -96,23 +99,45 @@ namespace TheDialgaTeam.DiscordBot.Modules
                         }
                     }
 
-                    if (requiredContext == (ContextType.Guild | ContextType.DM | ContextType.Group))
-                        requiredContextString = $"{ContextType.Guild}, {ContextType.DM}, {ContextType.Group}";
-                    else if (requiredContext == (ContextType.Guild | ContextType.DM))
-                        requiredContextString = $"{ContextType.Guild}, {ContextType.DM}";
-                    else if (requiredContext == (ContextType.Guild | ContextType.Group))
-                        requiredContextString = $"{ContextType.Guild}, {ContextType.Group}";
-                    else if (requiredContext == (ContextType.DM | ContextType.Group))
-                        requiredContextString = $"{ContextType.DM}, {ContextType.Group}";
-                    else if (requiredContext == ContextType.Guild)
-                        requiredContextString = $"{ContextType.Guild}";
-                    else if (requiredContext == ContextType.DM)
-                        requiredContextString = $"{ContextType.DM}";
-                    else if (requiredContext == ContextType.Group)
-                        requiredContextString = $"{ContextType.Group}";
+                    switch (requiredContext)
+                    {
+                        case ContextType.Guild | ContextType.DM | ContextType.Group:
+                            requiredContextString = $"{ContextType.Guild}, {ContextType.DM}, {ContextType.Group}";
+                            break;
+
+                        case ContextType.Guild | ContextType.DM:
+                            requiredContextString = $"{ContextType.Guild}, {ContextType.DM}";
+                            break;
+
+                        case ContextType.Guild | ContextType.Group:
+                            requiredContextString = $"{ContextType.Guild}, {ContextType.Group}";
+                            break;
+
+                        case ContextType.DM | ContextType.Group:
+                            requiredContextString = $"{ContextType.DM}, {ContextType.Group}";
+                            break;
+
+                        case ContextType.Guild:
+                            requiredContextString = $"{ContextType.Guild}";
+                            break;
+
+                        case ContextType.DM:
+                            requiredContextString = $"{ContextType.DM}";
+                            break;
+
+                        case ContextType.Group:
+                            requiredContextString = $"{ContextType.Group}";
+                            break;
+
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
 
                     if (command.Parameters.Count == 0)
-                        helpMessage = helpMessage.AddField($"{command.Name} command:", $"Usage: {Context.Client.CurrentUser.Mention} {command.Name}\nDescription: {command.Summary}\nRequired Permission: {requiredPermission.ToString()}\nRequired Context: {requiredContext}");
+                        helpMessage = helpMessage.AddField($"{command.Name} command:", $@"Usage: {Context.Client.CurrentUser.Mention} {command.Name}
+Description: {command.Summary}
+Required Permission: {requiredPermission.ToString()} and above
+Required Context: {requiredContext}");
                     else
                     {
                         var commandInfo = new StringBuilder($"Usage: {Context.Client.CurrentUser.Mention} {command.Name}");
@@ -126,14 +151,13 @@ namespace TheDialgaTeam.DiscordBot.Modules
 
                         commandInfo.AppendLine($"\nDescription: {command.Summary}");
                         commandInfo.AppendLine($"Required Permission: {requiredPermission.ToString()}");
-                        commandInfo.Append("Required Context: ");
-                        commandInfo.AppendLine(requiredContextString);
+                        commandInfo.AppendLine($"Required Context: {requiredContextString}");
                         commandInfo.AppendLine("\nArguments Info:");
                         commandInfo.AppendLine(argsInfo.ToString());
                         commandInfo.AppendLine("Note:");
-                        commandInfo.AppendLine("Char/String arguments requires to be double quoted except for the last string parameter \"This is a string\".");
-                        commandInfo.AppendLine("Integer arguments can be -2147483648 to 2147483647.");
-                        commandInfo.AppendLine("Boolean arguments can be true, false.");
+                        commandInfo.AppendLine("Char/String arguments must be double quoted except for the last string parameter \"This is a string\".");
+                        commandInfo.AppendLine("IRole arguments can be role name, role id or @role.");
+                        commandInfo.AppendLine("IChannel arguments can be channel name, channel id or #channel.");
 
                         helpMessage = helpMessage.AddField($"{command.Name} command:", commandInfo.ToString());
                     }

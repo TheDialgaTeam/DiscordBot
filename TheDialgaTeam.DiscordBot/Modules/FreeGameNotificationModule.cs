@@ -26,7 +26,7 @@ namespace TheDialgaTeam.DiscordBot.Modules
         [Summary("Setup free game notification for this guild.")]
         [RequirePermission(RequiredPermissions.GuildAdministrator)]
         [RequireContext(ContextType.Guild)]
-        public async Task FGNSetup([Summary("Role to mention for the free game announcement.")] IRole role, [Summary("Channel to announce in for the free game annonucement.")] IChannel channel)
+        public async Task FGNSetupAsync([Summary("Role to mention for the free game announcement.")] IRole role, [Summary("Channel to announce in for the free game annonucement.")] IChannel channel)
         {
             var clientId = Context.Client.CurrentUser.Id.ToString();
             var guildId = Context.Guild.Id.ToString();
@@ -48,7 +48,7 @@ namespace TheDialgaTeam.DiscordBot.Modules
         [Command("FGNAnnounce")]
         [Summary("Announce free game notification to all subscribed guilds.")]
         [RequirePermission(RequiredPermissions.GlobalDiscordAppOwner)]
-        public async Task FGNAnnounce([Remainder] [Summary("Message to announce.")] string message)
+        public async Task FGNAnnounceAsync([Remainder] [Summary("Message to announce.")] string message)
         {
             foreach (var discordSocketClientModel in DiscordAppService.DiscordSocketClientModels)
             {
@@ -76,7 +76,7 @@ namespace TheDialgaTeam.DiscordBot.Modules
         [Summary("Announce free game notification to this guild. (Dry run)")]
         [RequirePermission(RequiredPermissions.GuildAdministrator)]
         [RequireContext(ContextType.Guild)]
-        public async Task FGNTestAnnounce([Remainder] [Summary("Message to announce.")] string message)
+        public async Task FGNTestAnnounceAsync([Remainder] [Summary("Message to announce.")] string message)
         {
             var clientId = Context.Client.CurrentUser.Id.ToString();
             var guildId = Context.Guild.Id.ToString();

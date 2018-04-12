@@ -3,9 +3,11 @@ using Discord.Commands;
 using Discord.WebSocket;
 using System;
 using System.Collections.Generic;
+using System.Net.Http;
 using System.Threading.Tasks;
 using TheDialgaTeam.DiscordBot.Model.Discord;
 using TheDialgaTeam.DiscordBot.Model.SQLite.Table;
+using TheDialgaTeam.DiscordBot.Model.SQLite.Table.Modules;
 
 namespace TheDialgaTeam.DiscordBot.Services
 {
@@ -13,27 +15,27 @@ namespace TheDialgaTeam.DiscordBot.Services
     {
         List<IDiscordSocketClientModel> DiscordSocketClientModels { get; }
 
-        Task ListDiscordAppOwner(ulong clientId = 0);
+        Task ListDiscordAppOwnerAsync(ulong clientId = 0);
 
-        Task AddDiscordAppOwner(ulong userId, ulong clientId = 0);
+        Task AddDiscordAppOwnerAsync(ulong userId, ulong clientId = 0);
 
-        Task RemoveDiscordAppOwner(ulong userId, ulong clientId = 0);
+        Task RemoveDiscordAppOwnerAsync(ulong userId, ulong clientId = 0);
 
-        Task ListDiscordApp();
+        Task ListDiscordAppAsync();
 
-        Task<bool> AddDiscordApp(ulong clientId, string botToken);
+        Task<bool> AddDiscordAppAsync(ulong clientId, string botToken);
 
-        Task<bool> RemoveDiscordApp(ulong clientId);
+        Task<bool> RemoveDiscordAppAsync(ulong clientId);
 
-        Task ListRunningDiscordApp();
+        Task ListRunningDiscordAppAsync();
 
-        Task<bool> StartDiscordApp(ulong clientId);
+        Task<bool> StartDiscordAppAsync(ulong clientId);
 
-        Task StartDiscordApps();
+        Task StartDiscordAppsAsync();
 
-        Task<bool> StopDiscordApp(ulong clientId);
+        Task<bool> StopDiscordAppAsync(ulong clientId);
 
-        Task StopDiscordApps();
+        Task StopDiscordAppsAsync();
     }
 
     internal sealed class DiscordAppService : IDiscordAppService
@@ -53,7 +55,7 @@ namespace TheDialgaTeam.DiscordBot.Services
             SQLiteService = sqliteService;
         }
 
-        public async Task ListDiscordAppOwner(ulong clientId = 0)
+        public async Task ListDiscordAppOwnerAsync(ulong clientId = 0)
         {
             var stringClientId = clientId == 0 ? string.Empty : clientId.ToString();
             var discordAppOwnerModels = await SQLiteService.SQLiteAsyncConnection.Table<DiscordAppOwnerModel>().Where(a => a.ClientId == stringClientId).ToArrayAsync();
@@ -72,7 +74,7 @@ namespace TheDialgaTeam.DiscordBot.Services
                 await LoggerService.LogMessageAsync($"Id: {discordAppOwnerModel.Id} | UserId: {discordAppOwnerModel.UserId}");
         }
 
-        public async Task AddDiscordAppOwner(ulong userId, ulong clientId = 0)
+        public async Task AddDiscordAppOwnerAsync(ulong userId, ulong clientId = 0)
         {
             var stringUserId = userId.ToString();
             var stringClientId = clientId == 0 ? string.Empty : clientId.ToString();
@@ -87,7 +89,7 @@ namespace TheDialgaTeam.DiscordBot.Services
             await LoggerService.LogMessageAsync("Successfully added a new discord app owner.");
         }
 
-        public async Task RemoveDiscordAppOwner(ulong userId, ulong clientId = 0)
+        public async Task RemoveDiscordAppOwnerAsync(ulong userId, ulong clientId = 0)
         {
             var stringUserId = userId.ToString();
             var stringClientId = clientId == 0 ? string.Empty : clientId.ToString();
@@ -103,7 +105,7 @@ namespace TheDialgaTeam.DiscordBot.Services
             await LoggerService.LogMessageAsync("Successfully removed the discord app owner.");
         }
 
-        public async Task ListDiscordApp()
+        public async Task ListDiscordAppAsync()
         {
             var discordAppModels = await SQLiteService.SQLiteAsyncConnection.Table<DiscordAppModel>().ToArrayAsync();
 
@@ -121,7 +123,7 @@ namespace TheDialgaTeam.DiscordBot.Services
                 await LoggerService.LogMessageAsync($"Id: {discordAppModel.Id} | ClientId: {discordAppModel.ClientId}");
         }
 
-        public async Task<bool> AddDiscordApp(ulong clientId, string botToken)
+        public async Task<bool> AddDiscordAppAsync(ulong clientId, string botToken)
         {
             var stringClientId = clientId.ToString();
 
@@ -142,7 +144,7 @@ namespace TheDialgaTeam.DiscordBot.Services
             return true;
         }
 
-        public async Task<bool> RemoveDiscordApp(ulong clientId)
+        public async Task<bool> RemoveDiscordAppAsync(ulong clientId)
         {
             var stringClientId = clientId.ToString();
             var discordAppModel = await SQLiteService.SQLiteAsyncConnection.Table<DiscordAppModel>().Where(a => a.ClientId == stringClientId).FirstOrDefaultAsync();
@@ -158,7 +160,7 @@ namespace TheDialgaTeam.DiscordBot.Services
             return true;
         }
 
-        public async Task ListRunningDiscordApp()
+        public async Task ListRunningDiscordAppAsync()
         {
             if (DiscordSocketClientModels.Count == 0)
             {
@@ -174,7 +176,7 @@ namespace TheDialgaTeam.DiscordBot.Services
                 await LoggerService.LogMessageAsync($"ClientId: {discordSocketClientModel.DiscordAppModel.ClientId}");
         }
 
-        public async Task<bool> StartDiscordApp(ulong clientId)
+        public async Task<bool> StartDiscordAppAsync(ulong clientId)
         {
             var stringClientId = clientId.ToString();
             var discordAppModel = await SQLiteService.SQLiteAsyncConnection.Table<DiscordAppModel>().Where(a => a.ClientId == stringClientId).FirstOrDefaultAsync();
@@ -190,22 +192,22 @@ namespace TheDialgaTeam.DiscordBot.Services
                 if (discordSocketClientModel.DiscordAppModel.ClientId != clientId.ToString())
                     continue;
 
-                await StopDiscordApp(clientId);
+                await StopDiscordAppAsync(clientId);
                 break;
             }
 
             var newDiscordSocketClientModel = new DiscordSocketClientModel(discordAppModel);
             AddListener(newDiscordSocketClientModel);
 
-            await newDiscordSocketClientModel.StartListening();
+            await newDiscordSocketClientModel.StartListeningAsync();
 
             DiscordSocketClientModels.Add(newDiscordSocketClientModel);
             return true;
         }
 
-        public async Task StartDiscordApps()
+        public async Task StartDiscordAppsAsync()
         {
-            await StopDiscordApps();
+            await StopDiscordAppsAsync();
 
             var discordAppModels = await SQLiteService.SQLiteAsyncConnection.Table<DiscordAppModel>().ToArrayAsync();
 
@@ -214,13 +216,13 @@ namespace TheDialgaTeam.DiscordBot.Services
                 var newDiscordSocketClientModel = new DiscordSocketClientModel(discordAppModel);
                 AddListener(newDiscordSocketClientModel);
 
-                await newDiscordSocketClientModel.StartListening();
+                await newDiscordSocketClientModel.StartListeningAsync();
 
                 DiscordSocketClientModels.Add(newDiscordSocketClientModel);
             }
         }
 
-        public async Task<bool> StopDiscordApp(ulong clientId)
+        public async Task<bool> StopDiscordAppAsync(ulong clientId)
         {
             IDiscordSocketClientModel tempDiscordSocketClientModel = null;
 
@@ -229,7 +231,7 @@ namespace TheDialgaTeam.DiscordBot.Services
                 if (discordSocketClientModel.DiscordAppModel.ClientId != clientId.ToString())
                     continue;
 
-                await discordSocketClientModel.StopListening();
+                await discordSocketClientModel.StopListeningAsync();
                 RemoveListener(discordSocketClientModel);
                 await LoggerService.LogMessageAsync($"Successfully stopped {clientId} app.");
 
@@ -246,11 +248,11 @@ namespace TheDialgaTeam.DiscordBot.Services
             return true;
         }
 
-        public async Task StopDiscordApps()
+        public async Task StopDiscordAppsAsync()
         {
             foreach (var discordSocketClientModel in DiscordSocketClientModels)
             {
-                await discordSocketClientModel.StopListening();
+                await discordSocketClientModel.StopListeningAsync();
                 RemoveListener(discordSocketClientModel);
                 await LoggerService.LogMessageAsync($"Successfully stopped {discordSocketClientModel.DiscordAppModel.ClientId} app.");
             }
@@ -263,10 +265,12 @@ namespace TheDialgaTeam.DiscordBot.Services
             discordSocketClientModel.Log += DiscordSocketClientModelOnLog;
             discordSocketClientModel.Ready += DiscordSocketClientModelOnReady;
             discordSocketClientModel.MessageReceived += DiscordSocketClientModelOnMessageReceived;
+            discordSocketClientModel.UserJoined += DiscordSocketClientModelOnUserJoined;
         }
 
         private void RemoveListener(IDiscordSocketClientModel discordSocketClientModel)
         {
+            discordSocketClientModel.UserJoined -= DiscordSocketClientModelOnUserJoined;
             discordSocketClientModel.MessageReceived -= DiscordSocketClientModelOnMessageReceived;
             discordSocketClientModel.Ready -= DiscordSocketClientModelOnReady;
             discordSocketClientModel.Log -= DiscordSocketClientModelOnLog;
@@ -286,8 +290,8 @@ namespace TheDialgaTeam.DiscordBot.Services
                 if (socketClientModel.DiscordAppModel.ClientId != socketClientModel.DiscordSocketClient.CurrentUser.Id.ToString())
                 {
                     await LoggerService.LogMessageAsync($"[Bot {socketClientModel.DiscordAppModel.ClientId}] Client Id mismatch. Verification failed!");
-                    await StopDiscordApp(Convert.ToUInt64(socketClientModel.DiscordAppModel.ClientId));
-                    await RemoveDiscordApp(Convert.ToUInt64(socketClientModel.DiscordAppModel.ClientId));
+                    await StopDiscordAppAsync(Convert.ToUInt64(socketClientModel.DiscordAppModel.ClientId));
+                    await RemoveDiscordAppAsync(Convert.ToUInt64(socketClientModel.DiscordAppModel.ClientId));
                     return;
                 }
 
@@ -325,6 +329,52 @@ namespace TheDialgaTeam.DiscordBot.Services
             }
 
             await Program.CommandService.ExecuteAsync(context, argPos, Program.ServiceProvider);
+        }
+
+        private async Task DiscordSocketClientModelOnUserJoined(IDiscordSocketClientModel socketClientModel, SocketGuildUser socketGuildUser)
+        {
+            var clientId = socketClientModel.DiscordAppModel.ClientId;
+            var guildId = socketGuildUser.Guild.Id.ToString();
+
+            var discordGuildModuleModel = await SQLiteService.SQLiteAsyncConnection.Table<DiscordGuildModuleModel>().Where(a => a.ClientId == clientId && a.GuildId == guildId && a.Module == "ServerHound").FirstOrDefaultAsync();
+
+            if (!discordGuildModuleModel?.Active ?? true)
+                return;
+
+            var serverHoundModel = await SQLiteService.SQLiteAsyncConnection.Table<ServerHoundModel>().Where(a => a.ClientId == clientId && a.GuildId == guildId).FirstOrDefaultAsync();
+
+            if (!serverHoundModel?.DBans ?? true)
+                return;
+
+            // Check DBans :)
+            var httpClient = new HttpClient();
+
+            var values = new Dictionary<string, string>
+            {
+                { "token", "Ln3SIwdcIu" },
+                { "userid", socketGuildUser.Id.ToString() }
+            };
+
+            var content = new FormUrlEncodedContent(values);
+            var response = await httpClient.PostAsync("https://bans.discordlist.net/api", content);
+            var responseString = await response.Content.ReadAsStringAsync();
+
+            if (responseString.Equals("true", StringComparison.OrdinalIgnoreCase))
+            {
+                var permission = socketGuildUser.Guild.GetUser(socketClientModel.DiscordSocketClient.CurrentUser.Id).GuildPermissions;
+                var dmChannel = await socketGuildUser.GetOrCreateDMChannelAsync();
+
+                if (permission.BanMembers)
+                {
+                    await socketGuildUser.Guild.AddBanAsync(socketGuildUser, reason: "You have been banned due to ServerHound DBans listing.");
+                    await dmChannel.SendMessageAsync("You have been banned from the guild due to ServerHound DBans listing. If you think that this is a false positive, please goto: https://discord.gg/MPDPnEw and make an appeal to de-list your account.");
+                }
+                else if (permission.KickMembers)
+                {
+                    await socketGuildUser.KickAsync("You have been kicked due to ServerHound DBans listing.");
+                    await dmChannel.SendMessageAsync("You have been kicked from the guild due to ServerHound DBans listing. If you think that this is a false positive, please goto: https://discord.gg/MPDPnEw and make an appeal to de-list your account.");
+                }
+            }
         }
     }
 }

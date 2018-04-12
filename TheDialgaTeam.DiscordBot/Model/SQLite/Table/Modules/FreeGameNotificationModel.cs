@@ -13,7 +13,7 @@ namespace TheDialgaTeam.DiscordBot.Model.SQLite.Table.Modules
         string ChannelId { get; }
     }
 
-    [Table("FreeGameNotifications")]
+    [Table("FreeGameNotification")]
     internal sealed class FreeGameNotificationModel : BaseTable, IFreeGameNotificationModel
     {
         public string ClientId { get; set; }

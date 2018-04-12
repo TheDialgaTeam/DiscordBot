@@ -84,9 +84,9 @@ namespace TheDialgaTeam.DiscordBot.Model.Discord
 
         IDiscordAppModel DiscordAppModel { get; }
 
-        Task StartListening();
+        Task StartListeningAsync();
 
-        Task StopListening();
+        Task StopListeningAsync();
     }
 
     internal sealed class DiscordSocketClientModel : IDiscordSocketClientModel
@@ -173,7 +173,7 @@ namespace TheDialgaTeam.DiscordBot.Model.Discord
             DiscordSocketClient = new DiscordSocketClient();
         }
 
-        public async Task StartListening()
+        public async Task StartListeningAsync()
         {
             while (DiscordSocketClient.LoginState == LoginState.LoggingOut || DiscordSocketClient.ConnectionState == ConnectionState.Disconnecting)
                 await Task.Delay(1000);
@@ -222,7 +222,7 @@ namespace TheDialgaTeam.DiscordBot.Model.Discord
             }
         }
 
-        public async Task StopListening()
+        public async Task StopListeningAsync()
         {
             while (DiscordSocketClient.LoginState == LoginState.LoggingIn || DiscordSocketClient.ConnectionState == ConnectionState.Connecting)
                 await Task.Delay(1000);

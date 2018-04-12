@@ -1,6 +1,5 @@
 ﻿using Discord;
 using Discord.Commands;
-using Discord.WebSocket;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using TheDialgaTeam.DiscordBot.Model.Discord.Command;
@@ -24,40 +23,34 @@ namespace TheDialgaTeam.DiscordBot.Modules
 
         [Command("Ping")]
         [Summary("Check the connection speed between the bot and the server.")]
-        public async Task Ping()
+        public async Task PingAsync()
         {
             await ReplyAsync($"Ping: {Context.Client.Latency} ms");
         }
 
         [Command("About")]
         [Summary("Get the bot information.")]
-        public async Task About()
+        public async Task AboutAsync()
         {
             var helpMessage = new EmbedBuilder()
                               .WithTitle("The Dialga Team Discord Bot:")
-                              .WithThumbnailUrl(Context.User.GetAvatarUrl())
+                              .WithThumbnailUrl(Context.Client.CurrentUser.GetAvatarUrl())
                               .WithColor(Color.Orange)
-                              .WithDescription($@"Hello, I am **{Context.Client.CurrentUser.Username}**, a multipurpose bot that is hosted in AGN.
+                              .WithDescription($@"Hello, I am **{Context.Client.CurrentUser.Username}**, a multipurpose bot that is created by jianmingyong#4964.
 I am owned by **{(await Context.Client.GetApplicationInfoAsync()).Owner.Username}**.
-Type {Context.Client.CurrentUser.Mention} help to see my command.
+Type `{Context.Client.CurrentUser.Mention} help` to see my command.
 
 You can invite this bot by using this link: <https://discordapp.com/api/oauth2/authorize?client_id={Context.Client.CurrentUser.Id}&permissions=0&scope=bot>
 
 If you want to have a custom avatar and bot name, feel free to join our bot discord server <https://discord.me/TheDialgaTeam> and read the invite section.");
 
-            if (Context.Message.Channel is SocketDMChannel || Context.Message.Channel is SocketGroupChannel)
-                await ReplyAsync("", false, helpMessage.Build());
-            else
-            {
-                var dmChannel = await Context.Message.Author.GetOrCreateDMChannelAsync();
-                await dmChannel.SendMessageAsync("", false, helpMessage.Build());
-            }
+            await ReplyDMAsync("", false, helpMessage.Build());
         }
 
         [Command("GlobalBotAnnounce")]
         [Summary("Announce a message into all of the guilds of all bot instances.")]
         [RequirePermission(RequiredPermissions.GlobalDiscordAppOwner)]
-        public async Task GlobalBotAnnounce([Remainder] [Summary("Message to send.")] string message)
+        public async Task GlobalBotAnnounceAsync([Remainder] [Summary("Message to send.")] string message)
         {
             var ignoreGuilds = new List<ulong>();
 
@@ -81,7 +74,7 @@ If you want to have a custom avatar and bot name, feel free to join our bot disc
         [Command("BotAnnounce")]
         [Summary("Announce a message into all of the guilds of this bot instance.")]
         [RequirePermission(RequiredPermissions.DiscordAppOwner)]
-        public async Task BotAnnounce([Remainder] [Summary("Message to send.")] string message)
+        public async Task BotAnnounceAsync([Remainder] [Summary("Message to send.")] string message)
         {
             foreach (var socketGuild in Context.Client.Guilds)
             {
@@ -96,7 +89,7 @@ If you want to have a custom avatar and bot name, feel free to join our bot disc
         [Summary("Announce a message into this guild.")]
         [RequirePermission(RequiredPermissions.GuildModerator)]
         [RequireContext(ContextType.Guild)]
-        public async Task GuildSay([Remainder] [Summary("Message to send.")] string message)
+        public async Task GuildSayAsync([Remainder] [Summary("Message to send.")] string message)
         {
             var perms = Context.Guild.GetUser(Context.Client.CurrentUser.Id).GetPermissions(Context.Guild.DefaultChannel);
 
@@ -108,7 +101,7 @@ If you want to have a custom avatar and bot name, feel free to join our bot disc
         [Summary("Announce a message into this channel.")]
         [RequirePermission(RequiredPermissions.ChannelModerator)]
         [RequireContext(ContextType.Guild)]
-        public async Task ChannelSay([Remainder] [Summary("Message to send.")] string message)
+        public async Task ChannelSayAsync([Remainder] [Summary("Message to send.")] string message)
         {
             await ReplyAsync(message);
         }
@@ -116,7 +109,7 @@ If you want to have a custom avatar and bot name, feel free to join our bot disc
         [Command("AddDiscordApp")]
         [Summary("Add a new bot instance.")]
         [RequirePermission(RequiredPermissions.GlobalDiscordAppOwner)]
-        public async Task AddDiscordApp([Summary("Discord bot client id.")] ulong clientId, [Remainder] [Summary("Bot secret token.")] string botToken)
+        public async Task AddDiscordAppAsync([Summary("Discord bot client id.")] ulong clientId, [Remainder] [Summary("Bot secret token.")] string botToken)
         {
             var stringClientId = clientId.ToString();
 
@@ -138,7 +131,7 @@ If you want to have a custom avatar and bot name, feel free to join our bot disc
         [Command("RemoveDiscordApp")]
         [Summary("Remove a bot instance.")]
         [RequirePermission(RequiredPermissions.GlobalDiscordAppOwner)]
-        public async Task RemoveDiscordApp([Summary("Discord bot client id.")] ulong clientId)
+        public async Task RemoveDiscordAppAsync([Summary("Discord bot client id.")] ulong clientId)
         {
             var stringClientId = clientId.ToString();
             var discordAppModel = await SQLiteService.SQLiteAsyncConnection.Table<DiscordAppModel>().Where(a => a.ClientId == stringClientId).FirstOrDefaultAsync();
@@ -156,9 +149,9 @@ If you want to have a custom avatar and bot name, feel free to join our bot disc
         [Command("StartDiscordApp")]
         [Summary("Start a new bot instance")]
         [RequirePermission(RequiredPermissions.GlobalDiscordAppOwner)]
-        public async Task StartDiscordApp([Summary("Discord bot client id.")] ulong clientId)
+        public async Task StartDiscordAppAsync([Summary("Discord bot client id.")] ulong clientId)
         {
-            if (await DiscordAppService.StartDiscordApp(clientId))
+            if (await DiscordAppService.StartDiscordAppAsync(clientId))
                 await ReplyAsync(":white_check_mark: Successfully started the discord app.");
             else
                 await ReplyAsync(":negative_squared_cross_mark: This discord app is does not exist!");
@@ -167,9 +160,9 @@ If you want to have a custom avatar and bot name, feel free to join our bot disc
         [Command("StopDiscordApp")]
         [Summary("Stop a bot instance")]
         [RequirePermission(RequiredPermissions.GlobalDiscordAppOwner)]
-        public async Task StopDiscordApp([Summary("Discord bot client id.")] ulong clientId)
+        public async Task StopDiscordAppAsync([Summary("Discord bot client id.")] ulong clientId)
         {
-            if (await DiscordAppService.StopDiscordApp(clientId))
+            if (await DiscordAppService.StopDiscordAppAsync(clientId))
                 await ReplyAsync(":white_check_mark: Successfully stopped the discord app.");
             else
                 await ReplyAsync(":negative_squared_cross_mark: This discord app is not running!");

@@ -23,7 +23,7 @@ namespace TheDialgaTeam.DiscordBot.Modules
 
         [Command("ShowCommandPrefix")]
         [Summary("Show the current command prefix for this guild.")]
-        public async Task ShowCommandPrefix()
+        public async Task ShowCommandPrefixAsync()
         {
             var clientId = Context.Client.CurrentUser.Id.ToString();
             var guildId = Context.Guild.Id.ToString();
@@ -39,7 +39,7 @@ namespace TheDialgaTeam.DiscordBot.Modules
         [Command("SetCommandPrefix")]
         [Summary("Set the current command prefix for this guild.")]
         [RequirePermission(RequiredPermissions.GuildAdministrator)]
-        public async Task SetCommandPrefix([Remainder] [Summary("Custom prefix to use when using this bot commands.")] string prefix)
+        public async Task SetCommandPrefixAsync([Remainder] [Summary("Custom prefix to use when using this bot commands.")] string prefix)
         {
             var clientId = Context.Client.CurrentUser.Id.ToString();
             var guildId = Context.Guild.Id.ToString();
@@ -60,7 +60,7 @@ namespace TheDialgaTeam.DiscordBot.Modules
         [Command("SubscribeModule")]
         [Summary("Subscribe the bot specific modules.")]
         [RequirePermission(RequiredPermissions.GuildAdministrator)]
-        public async Task SubscribeModule([Remainder] [Summary("Module to subscribe.")] string module)
+        public async Task SubscribeModuleAsync([Remainder] [Summary("Module to subscribe.")] string module)
         {
             var clientId = Context.Client.CurrentUser.Id.ToString();
             var guildId = Context.Guild.Id.ToString();
@@ -100,7 +100,7 @@ namespace TheDialgaTeam.DiscordBot.Modules
         [Command("UnsubscribeModule")]
         [Summary("Unsubscribe the bot specific modules.")]
         [RequirePermission(RequiredPermissions.GuildAdministrator)]
-        public async Task UnsubscribeModule([Remainder] [Summary("Module to unsubscribe.")] string module)
+        public async Task UnsubscribeModuleAsync([Remainder] [Summary("Module to unsubscribe.")] string module)
         {
             var clientId = Context.Client.CurrentUser.Id.ToString();
             var guildId = Context.Guild.Id.ToString();
