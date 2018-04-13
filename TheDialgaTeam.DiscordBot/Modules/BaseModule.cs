@@ -32,13 +32,17 @@ namespace TheDialgaTeam.DiscordBot.Modules
         [Summary("Get the bot information.")]
         public async Task AboutAsync()
         {
+            var applicationInfo = await Context.Client.GetApplicationInfoAsync();
+
             var helpMessage = new EmbedBuilder()
                               .WithTitle("The Dialga Team Discord Bot:")
                               .WithThumbnailUrl(Context.Client.CurrentUser.GetAvatarUrl())
                               .WithColor(Color.Orange)
                               .WithDescription($@"Hello, I am **{Context.Client.CurrentUser.Username}**, a multipurpose bot that is created by jianmingyong#4964.
-I am owned by **{(await Context.Client.GetApplicationInfoAsync()).Owner.Username}**.
-Type `{Context.Client.CurrentUser.Mention} help` to see my command.
+
+I am owned by **{applicationInfo.Owner.Username}#{applicationInfo.Owner.Discriminator}**.
+
+Type `@{Context.Client.CurrentUser.Username}#{Context.Client.CurrentUser.Discriminator} help` to see my command.
 
 You can invite this bot by using this link: <https://discordapp.com/api/oauth2/authorize?client_id={Context.Client.CurrentUser.Id}&permissions=0&scope=bot>
 
@@ -83,27 +87,6 @@ If you want to have a custom avatar and bot name, feel free to join our bot disc
                 if (perms.SendMessages)
                     await socketGuild.DefaultChannel.SendMessageAsync(message);
             }
-        }
-
-        [Command("GuildSay")]
-        [Summary("Announce a message into this guild.")]
-        [RequirePermission(RequiredPermissions.GuildModerator)]
-        [RequireContext(ContextType.Guild)]
-        public async Task GuildSayAsync([Remainder] [Summary("Message to send.")] string message)
-        {
-            var perms = Context.Guild.GetUser(Context.Client.CurrentUser.Id).GetPermissions(Context.Guild.DefaultChannel);
-
-            if (perms.SendMessages)
-                await Context.Guild.DefaultChannel.SendMessageAsync(message);
-        }
-
-        [Command("ChannelSay")]
-        [Summary("Announce a message into this channel.")]
-        [RequirePermission(RequiredPermissions.ChannelModerator)]
-        [RequireContext(ContextType.Guild)]
-        public async Task ChannelSayAsync([Remainder] [Summary("Message to send.")] string message)
-        {
-            await ReplyAsync(message);
         }
 
         [Command("AddDiscordApp")]

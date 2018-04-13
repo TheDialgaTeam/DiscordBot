@@ -21,6 +21,25 @@ namespace TheDialgaTeam.DiscordBot.Modules
             SQLiteService = sqliteService;
         }
 
+        [Command("GuildSay")]
+        [Summary("Announce a message into this guild.")]
+        [RequirePermission(RequiredPermissions.GuildModerator)]
+        public async Task GuildSayAsync([Remainder] [Summary("Message to send.")] string message)
+        {
+            var perms = Context.Guild.GetUser(Context.Client.CurrentUser.Id).GetPermissions(Context.Guild.DefaultChannel);
+
+            if (perms.SendMessages)
+                await Context.Guild.DefaultChannel.SendMessageAsync(message);
+        }
+
+        [Command("ChannelSay")]
+        [Summary("Announce a message into this channel.")]
+        [RequirePermission(RequiredPermissions.ChannelModerator)]
+        public async Task ChannelSayAsync([Remainder] [Summary("Message to send.")] string message)
+        {
+            await ReplyAsync(message);
+        }
+
         [Command("ShowCommandPrefix")]
         [Summary("Show the current command prefix for this guild.")]
         public async Task ShowCommandPrefixAsync()
@@ -31,7 +50,7 @@ namespace TheDialgaTeam.DiscordBot.Modules
             var discordGuildModel = await SQLiteService.SQLiteAsyncConnection.Table<DiscordGuildModel>().Where(a => a.ClientId == clientId && a.GuildId == guildId).FirstOrDefaultAsync();
 
             if (discordGuildModel == null)
-                await ReplyAsync(":negative_squared_cross_mark: There are no command prefix set for this guild!");
+                await ReplyAsync(":negative_squared_cross_mark: There is no command prefix set for this guild!");
             else
                 await ReplyAsync($"The current command prefix is `{discordGuildModel.CharPrefix}`.");
         }
@@ -58,7 +77,7 @@ namespace TheDialgaTeam.DiscordBot.Modules
         }
 
         [Command("SubscribeModule")]
-        [Summary("Subscribe the bot specific modules.")]
+        [Summary("Subscribe the specific modules for this guild.")]
         [RequirePermission(RequiredPermissions.GuildAdministrator)]
         public async Task SubscribeModuleAsync([Remainder] [Summary("Module to subscribe.")] string module)
         {
@@ -98,7 +117,7 @@ namespace TheDialgaTeam.DiscordBot.Modules
         }
 
         [Command("UnsubscribeModule")]
-        [Summary("Unsubscribe the bot specific modules.")]
+        [Summary("Unsubscribe the specific modules for this guild.")]
         [RequirePermission(RequiredPermissions.GuildAdministrator)]
         public async Task UnsubscribeModuleAsync([Remainder] [Summary("Module to unsubscribe.")] string module)
         {

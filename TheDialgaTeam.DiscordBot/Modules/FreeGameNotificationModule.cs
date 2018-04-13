@@ -22,11 +22,29 @@ namespace TheDialgaTeam.DiscordBot.Modules
             DiscordAppService = discordAppService;
         }
 
-        [Command("FGNSetup")]
+        [Command("FreeGameNotificationAbout")]
+        [Alias("FGNAbout")]
+        [Summary("Find out more about Free Game Notification module.")]
+        public async Task FreeGameNotificationAboutAsync()
+        {
+            var helpMessage = new EmbedBuilder()
+                              .WithTitle("Free Game Notification Module:")
+                              .WithColor(Color.Orange)
+                              .WithDescription(@"Free Game Notification is a feature that will notify users about any potential free game that you can grab before the promotion expires.
+
+This is run by our community. You can also help us by joining <https://discord.me/TheDialgaTeam> and report any potential free game that are not listed.
+
+Blurgaro#1337 manage and announce the free game. You can find him at <https://discord.me/bptavern>.");
+
+            await ReplyAsync("", false, helpMessage.Build());
+        }
+
+        [Command("FreeGameNotificationSetup")]
+        [Alias("FGNSetup")]
         [Summary("Setup free game notification for this guild.")]
         [RequirePermission(RequiredPermissions.GuildAdministrator)]
         [RequireContext(ContextType.Guild)]
-        public async Task FGNSetupAsync([Summary("Role to mention for the free game announcement.")] IRole role, [Summary("Channel to announce in for the free game annonucement.")] IChannel channel)
+        public async Task FreeGameNotificationSetupAsync([Summary("Channel to announce in for the free game annonucement.")] IChannel channel, [Summary("Role to mention for the free game announcement.")] IRole role = null)
         {
             var clientId = Context.Client.CurrentUser.Id.ToString();
             var guildId = Context.Guild.Id.ToString();
@@ -34,21 +52,25 @@ namespace TheDialgaTeam.DiscordBot.Modules
             var freeGameNotificationModel = await SQLiteService.SQLiteAsyncConnection.Table<FreeGameNotificationModel>().Where(a => a.ClientId == clientId && a.GuildId == guildId).FirstOrDefaultAsync();
 
             if (freeGameNotificationModel == null)
-                await SQLiteService.SQLiteAsyncConnection.InsertAsync(new FreeGameNotificationModel { ClientId = clientId, GuildId = guildId, RoleId = role.Id.ToString(), ChannelId = channel.Id.ToString() });
+                await SQLiteService.SQLiteAsyncConnection.InsertAsync(new FreeGameNotificationModel { ClientId = clientId, GuildId = guildId, RoleId = role?.Id.ToString() ?? "", ChannelId = channel.Id.ToString() });
             else
             {
-                freeGameNotificationModel.RoleId = role.Id.ToString();
+                freeGameNotificationModel.RoleId = role?.Id.ToString() ?? "";
                 freeGameNotificationModel.ChannelId = channel.Id.ToString();
                 await SQLiteService.SQLiteAsyncConnection.UpdateAsync(freeGameNotificationModel);
             }
 
-            await ReplyAsync($":white_check_mark: Successfully setup free game notification with {role.Mention} in {MentionUtils.MentionChannel(channel.Id)}");
+            if (role != null)
+                await ReplyAsync($":white_check_mark: Successfully setup free game notification with {role.Mention} in {MentionUtils.MentionChannel(channel.Id)}");
+            else
+                await ReplyAsync($":white_check_mark: Successfully setup free game notification in {MentionUtils.MentionChannel(channel.Id)}");
         }
 
-        [Command("FGNAnnounce")]
+        [Command("FreeGameNotificationAnnounce")]
+        [Alias("FGNAnnounce")]
         [Summary("Announce free game notification to all subscribed guilds.")]
         [RequirePermission(RequiredPermissions.GlobalDiscordAppOwner)]
-        public async Task FGNAnnounceAsync([Remainder] [Summary("Message to announce.")] string message)
+        public async Task FreeGameNotificationAnnounceAsync([Remainder] [Summary("Message to announce.")] string message)
         {
             foreach (var discordSocketClientModel in DiscordAppService.DiscordSocketClientModels)
             {
@@ -58,25 +80,28 @@ namespace TheDialgaTeam.DiscordBot.Modules
                 foreach (var freeGameNotificationModel in freeGameNotificationModels)
                 {
                     var guild = discordSocketClientModel.DiscordSocketClient.GetGuild(Convert.ToUInt64(freeGameNotificationModel.GuildId));
-                    var textChannel = guild.GetTextChannel(Convert.ToUInt64(freeGameNotificationModel.ChannelId));
-                    var user = guild.GetUser(Convert.ToUInt64(discordSocketClientModel.DiscordAppModel.ClientId));
+                    var textChannel = guild?.GetTextChannel(Convert.ToUInt64(freeGameNotificationModel.ChannelId));
+                    var user = guild?.GetUser(Convert.ToUInt64(discordSocketClientModel.DiscordAppModel.ClientId));
 
-                    if (!user.GetPermissions(textChannel).SendMessages)
+                    if (!user?.GetPermissions(textChannel).SendMessages ?? true)
                         continue;
 
                     if (freeGameNotificationModel.RoleId == guild.Id.ToString())
                         await textChannel.SendMessageAsync($"@everyone {message}");
-                    else
+                    else if (!string.IsNullOrEmpty(freeGameNotificationModel.RoleId))
                         await textChannel.SendMessageAsync($"{MentionUtils.MentionRole(Convert.ToUInt64(freeGameNotificationModel.RoleId))} {message}");
+                    else
+                        await textChannel.SendMessageAsync(message);
                 }
             }
         }
 
-        [Command("FGNTestAnnounce")]
+        [Command("FreeGameNotificationTestAnnounce")]
+        [Alias("FGNTestAnnounce")]
         [Summary("Announce free game notification to this guild. (Dry run)")]
         [RequirePermission(RequiredPermissions.GuildAdministrator)]
         [RequireContext(ContextType.Guild)]
-        public async Task FGNTestAnnounceAsync([Remainder] [Summary("Message to announce.")] string message)
+        public async Task FreeGameNotificationTestAnnounceAsync([Remainder] [Summary("Message to announce.")] string message)
         {
             var clientId = Context.Client.CurrentUser.Id.ToString();
             var guildId = Context.Guild.Id.ToString();
@@ -93,8 +118,10 @@ namespace TheDialgaTeam.DiscordBot.Modules
 
             if (freeGameNotificationModel.RoleId == Context.Guild.Id.ToString())
                 await textChannel.SendMessageAsync($"@everyone {message}");
-            else
+            else if (!string.IsNullOrEmpty(freeGameNotificationModel.RoleId))
                 await textChannel.SendMessageAsync($"{MentionUtils.MentionRole(Convert.ToUInt64(freeGameNotificationModel.RoleId))} {message}");
+            else
+                await textChannel.SendMessageAsync(message);
         }
     }
 }

@@ -10,10 +10,13 @@ namespace TheDialgaTeam.DiscordBot.Modules
     [Name("Help")]
     public sealed class HelpModule : ModuleHelper
     {
+        private IServiceProvider ServiceProvider { get; }
+
         private CommandService CommandService { get; }
 
         public HelpModule(IProgram program)
         {
+            ServiceProvider = program.ServiceProvider;
             CommandService = program.CommandService;
         }
 
@@ -33,22 +36,22 @@ namespace TheDialgaTeam.DiscordBot.Modules
                 if (moduleName == "Help Module")
                     continue;
 
-                foreach (var preconditionAttribute in module.Preconditions)
-                {
-                    if (!(preconditionAttribute is RequireActiveModuleAttribute))
-                        continue;
-
-                    moduleName += " (Subscribers only)";
-                }
-
                 foreach (var command in module.Commands)
                 {
+                    var preconditionResult = await command.CheckPreconditionsAsync(Context, ServiceProvider);
+
+                    if (!preconditionResult.IsSuccess)
+                        continue;
+
                     commandInfo.Append($"`{command.Name}`");
 
                     if (command.Aliases.Count > 0)
                     {
                         foreach (var commandAliase in command.Aliases)
-                            commandInfo.Append($" `{commandAliase}`");
+                        {
+                            if (!commandAliase.Equals(command.Name, StringComparison.OrdinalIgnoreCase))
+                                commandInfo.Append($" `{commandAliase}`");
+                        }
                     }
 
                     commandInfo.AppendLine($": {command.Summary}");
@@ -145,7 +148,7 @@ Required Context: {requiredContext}");
 
                         foreach (var commandParameter in command.Parameters)
                         {
-                            commandInfo.Append(!commandParameter.IsOptional ? $" `{commandParameter.Type.Name} {commandParameter.Name}`" : $" `[{commandParameter.Type.Name} {commandParameter.Name} = {commandParameter.DefaultValue}]`");
+                            commandInfo.Append(!commandParameter.IsOptional ? $" `{commandParameter.Type.Name} {commandParameter.Name}`" : $" `[{commandParameter.Type.Name} {commandParameter.Name} = {commandParameter.DefaultValue ?? "null"}]`");
                             argsInfo.AppendLine($"{commandParameter.Type.Name} {commandParameter.Name}: {commandParameter.Summary}");
                         }
 

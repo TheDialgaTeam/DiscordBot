@@ -29,6 +29,8 @@ namespace TheDialgaTeam.DiscordBot
 
         private IDiscordAppService DiscordAppService { get; set; }
 
+        private IWebService WebService { get; set; }
+
         public static void Main(string[] args)
         {
             var program = new Program();
@@ -44,10 +46,11 @@ namespace TheDialgaTeam.DiscordBot
                 ServiceCollection.AddSingleton<ILoggerService, LoggerService>();
                 ServiceCollection.AddSingleton<ISQLiteService, SQLiteService>();
                 ServiceCollection.AddSingleton<IDiscordAppService, DiscordAppService>();
+                ServiceCollection.AddSingleton<IWebService, WebService>();
 
                 ServiceProvider = ServiceCollection.BuildServiceProvider();
 
-                CommandService = new CommandService(new CommandServiceConfig { CaseSensitiveCommands = false });
+                CommandService = new CommandService(new CommandServiceConfig { CaseSensitiveCommands = false, DefaultRunMode = RunMode.Async });
                 await CommandService.AddModulesAsync(Assembly.GetEntryAssembly());
 
                 LoggerService = ServiceProvider.GetRequiredService<ILoggerService>();
@@ -61,8 +64,13 @@ namespace TheDialgaTeam.DiscordBot
 
                 DiscordAppService = ServiceProvider.GetRequiredService<IDiscordAppService>();
 
+                WebService = ServiceProvider.GetRequiredService<IWebService>();
+                //await WebService.StartAsync();
+
                 await LoggerService.LogMessageAsync("\nDone initializing!");
                 await LoggerService.LogMessageAsync("Use StartDiscordApp or StartDiscordApps to start the bot instances.");
+
+                await DiscordAppService.StartDiscordAppsAsync();
             }
             catch (Exception ex)
             {
