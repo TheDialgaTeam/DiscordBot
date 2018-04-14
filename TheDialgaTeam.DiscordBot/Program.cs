@@ -65,7 +65,7 @@ namespace TheDialgaTeam.DiscordBot
                 DiscordAppService = ServiceProvider.GetRequiredService<IDiscordAppService>();
 
                 WebService = ServiceProvider.GetRequiredService<IWebService>();
-                //await WebService.StartAsync();
+                await WebService.StartAsync();
 
                 await LoggerService.LogMessageAsync("\nDone initializing!");
                 await LoggerService.LogMessageAsync("Use StartDiscordApp or StartDiscordApps to start the bot instances.");

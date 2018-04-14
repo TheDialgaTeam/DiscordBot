@@ -25,9 +25,9 @@ namespace TheDialgaTeam.DiscordBot.Services
             WebHost = new WebHostBuilder()
                       .UseContentRoot(Environment.CurrentDirectory)
                       .UseKestrel()
-                      .ConfigureServices(a => { a.AddSingleton(program); })
+                      .ConfigureServices(a => { a.AddSingleton(program.ServiceProvider.GetRequiredService<ISQLiteService>()); })
                       .UseStartup<Startup>()
-                      .UseUrls("http://*:80")
+                      .UseUrls("http://*:5000")
                       .Build();
         }
 
@@ -44,32 +44,32 @@ namespace TheDialgaTeam.DiscordBot.Services
 
     internal sealed class Startup
     {
-        private IServiceProvider ServiceProvider { get; }
+        private ISQLiteService SQLiteService { get; }
 
-        public Startup(IServiceProvider serviceProvider)
+        public Startup(ISQLiteService sqliteService)
         {
-            ServiceProvider = serviceProvider;
+            SQLiteService = sqliteService;
         }
 
         public void Configure(IApplicationBuilder app)
         {
-            app.UseOwin(x => x.UseNancy(a => a.Bootstrapper = new Bootstrapper(ServiceProvider)));
+            app.UseOwin(x => x.UseNancy(a => a.Bootstrapper = new Bootstrapper(SQLiteService)));
         }
     }
 
     internal sealed class Bootstrapper : DefaultNancyBootstrapper
     {
-        private IServiceProvider ServiceProvider { get; }
+        private ISQLiteService SQLiteService { get; }
 
-        public Bootstrapper(IServiceProvider serviceProvider)
+        public Bootstrapper(ISQLiteService sqliteService)
         {
-            ServiceProvider = serviceProvider;
+            SQLiteService = sqliteService;
         }
 
         protected override void ConfigureApplicationContainer(TinyIoCContainer container)
         {
             base.ConfigureApplicationContainer(container);
-            container.Register(ServiceProvider);
+            container.Register(SQLiteService);
         }
     }
 }

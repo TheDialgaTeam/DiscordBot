@@ -3,6 +3,10 @@
     background-color: #333333;
 }
 
+pre {
+    color: #cccccc;
+}
+
 .navbar-dark .navbar-toggler {
     border-color: black;
 }

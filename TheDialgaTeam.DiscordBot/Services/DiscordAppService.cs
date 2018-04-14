@@ -404,6 +404,9 @@ namespace TheDialgaTeam.DiscordBot.Services
                 }
 
                 await socketClientModel.DiscordSocketClient.SetGameAsync($"@{socketClientModel.DiscordSocketClient.CurrentUser.Username} help");
+
+                socketClientModel.DiscordAppModel.AppName = socketClientModel.DiscordSocketClient.CurrentUser.Username;
+                await SQLiteService.SQLiteAsyncConnection.UpdateAsync(socketClientModel.DiscordAppModel);
             });
         }
     }

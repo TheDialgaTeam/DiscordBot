@@ -15,12 +15,11 @@
 		->prependStylesheet($this->basePath('css/extra.css'))
 		->prependStylesheet($this->basePath('css/style.css'))
 		->prependStylesheet($this->basePath('vendor/twbs/bootstrap/dist/css/bootstrap.min.css'))
-		->prependStylesheet($this->basePath('vendor/twbs/bootstrap/dist/css/bootstrap-theme.min.css'))
 	?>
 
 	<!-- Scripts -->
 	<?= $this->headScript()
-		->prependFile($this->basePath('vendor/twbs/bootstrap/dist/js/bootstrap.min.js'))
+        ->prependFile($this->basePath('vendor/twbs/bootstrap/dist/js/bootstrap.min.js'))
 		->prependFile($this->basePath('vendor/components/jquery/jquery.min.js'))
     ?>
 </head>
@@ -42,7 +41,6 @@
                     <a class="nav-link" style="color: black" href="#">Test</a>
                 </li>
             </ul>
-            <a class="btn btn-primary" role="button" style="color: white">Login with Discord</a>
         </div>
     </nav>
 	<div class="container">

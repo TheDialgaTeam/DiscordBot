@@ -5,7 +5,11 @@ namespace TheDialgaTeam.DiscordBot.Model.SQLite.Table
 {
     public interface IDiscordAppModel : IBaseTable
     {
+        string AppName { get; set; }
+
         string ClientId { get; }
+
+        string ClientSecret { get; }
 
         bool Verified { get; set; }
 
@@ -15,8 +19,12 @@ namespace TheDialgaTeam.DiscordBot.Model.SQLite.Table
     [Table("DiscordApps")]
     internal sealed class DiscordAppModel : BaseTable, IDiscordAppModel
     {
+        public string AppName { get; set; }
+
         [Unique]
         public string ClientId { get; set; }
+
+        public string ClientSecret { get; set; }
 
         public string BotToken { get; set; }
 
