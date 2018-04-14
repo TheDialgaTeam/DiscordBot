@@ -13,7 +13,7 @@ namespace TheDialgaTeam.DiscordBot.Model.Discord.Command
         public override async Task<PreconditionResult> CheckPermissionsAsync(ICommandContext context, CommandInfo command, IServiceProvider services)
         {
             if (context.Message.Channel is SocketDMChannel || context.Message.Channel is SocketGroupChannel)
-                return PreconditionResult.FromSuccess();
+                return PreconditionResult.FromError("This command requires to be in Guild context.");
 
             var sqliteService = services.GetRequiredService<ISQLiteService>();
 

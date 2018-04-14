@@ -17,10 +17,4 @@
     <PackageReference Include="sqlite-net-pcl" Version="1.5.166-beta" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Update="Web\index.html">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
 </Project>

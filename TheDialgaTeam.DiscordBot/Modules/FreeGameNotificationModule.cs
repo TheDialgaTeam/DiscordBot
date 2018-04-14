@@ -3,13 +3,13 @@ using Discord.Commands;
 using System;
 using System.Threading.Tasks;
 using TheDialgaTeam.DiscordBot.Model.Discord.Command;
+using TheDialgaTeam.DiscordBot.Model.SQLite.Table;
 using TheDialgaTeam.DiscordBot.Model.SQLite.Table.Modules;
 using TheDialgaTeam.DiscordBot.Services;
 
 namespace TheDialgaTeam.DiscordBot.Modules
 {
     [Name("Free Game Notification")]
-    [RequireActiveModule]
     public sealed class FreeGameNotificationModule : ModuleHelper
     {
         private ISQLiteService SQLiteService { get; }
@@ -30,13 +30,61 @@ namespace TheDialgaTeam.DiscordBot.Modules
             var helpMessage = new EmbedBuilder()
                               .WithTitle("Free Game Notification Module:")
                               .WithColor(Color.Orange)
-                              .WithDescription(@"Free Game Notification is a feature that will notify users about any potential free game that you can grab before the promotion expires.
+                              .WithDescription($@"Free Game Notification is a feature that will notify users about any potential free game that you can grab before the promotion expires.
 
 This is run by our community. You can also help us by joining <https://discord.me/TheDialgaTeam> and report any potential free game that are not listed.
 
-Blurgaro#1337 manage and announce the free game. You can find him at <https://discord.me/bptavern>.");
+Blurgaro#1337 manage and announce the free game. You can find him at <https://discord.me/bptavern>.
+
+To subscribe this module, use `{Context.Client.CurrentUser.Mention} SubscribeFreeGameNotificationModule`.");
 
             await ReplyAsync("", false, helpMessage.Build());
+        }
+
+        [Command("SubscribeFreeGameNotificationModule")]
+        [Alias("SubscribeFGNModule")]
+        [Summary("Subscribe Free Game Notification module.")]
+        [RequirePermission(RequiredPermissions.GuildAdministrator)]
+        [RequireContext(ContextType.Guild)]
+        public async Task SubscribeFreeGameNotificationModuleAsync()
+        {
+            var clientId = Context.Client.CurrentUser.Id.ToString();
+            var guildId = Context.Guild.Id.ToString();
+
+            var discordGuildModuleModel = await SQLiteService.SQLiteAsyncConnection.Table<DiscordGuildModuleModel>().Where(a => a.ClientId == clientId && a.GuildId == guildId).FirstOrDefaultAsync();
+
+            if (discordGuildModuleModel == null)
+                await SQLiteService.SQLiteAsyncConnection.InsertAsync(new DiscordGuildModuleModel { ClientId = clientId, GuildId = guildId, Module = "Free Game Notification", Active = true });
+            else
+            {
+                discordGuildModuleModel.Active = true;
+                await SQLiteService.SQLiteAsyncConnection.UpdateAsync(discordGuildModuleModel);
+            }
+
+            await ReplyAsync(@":white_check_mark: Successfully subscribe to Free Game Notification module.");
+        }
+
+        [Command("UnsubscribeFreeGameNotificationModule")]
+        [Alias("UnsubscribeFGNModule")]
+        [Summary("Unsubscribe Free Game Notification module.")]
+        [RequirePermission(RequiredPermissions.GuildAdministrator)]
+        [RequireContext(ContextType.Guild)]
+        public async Task UnsubscribeFreeGameNotificationModuleAsync()
+        {
+            var clientId = Context.Client.CurrentUser.Id.ToString();
+            var guildId = Context.Guild.Id.ToString();
+
+            var discordGuildModuleModel = await SQLiteService.SQLiteAsyncConnection.Table<DiscordGuildModuleModel>().Where(a => a.ClientId == clientId && a.GuildId == guildId).FirstOrDefaultAsync();
+
+            if (discordGuildModuleModel == null)
+                await SQLiteService.SQLiteAsyncConnection.InsertAsync(new DiscordGuildModuleModel { ClientId = clientId, GuildId = guildId, Module = "Free Game Notification", Active = false });
+            else
+            {
+                discordGuildModuleModel.Active = false;
+                await SQLiteService.SQLiteAsyncConnection.UpdateAsync(discordGuildModuleModel);
+            }
+
+            await ReplyAsync(@":white_check_mark: Successfully unsubscribe to Free Game Notification module.");
         }
 
         [Command("FreeGameNotificationSetup")]
@@ -44,6 +92,7 @@ Blurgaro#1337 manage and announce the free game. You can find him at <https://di
         [Summary("Setup free game notification for this guild.")]
         [RequirePermission(RequiredPermissions.GuildAdministrator)]
         [RequireContext(ContextType.Guild)]
+        [RequireActiveModule]
         public async Task FreeGameNotificationSetupAsync([Summary("Channel to announce in for the free game annonucement.")] IChannel channel, [Summary("Role to mention for the free game announcement.")] IRole role = null)
         {
             var clientId = Context.Client.CurrentUser.Id.ToString();
@@ -61,9 +110,9 @@ Blurgaro#1337 manage and announce the free game. You can find him at <https://di
             }
 
             if (role != null)
-                await ReplyAsync($":white_check_mark: Successfully setup free game notification with {role.Mention} in {MentionUtils.MentionChannel(channel.Id)}");
+                await ReplyAsync($":white_check_mark: Successfully setup free game notification in {MentionUtils.MentionChannel(channel.Id)} with {role.Mention}.");
             else
-                await ReplyAsync($":white_check_mark: Successfully setup free game notification in {MentionUtils.MentionChannel(channel.Id)}");
+                await ReplyAsync($":white_check_mark: Successfully setup free game notification in {MentionUtils.MentionChannel(channel.Id)}.");
         }
 
         [Command("FreeGameNotificationAnnounce")]
@@ -80,10 +129,31 @@ Blurgaro#1337 manage and announce the free game. You can find him at <https://di
                 foreach (var freeGameNotificationModel in freeGameNotificationModels)
                 {
                     var guild = discordSocketClientModel.DiscordSocketClient.GetGuild(Convert.ToUInt64(freeGameNotificationModel.GuildId));
-                    var textChannel = guild?.GetTextChannel(Convert.ToUInt64(freeGameNotificationModel.ChannelId));
-                    var user = guild?.GetUser(Convert.ToUInt64(discordSocketClientModel.DiscordAppModel.ClientId));
 
-                    if (!user?.GetPermissions(textChannel).SendMessages ?? true)
+                    // Guild does not exist.
+                    if (guild == null)
+                        continue;
+
+                    var discordGuildModuleModel = await SQLiteService.SQLiteAsyncConnection.Table<DiscordGuildModuleModel>().Where(a => a.ClientId == clientId && a.GuildId == freeGameNotificationModel.GuildId && a.Module == "Free Game Notification").FirstOrDefaultAsync();
+
+                    // Free Game Notification not subscribed.
+                    if (discordGuildModuleModel == null || !discordGuildModuleModel.Active)
+                        continue;
+
+                    var user = guild.GetUser(Convert.ToUInt64(discordSocketClientModel.DiscordAppModel.ClientId));
+
+                    // Bot does not exist.
+                    if (user == null)
+                        continue;
+
+                    var textChannel = guild.GetTextChannel(Convert.ToUInt64(freeGameNotificationModel.ChannelId));
+
+                    // Text channel does not exist.
+                    if (textChannel == null)
+                        continue;
+
+                    // Bot cannot send message.
+                    if (!user.GetPermissions(textChannel).SendMessages)
                         continue;
 
                     if (freeGameNotificationModel.RoleId == guild.Id.ToString())
@@ -101,6 +171,7 @@ Blurgaro#1337 manage and announce the free game. You can find him at <https://di
         [Summary("Announce free game notification to this guild. (Dry run)")]
         [RequirePermission(RequiredPermissions.GuildAdministrator)]
         [RequireContext(ContextType.Guild)]
+        [RequireActiveModule]
         public async Task FreeGameNotificationTestAnnounceAsync([Remainder] [Summary("Message to announce.")] string message)
         {
             var clientId = Context.Client.CurrentUser.Id.ToString();

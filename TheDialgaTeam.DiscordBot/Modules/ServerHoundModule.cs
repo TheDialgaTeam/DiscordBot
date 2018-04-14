@@ -2,13 +2,13 @@
 using Discord.Commands;
 using System.Threading.Tasks;
 using TheDialgaTeam.DiscordBot.Model.Discord.Command;
+using TheDialgaTeam.DiscordBot.Model.SQLite.Table;
 using TheDialgaTeam.DiscordBot.Model.SQLite.Table.Modules;
 using TheDialgaTeam.DiscordBot.Services;
 
 namespace TheDialgaTeam.DiscordBot.Modules
 {
     [Name("ServerHound")]
-    [RequireActiveModule]
     public sealed class ServerHoundModule : ModuleHelper
     {
         private ISQLiteService SQLiteService { get; }
@@ -38,11 +38,58 @@ Please note that this is not a replacement of ServerHound as a whole. It is name
             await ReplyAsync("", false, helpMessage.Build());
         }
 
+        [Command("SubscribeServerHoundModule")]
+        [Alias("SubscribeSHModule")]
+        [Summary("Subscribe ServerHound module.")]
+        [RequirePermission(RequiredPermissions.GuildAdministrator)]
+        [RequireContext(ContextType.Guild)]
+        public async Task SubscribeServerHoundModuleAsync()
+        {
+            var clientId = Context.Client.CurrentUser.Id.ToString();
+            var guildId = Context.Guild.Id.ToString();
+
+            var discordGuildModuleModel = await SQLiteService.SQLiteAsyncConnection.Table<DiscordGuildModuleModel>().Where(a => a.ClientId == clientId && a.GuildId == guildId).FirstOrDefaultAsync();
+
+            if (discordGuildModuleModel == null)
+                await SQLiteService.SQLiteAsyncConnection.InsertAsync(new DiscordGuildModuleModel { ClientId = clientId, GuildId = guildId, Module = "ServerHound", Active = true });
+            else
+            {
+                discordGuildModuleModel.Active = true;
+                await SQLiteService.SQLiteAsyncConnection.UpdateAsync(discordGuildModuleModel);
+            }
+
+            await ReplyAsync(@":white_check_mark: Successfully subscribe to ServerHound module.");
+        }
+
+        [Command("UnsubscribeServerHoundModule")]
+        [Alias("UnsubscribeSHModule")]
+        [Summary("Unsubscribe ServerHound module.")]
+        [RequirePermission(RequiredPermissions.GuildAdministrator)]
+        [RequireContext(ContextType.Guild)]
+        public async Task UnsubscribeServerHoundModuleAsync()
+        {
+            var clientId = Context.Client.CurrentUser.Id.ToString();
+            var guildId = Context.Guild.Id.ToString();
+
+            var discordGuildModuleModel = await SQLiteService.SQLiteAsyncConnection.Table<DiscordGuildModuleModel>().Where(a => a.ClientId == clientId && a.GuildId == guildId).FirstOrDefaultAsync();
+
+            if (discordGuildModuleModel == null)
+                await SQLiteService.SQLiteAsyncConnection.InsertAsync(new DiscordGuildModuleModel { ClientId = clientId, GuildId = guildId, Module = "ServerHound", Active = false });
+            else
+            {
+                discordGuildModuleModel.Active = false;
+                await SQLiteService.SQLiteAsyncConnection.UpdateAsync(discordGuildModuleModel);
+            }
+
+            await ReplyAsync(@":white_check_mark: Successfully Unsubscribe to ServerHound module.");
+        }
+
         [Command("ServerHoundActivateDBans")]
         [Alias("SHActivateDBans")]
         [Summary("Activate ServerHound DBans feature.")]
         [RequirePermission(RequiredPermissions.GuildAdministrator)]
         [RequireContext(ContextType.Guild)]
+        [RequireActiveModule]
         public async Task ServerHoundActivateDBansAsync()
         {
             var clientId = Context.Client.CurrentUser.Id.ToString();
@@ -66,6 +113,7 @@ Please note that this is not a replacement of ServerHound as a whole. It is name
         [Summary("Deactivate ServerHound DBans feature.")]
         [RequirePermission(RequiredPermissions.GuildAdministrator)]
         [RequireContext(ContextType.Guild)]
+        [RequireActiveModule]
         public async Task ServerHoundDeactivateDBansAsync()
         {
             var clientId = Context.Client.CurrentUser.Id.ToString();

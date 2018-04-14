@@ -42,7 +42,7 @@ namespace TheDialgaTeam.DiscordBot.Modules
 
 I am owned by **{applicationInfo.Owner.Username}#{applicationInfo.Owner.Discriminator}**.
 
-Type `@{Context.Client.CurrentUser.Username}#{Context.Client.CurrentUser.Discriminator} help` to see my command.
+Type `{Context.Client.CurrentUser.Mention} help` to see my command.
 
 You can invite this bot by using this link: <https://discordapp.com/api/oauth2/authorize?client_id={Context.Client.CurrentUser.Id}&permissions=0&scope=bot>
 

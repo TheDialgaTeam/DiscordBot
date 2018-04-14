@@ -26,15 +26,17 @@ namespace TheDialgaTeam.DiscordBot.Modules
             var helpMessage = new EmbedBuilder()
                               .WithTitle("Available Command:")
                               .WithColor(Color.Orange)
-                              .WithDescription($"To find out more about each command, use {Context.Client.CurrentUser.Mention} help <CommandName>");
+                              .WithDescription($"To find out more about each command, use `{Context.Client.CurrentUser.Mention} help <CommandName>`")
+                              .WithThumbnailUrl(Context.Client.CurrentUser.GetAvatarUrl());
 
             foreach (var module in CommandService.Modules)
             {
                 var moduleName = $"{module.Name} Module";
-                var commandInfo = new StringBuilder();
 
                 if (moduleName == "Help Module")
                     continue;
+
+                var commandInfo = new StringBuilder();
 
                 foreach (var command in module.Commands)
                 {
@@ -82,11 +84,11 @@ namespace TheDialgaTeam.DiscordBot.Modules
                     var helpMessage = new EmbedBuilder()
                                       .WithTitle("Command Info:")
                                       .WithColor(Color.Orange)
-                                      .WithDescription($"To find out more about each command, use {Context.Client.CurrentUser.Mention} help <CommandName>");
+                                      .WithDescription($"To find out more about each command, use `{Context.Client.CurrentUser.Mention} help <CommandName>`");
 
                     var requiredPermission = RequiredPermissions.GuildMember;
                     var requiredContext = ContextType.Guild | ContextType.DM | ContextType.Group;
-                    var requiredContextString = string.Empty;
+                    string requiredContextString;
 
                     foreach (var commandAttribute in command.Preconditions)
                     {
@@ -136,34 +138,31 @@ namespace TheDialgaTeam.DiscordBot.Modules
                             throw new ArgumentOutOfRangeException();
                     }
 
-                    if (command.Parameters.Count == 0)
-                        helpMessage = helpMessage.AddField($"{command.Name} command:", $@"Usage: {Context.Client.CurrentUser.Mention} {command.Name}
-Description: {command.Summary}
-Required Permission: {requiredPermission.ToString()} and above
-Required Context: {requiredContext}");
-                    else
+                    var commandInfo = new StringBuilder($"Usage: {Context.Client.CurrentUser.Mention} {command.Name}");
+                    var argsInfo = new StringBuilder();
+
+                    foreach (var commandParameter in command.Parameters)
                     {
-                        var commandInfo = new StringBuilder($"Usage: {Context.Client.CurrentUser.Mention} {command.Name}");
-                        var argsInfo = new StringBuilder();
-
-                        foreach (var commandParameter in command.Parameters)
-                        {
-                            commandInfo.Append(!commandParameter.IsOptional ? $" `{commandParameter.Type.Name} {commandParameter.Name}`" : $" `[{commandParameter.Type.Name} {commandParameter.Name} = {commandParameter.DefaultValue ?? "null"}]`");
-                            argsInfo.AppendLine($"{commandParameter.Type.Name} {commandParameter.Name}: {commandParameter.Summary}");
-                        }
-
-                        commandInfo.AppendLine($"\nDescription: {command.Summary}");
-                        commandInfo.AppendLine($"Required Permission: {requiredPermission.ToString()}");
-                        commandInfo.AppendLine($"Required Context: {requiredContextString}");
-                        commandInfo.AppendLine("\nArguments Info:");
-                        commandInfo.AppendLine(argsInfo.ToString());
-                        commandInfo.AppendLine("Note:");
-                        commandInfo.AppendLine("Char/String arguments must be double quoted except for the last string parameter \"This is a string\".");
-                        commandInfo.AppendLine("IRole arguments can be role name, role id or @role.");
-                        commandInfo.AppendLine("IChannel arguments can be channel name, channel id or #channel.");
-
-                        helpMessage = helpMessage.AddField($"{command.Name} command:", commandInfo.ToString());
+                        commandInfo.Append(!commandParameter.IsOptional ? $" `{commandParameter.Type.Name} {commandParameter.Name}`" : $" `[{commandParameter.Type.Name} {commandParameter.Name} = {commandParameter.DefaultValue ?? "null"}]`");
+                        argsInfo.AppendLine($"{commandParameter.Type.Name} {commandParameter.Name}: {commandParameter.Summary}");
                     }
+
+                    commandInfo.AppendLine($"\nDescription: {command.Summary}");
+                    commandInfo.AppendLine($"Required Permission: {requiredPermission.ToString()}");
+                    commandInfo.AppendLine($"Required Context: {requiredContextString}");
+
+                    if (argsInfo.Length > 0)
+                    {
+                        commandInfo.AppendLine("\nArguments Info:");
+                        commandInfo.Append(argsInfo);
+                    }
+
+                    commandInfo.AppendLine("\nNote:");
+                    commandInfo.AppendLine("Char/String arguments must be double quoted except for the last string parameter \"This is a string\".");
+                    commandInfo.AppendLine("IRole arguments can be role name, role id or @role.");
+                    commandInfo.AppendLine("IChannel arguments can be channel name, channel id or #channel.");
+
+                    helpMessage = helpMessage.AddField($"{command.Name} command:", commandInfo.ToString());
 
                     await ReplyAsync("", false, helpMessage.Build());
                     return;
