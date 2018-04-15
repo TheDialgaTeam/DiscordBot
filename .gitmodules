@@ -1,0 +1,3 @@
+[submodule "TheDialgaTeam.Dashboard"]
+	path = TheDialgaTeam.Dashboard
+	url = https://github.com/TheDialgaTeam/Dashboard.git
