@@ -1,15 +1,13 @@
 ﻿using SQLite;
+using TheDialgaTeam.DiscordBot.Model.SQLite.Table.Interface;
 
 namespace TheDialgaTeam.DiscordBot.Model.SQLite.Table
 {
-    public interface IDiscordAppOwnerModel : IBaseTable
+    public interface IDiscordAppOwnerModel : IBaseTable, IClientId, IUserId
     {
-        string ClientId { get; }
-
-        string UserId { get; }
     }
 
-    [Table("DiscordAppOwners")]
+    [Table("DiscordAppOwnerModels")]
     internal sealed class DiscordAppOwnerModel : BaseTable, IDiscordAppOwnerModel
     {
         public string ClientId { get; set; }

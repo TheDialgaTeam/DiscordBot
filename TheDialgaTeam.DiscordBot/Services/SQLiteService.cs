@@ -48,6 +48,7 @@ namespace TheDialgaTeam.DiscordBot.Services
 
                 await SQLiteAsyncConnection.CreateTableAsync<FreeGameNotificationModel>();
                 await SQLiteAsyncConnection.CreateTableAsync<ServerHoundModel>();
+                await SQLiteAsyncConnection.CreateTableAsync<PollModel>();
 
                 await SQLiteAsyncConnection.ExecuteAsync("VACUUM");
 

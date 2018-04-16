@@ -92,20 +92,23 @@ If you want to have a custom avatar and bot name, feel free to join our bot disc
         [Command("AddDiscordApp")]
         [Summary("Add a new bot instance.")]
         [RequirePermission(RequiredPermissions.GlobalDiscordAppOwner)]
-        public async Task AddDiscordAppAsync([Summary("Discord bot client id.")] ulong clientId, [Remainder] [Summary("Bot secret token.")] string botToken)
+        public async Task AddDiscordAppAsync([Summary("Discord bot client id.")] ulong clientId, [Summary("Discord bot client secret.")] string clientSecret, [Remainder] [Summary("Bot secret token.")] string botToken)
         {
             var stringClientId = clientId.ToString();
+            var discordAppModel = await SQLiteService.SQLiteAsyncConnection.Table<DiscordAppModel>().Where(a => a.ClientId == stringClientId).FirstOrDefaultAsync();
 
-            var discordAppModel = await SQLiteService.SQLiteAsyncConnection.Table<DiscordAppModel>().Where(a => a.ClientId == stringClientId).FirstOrDefaultAsync() ?? new DiscordAppModel { ClientId = stringClientId };
-            discordAppModel.SetBotToken(botToken);
-
-            if (discordAppModel.Id == default(int))
+            if (discordAppModel == null)
             {
-                await SQLiteService.SQLiteAsyncConnection.InsertAsync(discordAppModel);
+                var discordAppModelNew = new DiscordAppModel { ClientId = clientId.ToString(), ClientSecret = clientSecret, BotToken = botToken };
+
+                await SQLiteService.SQLiteAsyncConnection.InsertAsync(discordAppModelNew);
                 await ReplyAsync(":white_check_mark: Successfully added new discord app.");
             }
             else
             {
+                discordAppModel.ClientSecret = clientSecret;
+                discordAppModel.BotToken = botToken;
+
                 await SQLiteService.SQLiteAsyncConnection.UpdateAsync(discordAppModel);
                 await ReplyAsync(":white_check_mark: Successfully updated the discord app.");
             }

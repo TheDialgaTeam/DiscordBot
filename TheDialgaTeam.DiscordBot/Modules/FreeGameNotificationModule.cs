@@ -36,14 +36,14 @@ This is run by our community. You can also help us by joining <https://discord.m
 
 Blurgaro#1337 manage and announce the free game. You can find him at <https://discord.me/bptavern>.
 
-To subscribe this module, use `{Context.Client.CurrentUser.Mention} SubscribeFreeGameNotificationModule`.");
+To enable this module, use `{Context.Client.CurrentUser.Mention} EnableFreeGameNotificationModule`.");
 
             await ReplyAsync("", false, helpMessage.Build());
         }
 
-        [Command("SubscribeFreeGameNotificationModule")]
-        [Alias("SubscribeFGNModule")]
-        [Summary("Subscribe Free Game Notification module.")]
+        [Command("EnableFreeGameNotificationModule")]
+        [Alias("EnableFGNModule")]
+        [Summary("Enable Free Game Notification module.")]
         [RequirePermission(RequiredPermissions.GuildAdministrator)]
         [RequireContext(ContextType.Guild)]
         public async Task SubscribeFreeGameNotificationModuleAsync()
@@ -61,12 +61,12 @@ To subscribe this module, use `{Context.Client.CurrentUser.Mention} SubscribeFre
                 await SQLiteService.SQLiteAsyncConnection.UpdateAsync(discordGuildModuleModel);
             }
 
-            await ReplyAsync(@":white_check_mark: Successfully subscribe to Free Game Notification module.");
+            await ReplyAsync(@":white_check_mark: Successfully enable Free Game Notification module.");
         }
 
-        [Command("UnsubscribeFreeGameNotificationModule")]
-        [Alias("UnsubscribeFGNModule")]
-        [Summary("Unsubscribe Free Game Notification module.")]
+        [Command("DisableFreeGameNotificationModule")]
+        [Alias("DisableFGNModule")]
+        [Summary("Disable Free Game Notification module.")]
         [RequirePermission(RequiredPermissions.GuildAdministrator)]
         [RequireContext(ContextType.Guild)]
         public async Task UnsubscribeFreeGameNotificationModuleAsync()
@@ -84,7 +84,7 @@ To subscribe this module, use `{Context.Client.CurrentUser.Mention} SubscribeFre
                 await SQLiteService.SQLiteAsyncConnection.UpdateAsync(discordGuildModuleModel);
             }
 
-            await ReplyAsync(@":white_check_mark: Successfully unsubscribe to Free Game Notification module.");
+            await ReplyAsync(@":white_check_mark: Successfully disable Free Game Notification module.");
         }
 
         [Command("FreeGameNotificationSetup")]

@@ -217,7 +217,7 @@ namespace TheDialgaTeam.DiscordBot.Model.Discord
                 DiscordSocketClient.Ready += DiscordSocketClientOnReady;
                 DiscordSocketClient.LatencyUpdated += DiscordSocketClientOnLatencyUpdated;
 
-                await DiscordSocketClient.LoginAsync(TokenType.Bot, DiscordAppModel.GetBotToken());
+                await DiscordSocketClient.LoginAsync(TokenType.Bot, DiscordAppModel.BotToken);
                 await DiscordSocketClient.StartAsync();
             }
         }

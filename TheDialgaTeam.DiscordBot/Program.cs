@@ -1,9 +1,12 @@
-﻿using Discord.Commands;
+﻿using Discord;
+using Discord.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using TheDialgaTeam.DiscordBot.Model.Command;
+using TheDialgaTeam.DiscordBot.Model.Discord.Command;
 using TheDialgaTeam.DiscordBot.Services;
 
 namespace TheDialgaTeam.DiscordBot
@@ -29,6 +32,8 @@ namespace TheDialgaTeam.DiscordBot
 
         private IDiscordAppService DiscordAppService { get; set; }
 
+        private IPollHandlerService PollHandlerService { get; set; }
+
         private IWebService WebService { get; set; }
 
         public static void Main(string[] args)
@@ -46,11 +51,13 @@ namespace TheDialgaTeam.DiscordBot
                 ServiceCollection.AddSingleton<ILoggerService, LoggerService>();
                 ServiceCollection.AddSingleton<ISQLiteService, SQLiteService>();
                 ServiceCollection.AddSingleton<IDiscordAppService, DiscordAppService>();
+                ServiceCollection.AddSingleton<IPollHandlerService, PollHandlerService>();
                 ServiceCollection.AddSingleton<IWebService, WebService>();
 
                 ServiceProvider = ServiceCollection.BuildServiceProvider();
 
                 CommandService = new CommandService(new CommandServiceConfig { CaseSensitiveCommands = false, DefaultRunMode = RunMode.Async });
+                CommandService.AddTypeReader<IEmote>(new EmoteTypeReader());
                 await CommandService.AddModulesAsync(Assembly.GetEntryAssembly());
 
                 LoggerService = ServiceProvider.GetRequiredService<ILoggerService>();
@@ -63,6 +70,11 @@ namespace TheDialgaTeam.DiscordBot
                 await SQLiteService.InitializeDatabaseAsync();
 
                 DiscordAppService = ServiceProvider.GetRequiredService<IDiscordAppService>();
+
+                PollHandlerService = ServiceProvider.GetRequiredService<IPollHandlerService>();
+
+                var pollUpdateHandler = new Thread(async () => await PollHandlerService.UpdatePollTask()) { IsBackground = true };
+                pollUpdateHandler.Start();
 
                 WebService = ServiceProvider.GetRequiredService<IWebService>();
                 await WebService.StartAsync();
@@ -156,12 +168,12 @@ namespace TheDialgaTeam.DiscordBot
 
         private async Task AddDiscordAppAsync(ICommandProcessorModel commandProcessorModel)
         {
-            var paramObject = commandProcessorModel.GetCommandParamenterTypeObjects(new[] { CommandProcessorModel.ParamenterType.ULong, CommandProcessorModel.ParamenterType.String });
+            var paramObject = commandProcessorModel.GetCommandParamenterTypeObjects(new[] { CommandProcessorModel.ParamenterType.ULong, CommandProcessorModel.ParamenterType.String, CommandProcessorModel.ParamenterType.String });
 
-            if (paramObject?[0] == null || paramObject[1] == null)
+            if (paramObject?[0] == null || paramObject[1] == null || paramObject[2] == null)
                 return;
 
-            await DiscordAppService.AddDiscordAppAsync((ulong)paramObject[0], paramObject[1].ToString());
+            await DiscordAppService.AddDiscordAppAsync((ulong)paramObject[0], paramObject[1].ToString(), paramObject[2].ToString());
         }
 
         private async Task RemoveDiscordAppAsync(ICommandProcessorModel commandProcessorModel)

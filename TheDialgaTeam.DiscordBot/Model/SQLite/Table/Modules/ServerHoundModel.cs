@@ -1,17 +1,14 @@
 ﻿using SQLite;
+using TheDialgaTeam.DiscordBot.Model.SQLite.Table.Interface;
 
 namespace TheDialgaTeam.DiscordBot.Model.SQLite.Table.Modules
 {
-    public interface IServerHoundModel
+    public interface IServerHoundModel : IBaseTable, IClientId, IGuildId
     {
-        string ClientId { get; }
-
-        string GuildId { get; }
-
         bool DBans { get; }
     }
 
-    [Table("ServerHound")]
+    [Table("ServerHoundModuleModels")]
     internal sealed class ServerHoundModel : BaseTable, IServerHoundModel
     {
         public string ClientId { get; set; }

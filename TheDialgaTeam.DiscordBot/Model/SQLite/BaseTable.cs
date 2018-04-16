@@ -1,10 +1,10 @@
 ﻿using SQLite;
+using TheDialgaTeam.DiscordBot.Model.SQLite.Table.Interface;
 
-namespace TheDialgaTeam.DiscordBot.Model.SQLite.Table
+namespace TheDialgaTeam.DiscordBot.Model.SQLite
 {
-    public interface IBaseTable
+    public interface IBaseTable : ITableId
     {
-        int Id { get; }
     }
 
     internal abstract class BaseTable : IBaseTable

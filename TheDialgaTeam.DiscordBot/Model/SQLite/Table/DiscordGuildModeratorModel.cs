@@ -1,19 +1,13 @@
 ﻿using SQLite;
+using TheDialgaTeam.DiscordBot.Model.SQLite.Table.Interface;
 
 namespace TheDialgaTeam.DiscordBot.Model.SQLite.Table
 {
-    public interface IDiscordGuildModeratorModel : IBaseTable
+    public interface IDiscordGuildModeratorModel : IBaseTable, IClientId, IGuildId, IRoleId, IUserId
     {
-        string ClientId { get; }
-
-        string GuildId { get; }
-
-        string RoleId { get; }
-
-        string UserId { get; }
     }
 
-    [Table("DiscordGuildModerators")]
+    [Table("DiscordGuildModeratorModels")]
     internal sealed class DiscordGuildModeratorModel : BaseTable, IDiscordGuildModeratorModel
     {
         public string ClientId { get; set; }

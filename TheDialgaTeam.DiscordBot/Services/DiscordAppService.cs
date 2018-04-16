@@ -23,7 +23,7 @@ namespace TheDialgaTeam.DiscordBot.Services
 
         Task ListDiscordAppAsync();
 
-        Task<bool> AddDiscordAppAsync(ulong clientId, string botToken);
+        Task AddDiscordAppAsync(ulong clientId, string clientSecret, string botToken);
 
         Task<bool> RemoveDiscordAppAsync(ulong clientId);
 
@@ -123,25 +123,26 @@ namespace TheDialgaTeam.DiscordBot.Services
                 await LoggerService.LogMessageAsync($"Id: {discordAppModel.Id} | ClientId: {discordAppModel.ClientId}");
         }
 
-        public async Task<bool> AddDiscordAppAsync(ulong clientId, string botToken)
+        public async Task AddDiscordAppAsync(ulong clientId, string clientSecret, string botToken)
         {
             var stringClientId = clientId.ToString();
+            var discordAppModel = await SQLiteService.SQLiteAsyncConnection.Table<DiscordAppModel>().Where(a => a.ClientId == stringClientId).FirstOrDefaultAsync();
 
-            var discordAppModel = await SQLiteService.SQLiteAsyncConnection.Table<DiscordAppModel>().Where(a => a.ClientId == stringClientId).FirstOrDefaultAsync() ?? new DiscordAppModel { ClientId = stringClientId };
-            discordAppModel.SetBotToken(botToken);
-
-            if (discordAppModel.Id == default(int))
+            if (discordAppModel == null)
             {
-                await SQLiteService.SQLiteAsyncConnection.InsertAsync(discordAppModel);
+                var discordAppModelNew = new DiscordAppModel { ClientId = clientId.ToString(), ClientSecret = clientSecret, BotToken = botToken };
+
+                await SQLiteService.SQLiteAsyncConnection.InsertAsync(discordAppModelNew);
                 await LoggerService.LogMessageAsync("Successfully added new discord app.");
             }
             else
             {
+                discordAppModel.ClientSecret = clientSecret;
+                discordAppModel.BotToken = botToken;
+
                 await SQLiteService.SQLiteAsyncConnection.UpdateAsync(discordAppModel);
                 await LoggerService.LogMessageAsync("Successfully updated the discord app.");
             }
-
-            return true;
         }
 
         public async Task<bool> RemoveDiscordAppAsync(ulong clientId)
@@ -305,7 +306,7 @@ namespace TheDialgaTeam.DiscordBot.Services
                         return;
 
                     if (!message.HasMentionPrefix(socketClientModel.DiscordSocketClient.CurrentUser, ref argPos) &&
-                        !message.HasStringPrefix(discordGuildModel?.CharPrefix ?? "", ref argPos, StringComparison.OrdinalIgnoreCase))
+                        !message.HasStringPrefix(discordGuildModel?.StringPrefix ?? "", ref argPos, StringComparison.OrdinalIgnoreCase))
                         return;
                 }
 

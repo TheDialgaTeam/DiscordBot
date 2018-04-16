@@ -51,7 +51,7 @@ namespace TheDialgaTeam.DiscordBot.Modules
             if (discordGuildModel == null)
                 await ReplyAsync(":negative_squared_cross_mark: There is no command prefix set for this guild!");
             else
-                await ReplyAsync($"The current command prefix is `{discordGuildModel.CharPrefix}`.");
+                await ReplyAsync($"The current command prefix is `{discordGuildModel.StringPrefix}`.");
         }
 
         [Command("SetCommandPrefix")]
@@ -65,10 +65,10 @@ namespace TheDialgaTeam.DiscordBot.Modules
             var discordGuildModel = await SQLiteService.SQLiteAsyncConnection.Table<DiscordGuildModel>().Where(a => a.ClientId == clientId && a.GuildId == guildId).FirstOrDefaultAsync();
 
             if (discordGuildModel == null)
-                await SQLiteService.SQLiteAsyncConnection.InsertAsync(new DiscordGuildModel { ClientId = clientId, GuildId = guildId, CharPrefix = prefix });
+                await SQLiteService.SQLiteAsyncConnection.InsertAsync(new DiscordGuildModel { ClientId = clientId, GuildId = guildId, StringPrefix = prefix });
             else
             {
-                discordGuildModel.CharPrefix = prefix;
+                discordGuildModel.StringPrefix = prefix;
                 await SQLiteService.SQLiteAsyncConnection.UpdateAsync(discordGuildModel);
             }
 

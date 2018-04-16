@@ -38,9 +38,9 @@ Please note that this is not a replacement of ServerHound as a whole. It is name
             await ReplyAsync("", false, helpMessage.Build());
         }
 
-        [Command("SubscribeServerHoundModule")]
-        [Alias("SubscribeSHModule")]
-        [Summary("Subscribe ServerHound module.")]
+        [Command("EnableServerHoundModule")]
+        [Alias("EnableSHModule")]
+        [Summary("Enable ServerHound module.")]
         [RequirePermission(RequiredPermissions.GuildAdministrator)]
         [RequireContext(ContextType.Guild)]
         public async Task SubscribeServerHoundModuleAsync()
@@ -58,12 +58,12 @@ Please note that this is not a replacement of ServerHound as a whole. It is name
                 await SQLiteService.SQLiteAsyncConnection.UpdateAsync(discordGuildModuleModel);
             }
 
-            await ReplyAsync(@":white_check_mark: Successfully subscribe to ServerHound module.");
+            await ReplyAsync(@":white_check_mark: Successfully enable ServerHound module.");
         }
 
-        [Command("UnsubscribeServerHoundModule")]
-        [Alias("UnsubscribeSHModule")]
-        [Summary("Unsubscribe ServerHound module.")]
+        [Command("DisableServerHoundModule")]
+        [Alias("DisableSHModule")]
+        [Summary("Disable ServerHound module.")]
         [RequirePermission(RequiredPermissions.GuildAdministrator)]
         [RequireContext(ContextType.Guild)]
         public async Task UnsubscribeServerHoundModuleAsync()
@@ -81,12 +81,12 @@ Please note that this is not a replacement of ServerHound as a whole. It is name
                 await SQLiteService.SQLiteAsyncConnection.UpdateAsync(discordGuildModuleModel);
             }
 
-            await ReplyAsync(@":white_check_mark: Successfully Unsubscribe to ServerHound module.");
+            await ReplyAsync(@":white_check_mark: Successfully disable ServerHound module.");
         }
 
-        [Command("ServerHoundActivateDBans")]
-        [Alias("SHActivateDBans")]
-        [Summary("Activate ServerHound DBans feature.")]
+        [Command("ServerHoundEnableDBans")]
+        [Alias("SHEnableDBans")]
+        [Summary("Enable ServerHound DBans feature.")]
         [RequirePermission(RequiredPermissions.GuildAdministrator)]
         [RequireContext(ContextType.Guild)]
         [RequireActiveModule]
@@ -105,12 +105,12 @@ Please note that this is not a replacement of ServerHound as a whole. It is name
                 await SQLiteService.SQLiteAsyncConnection.UpdateAsync(serverHoundModel);
             }
 
-            await ReplyAsync(":white_check_mark: Successfully activate ServerHound DBans feature.");
+            await ReplyAsync(":white_check_mark: Successfully enable ServerHound DBans feature.");
         }
 
-        [Command("ServerHoundDeactivateDBans")]
-        [Alias("SHDeactivateDBans")]
-        [Summary("Deactivate ServerHound DBans feature.")]
+        [Command("ServerHoundDisableDBans")]
+        [Alias("SHDisableDBans")]
+        [Summary("Disable ServerHound DBans feature.")]
         [RequirePermission(RequiredPermissions.GuildAdministrator)]
         [RequireContext(ContextType.Guild)]
         [RequireActiveModule]
@@ -129,7 +129,7 @@ Please note that this is not a replacement of ServerHound as a whole. It is name
                 await SQLiteService.SQLiteAsyncConnection.UpdateAsync(serverHoundModel);
             }
 
-            await ReplyAsync(":white_check_mark: Successfully deactivate ServerHound DBans feature.");
+            await ReplyAsync(":white_check_mark: Successfully disable ServerHound DBans feature.");
         }
     }
 }
