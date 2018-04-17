@@ -1,4 +1,4 @@
-﻿namespace TheDialgaTeam.DiscordBot.Model.SQLite.Table.Interface
+﻿namespace TheDialgaTeam.DiscordBot.Model.SQLite.Interface
 {
     public interface IGuildId
     {

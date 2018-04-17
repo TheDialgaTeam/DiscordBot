@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using TheDialgaTeam.DiscordBot.Model.SQLite.Table;
 using TheDialgaTeam.DiscordBot.Model.SQLite.Table.Modules;
-using TheDialgaTeam.DiscordBot.Services;
+using TheDialgaTeam.DiscordBot.Services.SQLite;
 
 namespace TheDialgaTeam.DiscordBot.Nancy
 {

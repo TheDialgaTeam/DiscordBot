@@ -3,11 +3,14 @@ using Discord.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Reflection;
-using System.Threading;
 using System.Threading.Tasks;
 using TheDialgaTeam.DiscordBot.Model.Command;
 using TheDialgaTeam.DiscordBot.Model.Discord.Command;
 using TheDialgaTeam.DiscordBot.Services;
+using TheDialgaTeam.DiscordBot.Services.Discord;
+using TheDialgaTeam.DiscordBot.Services.Logger;
+using TheDialgaTeam.DiscordBot.Services.Nancy;
+using TheDialgaTeam.DiscordBot.Services.SQLite;
 
 namespace TheDialgaTeam.DiscordBot
 {
@@ -36,13 +39,13 @@ namespace TheDialgaTeam.DiscordBot
 
         private IWebService WebService { get; set; }
 
-        public static void Main(string[] args)
+        public static int Main(string[] args)
         {
             var program = new Program();
-            program.MainAsync().GetAwaiter().GetResult();
+            return program.MainAsync().GetAwaiter().GetResult();
         }
 
-        private async Task MainAsync()
+        private async Task<int> MainAsync()
         {
             try
             {
@@ -69,24 +72,21 @@ namespace TheDialgaTeam.DiscordBot
                 SQLiteService = ServiceProvider.GetRequiredService<ISQLiteService>();
                 await SQLiteService.InitializeDatabaseAsync();
 
-                DiscordAppService = ServiceProvider.GetRequiredService<IDiscordAppService>();
-
                 PollHandlerService = ServiceProvider.GetRequiredService<IPollHandlerService>();
-
-                var pollUpdateHandler = new Thread(async () => await PollHandlerService.UpdatePollTask()) { IsBackground = true };
-                pollUpdateHandler.Start();
+                PollHandlerService.UpdatePollTask();
 
                 WebService = ServiceProvider.GetRequiredService<IWebService>();
                 await WebService.StartAsync();
 
                 await LoggerService.LogMessageAsync("\nDone initializing!");
-                await LoggerService.LogMessageAsync("Use StartDiscordApp or StartDiscordApps to start the bot instances.");
 
+                DiscordAppService = ServiceProvider.GetRequiredService<IDiscordAppService>();
                 await DiscordAppService.StartDiscordAppsAsync();
             }
             catch (Exception ex)
             {
                 await LoggerService.LogErrorMessageAsync(ex.ToString());
+                return -1;
             }
 
             while (true)
@@ -127,6 +127,8 @@ namespace TheDialgaTeam.DiscordBot
                     await LoggerService.LogErrorMessageAsync(ex.ToString());
                 }
             }
+
+            return 0;
         }
 
         private async Task ListDiscordAppOwnerAsync(ICommandProcessorModel commandProcessorModel)

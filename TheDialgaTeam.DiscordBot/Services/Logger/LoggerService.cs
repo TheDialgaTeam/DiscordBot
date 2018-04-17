@@ -4,7 +4,7 @@ using System.IO;
 using System.Threading.Tasks;
 using TheDialgaTeam.DiscordBot.Extension.System.IO;
 
-namespace TheDialgaTeam.DiscordBot.Services
+namespace TheDialgaTeam.DiscordBot.Services.Logger
 {
     public interface ILoggerService
     {
@@ -42,25 +42,25 @@ namespace TheDialgaTeam.DiscordBot.Services
 
         public async Task LogMessageAsync(string message)
         {
-            await InternalMessageAsync(Console.Out, message);
+            await InternalMessageAsync(Console.Out, $"{message}");
         }
 
         public async Task LogMessageAsync(LogMessage logMessage)
         {
             if (logMessage.Exception != null)
-                await InternalMessageAsync(Console.Error, logMessage.Exception.ToString());
+                await InternalMessageAsync(Console.Error, $"[{logMessage.Severity.ToString()}] {logMessage.Exception}");
             else
-                await InternalMessageAsync(Console.Out, logMessage.Message);
+                await InternalMessageAsync(Console.Out, $"[{logMessage.Severity.ToString()}] {logMessage.Message}");
         }
 
         public async Task LogErrorMessageAsync(string message)
         {
-            await InternalMessageAsync(Console.Error, message);
+            await InternalMessageAsync(Console.Error, $"{message}");
         }
 
         public async Task LogErrorMessageAsync(Exception exception)
         {
-            await InternalMessageAsync(Console.Error, exception.ToString());
+            await InternalMessageAsync(Console.Error, $"{exception}");
         }
 
         private async Task InternalMessageAsync(TextWriter writer, string message)

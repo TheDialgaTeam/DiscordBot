@@ -6,8 +6,9 @@ using Nancy.Owin;
 using Nancy.TinyIoc;
 using System;
 using System.Threading.Tasks;
+using TheDialgaTeam.DiscordBot.Services.SQLite;
 
-namespace TheDialgaTeam.DiscordBot.Services
+namespace TheDialgaTeam.DiscordBot.Services.Nancy
 {
     public interface IWebService
     {

@@ -1,12 +1,13 @@
 ﻿using SQLite;
 using System;
 using System.IO;
+using System.Reflection;
 using System.Threading.Tasks;
 using TheDialgaTeam.DiscordBot.Extension.System.IO;
-using TheDialgaTeam.DiscordBot.Model.SQLite.Table;
-using TheDialgaTeam.DiscordBot.Model.SQLite.Table.Modules;
+using TheDialgaTeam.DiscordBot.Model.SQLite.Interface;
+using TheDialgaTeam.DiscordBot.Services.Logger;
 
-namespace TheDialgaTeam.DiscordBot.Services
+namespace TheDialgaTeam.DiscordBot.Services.SQLite
 {
     public interface ISQLiteService
     {
@@ -15,7 +16,7 @@ namespace TheDialgaTeam.DiscordBot.Services
         Task InitializeDatabaseAsync();
     }
 
-    internal sealed class SQLiteService : ISQLiteService, IDisposable
+    internal sealed class SQLiteService : ISQLiteService
     {
         public SQLiteAsyncConnection SQLiteAsyncConnection { get; private set; }
 
@@ -39,30 +40,23 @@ namespace TheDialgaTeam.DiscordBot.Services
 
                 SQLiteAsyncConnection = new SQLiteAsyncConnection(SQLiteDataBasePath);
 
-                await SQLiteAsyncConnection.CreateTableAsync<DiscordAppOwnerModel>();
-                await SQLiteAsyncConnection.CreateTableAsync<DiscordAppModel>();
-                await SQLiteAsyncConnection.CreateTableAsync<DiscordChannelModeratorModel>();
-                await SQLiteAsyncConnection.CreateTableAsync<DiscordGuildModel>();
-                await SQLiteAsyncConnection.CreateTableAsync<DiscordGuildModeratorModel>();
-                await SQLiteAsyncConnection.CreateTableAsync<DiscordGuildModuleModel>();
+                var assemblyTypes = Assembly.GetExecutingAssembly().GetTypes();
 
-                await SQLiteAsyncConnection.CreateTableAsync<FreeGameNotificationModel>();
-                await SQLiteAsyncConnection.CreateTableAsync<ServerHoundModel>();
-                await SQLiteAsyncConnection.CreateTableAsync<PollModel>();
+                foreach (var assemblyType in assemblyTypes)
+                {
+                    if (!assemblyType.IsClass || !typeof(IDatabaseTable).IsAssignableFrom(assemblyType))
+                        continue;
+
+                    await SQLiteAsyncConnection.CreateTableAsync(assemblyType);
+                }
 
                 await SQLiteAsyncConnection.ExecuteAsync("VACUUM");
-
                 await LoggerService.LogMessageAsync($"Database created at: {SQLiteDataBasePath}");
             }
             catch (Exception ex)
             {
                 await LoggerService.LogErrorMessageAsync(ex);
             }
-        }
-
-        public void Dispose()
-        {
-            SQLiteAsyncConnection.CloseAsync().GetAwaiter().GetResult();
         }
     }
 }

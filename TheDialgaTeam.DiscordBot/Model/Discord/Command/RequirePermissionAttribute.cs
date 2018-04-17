@@ -4,7 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Threading.Tasks;
 using TheDialgaTeam.DiscordBot.Model.SQLite.Table;
-using TheDialgaTeam.DiscordBot.Services;
+using TheDialgaTeam.DiscordBot.Services.SQLite;
 
 namespace TheDialgaTeam.DiscordBot.Model.Discord.Command
 {

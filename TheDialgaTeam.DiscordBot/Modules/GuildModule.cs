@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using TheDialgaTeam.DiscordBot.Model.Discord.Command;
 using TheDialgaTeam.DiscordBot.Model.SQLite.Table;
-using TheDialgaTeam.DiscordBot.Services;
+using TheDialgaTeam.DiscordBot.Services.SQLite;
 
 namespace TheDialgaTeam.DiscordBot.Modules
 {

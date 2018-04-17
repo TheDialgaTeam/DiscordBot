@@ -1,5 +1,5 @@
 ﻿using SQLite;
-using TheDialgaTeam.DiscordBot.Model.SQLite.Table.Interface;
+using TheDialgaTeam.DiscordBot.Model.SQLite.Interface;
 
 namespace TheDialgaTeam.DiscordBot.Model.SQLite.Table
 {

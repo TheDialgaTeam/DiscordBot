@@ -84,6 +84,8 @@ namespace TheDialgaTeam.DiscordBot.Model.Discord
 
         IDiscordAppModel DiscordAppModel { get; }
 
+        bool IsReady { get; set; }
+
         Task StartListeningAsync();
 
         Task StopListeningAsync();
@@ -167,10 +169,12 @@ namespace TheDialgaTeam.DiscordBot.Model.Discord
 
         public IDiscordAppModel DiscordAppModel { get; }
 
+        public bool IsReady { get; set; }
+
         public DiscordSocketClientModel(IDiscordAppModel discordAppModel)
         {
             DiscordAppModel = discordAppModel;
-            DiscordSocketClient = new DiscordSocketClient();
+            DiscordSocketClient = new DiscordSocketClient(new DiscordSocketConfig { LogLevel = LogSeverity.Verbose });
         }
 
         public async Task StartListeningAsync()

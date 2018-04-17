@@ -1,5 +1,5 @@
 ﻿using SQLite;
-using TheDialgaTeam.DiscordBot.Model.SQLite.Table.Interface;
+using TheDialgaTeam.DiscordBot.Model.SQLite.Interface;
 
 namespace TheDialgaTeam.DiscordBot.Model.SQLite
 {
@@ -7,7 +7,7 @@ namespace TheDialgaTeam.DiscordBot.Model.SQLite
     {
     }
 
-    internal abstract class BaseTable : IBaseTable
+    internal abstract class BaseTable : IBaseTable, IDatabaseTable
     {
         [PrimaryKey]
         [AutoIncrement]

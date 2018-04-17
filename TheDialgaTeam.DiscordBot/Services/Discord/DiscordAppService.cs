@@ -8,12 +8,14 @@ using System.Threading.Tasks;
 using TheDialgaTeam.DiscordBot.Model.Discord;
 using TheDialgaTeam.DiscordBot.Model.SQLite.Table;
 using TheDialgaTeam.DiscordBot.Model.SQLite.Table.Modules;
+using TheDialgaTeam.DiscordBot.Services.Logger;
+using TheDialgaTeam.DiscordBot.Services.SQLite;
 
-namespace TheDialgaTeam.DiscordBot.Services
+namespace TheDialgaTeam.DiscordBot.Services.Discord
 {
     public interface IDiscordAppService
     {
-        List<IDiscordSocketClientModel> DiscordSocketClientModels { get; }
+        List<IDiscordShardedClientModel> DiscordShardedClientModels { get; }
 
         Task ListDiscordAppOwnerAsync(ulong clientId = 0);
 
@@ -40,7 +42,7 @@ namespace TheDialgaTeam.DiscordBot.Services
 
     internal sealed class DiscordAppService : IDiscordAppService
     {
-        public List<IDiscordSocketClientModel> DiscordSocketClientModels { get; } = new List<IDiscordSocketClientModel>();
+        public List<IDiscordShardedClientModel> DiscordShardedClientModels { get; } = new List<IDiscordShardedClientModel>();
 
         private IProgram Program { get; }
 
@@ -62,12 +64,12 @@ namespace TheDialgaTeam.DiscordBot.Services
 
             if (discordAppOwnerModels.Length == 0)
             {
-                await LoggerService.LogMessageAsync("No discord app owner have been found!");
+                await LoggerService.LogMessageAsync("No Discord App owner have been found!");
                 return;
             }
 
             await LoggerService.LogMessageAsync("==================================================");
-            await LoggerService.LogMessageAsync("List of discord app owners:");
+            await LoggerService.LogMessageAsync("List of Discord App owners:");
             await LoggerService.LogMessageAsync("==================================================");
 
             foreach (var discordAppOwnerModel in discordAppOwnerModels)
@@ -163,7 +165,7 @@ namespace TheDialgaTeam.DiscordBot.Services
 
         public async Task ListRunningDiscordAppAsync()
         {
-            if (DiscordSocketClientModels.Count == 0)
+            if (DiscordShardedClientModels.Count == 0)
             {
                 await LoggerService.LogMessageAsync("No running discord app have been found!");
                 return;
@@ -173,7 +175,7 @@ namespace TheDialgaTeam.DiscordBot.Services
             await LoggerService.LogMessageAsync("List of running discord app:");
             await LoggerService.LogMessageAsync("==================================================");
 
-            foreach (var discordSocketClientModel in DiscordSocketClientModels)
+            foreach (var discordSocketClientModel in DiscordShardedClientModels)
                 await LoggerService.LogMessageAsync($"ClientId: {discordSocketClientModel.DiscordAppModel.ClientId}");
         }
 
@@ -188,7 +190,7 @@ namespace TheDialgaTeam.DiscordBot.Services
                 return false;
             }
 
-            foreach (var discordSocketClientModel in DiscordSocketClientModels)
+            foreach (var discordSocketClientModel in DiscordShardedClientModels)
             {
                 if (discordSocketClientModel.DiscordAppModel.ClientId != clientId.ToString())
                     continue;
@@ -197,12 +199,12 @@ namespace TheDialgaTeam.DiscordBot.Services
                 break;
             }
 
-            var newDiscordSocketClientModel = new DiscordSocketClientModel(discordAppModel);
+            var newDiscordSocketClientModel = new DiscordShardedClientModel(discordAppModel);
             AddListener(newDiscordSocketClientModel);
 
             await newDiscordSocketClientModel.StartListeningAsync();
 
-            DiscordSocketClientModels.Add(newDiscordSocketClientModel);
+            DiscordShardedClientModels.Add(newDiscordSocketClientModel);
             return true;
         }
 
@@ -214,12 +216,12 @@ namespace TheDialgaTeam.DiscordBot.Services
 
             foreach (var discordAppModel in discordAppModels)
             {
-                var newDiscordSocketClientModel = new DiscordSocketClientModel(discordAppModel);
+                var newDiscordSocketClientModel = new DiscordShardedClientModel(discordAppModel);
                 AddListener(newDiscordSocketClientModel);
 
                 await newDiscordSocketClientModel.StartListeningAsync();
 
-                DiscordSocketClientModels.Add(newDiscordSocketClientModel);
+                DiscordShardedClientModels.Add(newDiscordSocketClientModel);
             }
         }
 
@@ -227,7 +229,7 @@ namespace TheDialgaTeam.DiscordBot.Services
         {
             IDiscordSocketClientModel tempDiscordSocketClientModel = null;
 
-            foreach (var discordSocketClientModel in DiscordSocketClientModels)
+            foreach (var discordSocketClientModel in DiscordShardedClientModels)
             {
                 if (discordSocketClientModel.DiscordAppModel.ClientId != clientId.ToString())
                     continue;
@@ -245,38 +247,38 @@ namespace TheDialgaTeam.DiscordBot.Services
                 return false;
             }
 
-            DiscordSocketClientModels.Remove(tempDiscordSocketClientModel);
+            DiscordShardedClientModels.Remove(tempDiscordSocketClientModel);
             return true;
         }
 
         public async Task StopDiscordAppsAsync()
         {
-            foreach (var discordSocketClientModel in DiscordSocketClientModels)
+            foreach (var discordSocketClientModel in DiscordShardedClientModels)
             {
                 await discordSocketClientModel.StopListeningAsync();
                 RemoveListener(discordSocketClientModel);
                 await LoggerService.LogMessageAsync($"Successfully stopped {discordSocketClientModel.DiscordAppModel.ClientId} app.");
             }
 
-            DiscordSocketClientModels.Clear();
+            DiscordShardedClientModels.Clear();
         }
 
-        private void AddListener(IDiscordSocketClientModel discordSocketClientModel)
+        private void AddListener(DiscordShardedClientModel discordSocketClientModel)
         {
-            discordSocketClientModel.Log += DiscordSocketClientModelOnLog;
-            discordSocketClientModel.MessageReceived += DiscordSocketClientModelOnMessageReceived;
-            discordSocketClientModel.LeftGuild += DiscordSocketClientModelOnLeftGuild;
-            discordSocketClientModel.UserJoined += DiscordSocketClientModelOnUserJoined;
-            discordSocketClientModel.Ready += DiscordSocketClientModelOnReady;
+            //discordSocketClientModel.Log += DiscordSocketClientModelOnLog;
+            //discordSocketClientModel.MessageReceived += DiscordSocketClientModelOnMessageReceived;
+            //discordSocketClientModel.LeftGuild += DiscordSocketClientModelOnLeftGuild;
+            //discordSocketClientModel.UserJoined += DiscordSocketClientModelOnUserJoined;
+            //discordSocketClientModel.Ready += DiscordSocketClientModelOnReady;
         }
 
-        private void RemoveListener(IDiscordSocketClientModel discordSocketClientModel)
+        private void RemoveListener(IDiscordShardedClientModel discordSocketClientModel)
         {
-            discordSocketClientModel.Ready -= DiscordSocketClientModelOnReady;
-            discordSocketClientModel.UserJoined -= DiscordSocketClientModelOnUserJoined;
-            discordSocketClientModel.LeftGuild -= DiscordSocketClientModelOnLeftGuild;
-            discordSocketClientModel.MessageReceived -= DiscordSocketClientModelOnMessageReceived;
-            discordSocketClientModel.Log -= DiscordSocketClientModelOnLog;
+            //discordSocketClientModel.Ready -= DiscordSocketClientModelOnReady;
+            //discordSocketClientModel.UserJoined -= DiscordSocketClientModelOnUserJoined;
+            //discordSocketClientModel.LeftGuild -= DiscordSocketClientModelOnLeftGuild;
+            //discordSocketClientModel.MessageReceived -= DiscordSocketClientModelOnMessageReceived;
+            //discordSocketClientModel.Log -= DiscordSocketClientModelOnLog;
         }
 
         private async Task DiscordSocketClientModelOnLog(IDiscordSocketClientModel socketClientModel, LogMessage logMessage)
@@ -286,129 +288,114 @@ namespace TheDialgaTeam.DiscordBot.Services
 
         private async Task DiscordSocketClientModelOnMessageReceived(IDiscordSocketClientModel socketClientModel, SocketMessage socketMessage)
         {
-            await Task.Run(async () =>
+            if (!(socketMessage is SocketUserMessage message))
+                return;
+
+            var argPos = 0;
+            var context = new SocketCommandContext(socketClientModel.DiscordSocketClient, message);
+
+            if (message.Channel is SocketDMChannel)
+                message.HasMentionPrefix(socketClientModel.DiscordSocketClient.CurrentUser, ref argPos);
+            else
             {
-                if (!(socketMessage is SocketUserMessage message))
+                var clientId = socketClientModel.DiscordSocketClient.CurrentUser.Id.ToString();
+                var guildId = context.Guild.Id.ToString();
+                var discordGuildModel = await SQLiteService.SQLiteAsyncConnection.Table<DiscordGuildModel>().Where(a => a.ClientId == clientId && a.GuildId == guildId).FirstOrDefaultAsync();
+
+                if (discordGuildModel == null && !message.HasMentionPrefix(socketClientModel.DiscordSocketClient.CurrentUser, ref argPos))
                     return;
 
-                var argPos = 0;
-                var context = new SocketCommandContext(socketClientModel.DiscordSocketClient, message);
+                if (!message.HasMentionPrefix(socketClientModel.DiscordSocketClient.CurrentUser, ref argPos) &&
+                    !message.HasStringPrefix(discordGuildModel?.StringPrefix ?? "", ref argPos, StringComparison.OrdinalIgnoreCase))
+                    return;
+            }
 
-                if (message.Channel is SocketDMChannel)
-                    message.HasMentionPrefix(socketClientModel.DiscordSocketClient.CurrentUser, ref argPos);
-                else
-                {
-                    var clientId = socketClientModel.DiscordSocketClient.CurrentUser.Id.ToString();
-                    var guildId = context.Guild.Id.ToString();
-                    var discordGuildModel = await SQLiteService.SQLiteAsyncConnection.Table<DiscordGuildModel>().Where(a => a.ClientId == clientId && a.GuildId == guildId).FirstOrDefaultAsync();
-
-                    if (discordGuildModel == null && !message.HasMentionPrefix(socketClientModel.DiscordSocketClient.CurrentUser, ref argPos))
-                        return;
-
-                    if (!message.HasMentionPrefix(socketClientModel.DiscordSocketClient.CurrentUser, ref argPos) &&
-                        !message.HasStringPrefix(discordGuildModel?.StringPrefix ?? "", ref argPos, StringComparison.OrdinalIgnoreCase))
-                        return;
-                }
-
-                await Program.CommandService.ExecuteAsync(context, argPos, Program.ServiceProvider);
-            });
+            await Program.CommandService.ExecuteAsync(context, argPos, Program.ServiceProvider);
         }
 
         private async Task DiscordSocketClientModelOnLeftGuild(IDiscordSocketClientModel socketClientModel, SocketGuild socketGuild)
         {
-            await Task.Run(async () =>
-            {
-                var clientId = socketClientModel.DiscordAppModel.ClientId;
-                var guildId = socketGuild.Id.ToString();
+            var clientId = socketClientModel.DiscordAppModel.ClientId;
+            var guildId = socketGuild.Id.ToString();
 
-                foreach (var socketGuildChannel in socketGuild.Channels)
-                {
-                    var channelId = socketGuildChannel.Id.ToString();
-                    await SQLiteService.SQLiteAsyncConnection.Table<DiscordChannelModeratorModel>().DeleteAsync(a => a.ClientId == clientId && a.ChannelId == channelId);
-                }
-
-                await SQLiteService.SQLiteAsyncConnection.Table<DiscordGuildModel>().DeleteAsync(a => a.ClientId == clientId && a.GuildId == guildId);
-                await SQLiteService.SQLiteAsyncConnection.Table<DiscordGuildModeratorModel>().DeleteAsync(a => a.ClientId == clientId && a.GuildId == guildId);
-                await SQLiteService.SQLiteAsyncConnection.Table<DiscordGuildModuleModel>().DeleteAsync(a => a.ClientId == clientId && a.GuildId == guildId);
-                await SQLiteService.SQLiteAsyncConnection.Table<FreeGameNotificationModel>().DeleteAsync(a => a.ClientId == clientId && a.GuildId == guildId);
-                await SQLiteService.SQLiteAsyncConnection.Table<ServerHoundModel>().DeleteAsync(a => a.ClientId == clientId && a.GuildId == guildId);
-            });
+            await SQLiteService.SQLiteAsyncConnection.Table<DiscordChannelModeratorModel>().DeleteAsync(a => a.ClientId == clientId && a.GuildId == guildId);
+            await SQLiteService.SQLiteAsyncConnection.Table<DiscordGuildModel>().DeleteAsync(a => a.ClientId == clientId && a.GuildId == guildId);
+            await SQLiteService.SQLiteAsyncConnection.Table<DiscordGuildModeratorModel>().DeleteAsync(a => a.ClientId == clientId && a.GuildId == guildId);
+            await SQLiteService.SQLiteAsyncConnection.Table<DiscordGuildModuleModel>().DeleteAsync(a => a.ClientId == clientId && a.GuildId == guildId);
+            await SQLiteService.SQLiteAsyncConnection.Table<FreeGameNotificationModel>().DeleteAsync(a => a.ClientId == clientId && a.GuildId == guildId);
+            await SQLiteService.SQLiteAsyncConnection.Table<ServerHoundModel>().DeleteAsync(a => a.ClientId == clientId && a.GuildId == guildId);
         }
 
         private async Task DiscordSocketClientModelOnUserJoined(IDiscordSocketClientModel socketClientModel, SocketGuildUser socketGuildUser)
         {
-            await Task.Run(async () =>
-            {
-                var clientId = socketClientModel.DiscordAppModel.ClientId;
-                var guildId = socketGuildUser.Guild.Id.ToString();
+            var clientId = socketClientModel.DiscordAppModel.ClientId;
+            var guildId = socketGuildUser.Guild.Id.ToString();
 
-                var discordGuildModuleModel = await SQLiteService.SQLiteAsyncConnection.Table<DiscordGuildModuleModel>().Where(a => a.ClientId == clientId && a.GuildId == guildId && a.Module == "ServerHound").FirstOrDefaultAsync();
+            var discordGuildModuleModel = await SQLiteService.SQLiteAsyncConnection.Table<DiscordGuildModuleModel>().Where(a => a.ClientId == clientId && a.GuildId == guildId && a.Module == "ServerHound").FirstOrDefaultAsync();
 
-                if (!discordGuildModuleModel?.Active ?? true)
-                    return;
+            if (!discordGuildModuleModel?.Active ?? true)
+                return;
 
-                var serverHoundModel = await SQLiteService.SQLiteAsyncConnection.Table<ServerHoundModel>().Where(a => a.ClientId == clientId && a.GuildId == guildId).FirstOrDefaultAsync();
+            var serverHoundModel = await SQLiteService.SQLiteAsyncConnection.Table<ServerHoundModel>().Where(a => a.ClientId == clientId && a.GuildId == guildId).FirstOrDefaultAsync();
 
-                if (!serverHoundModel?.DBans ?? true)
-                    return;
+            if (!serverHoundModel?.DBans ?? true)
+                return;
 
-                // Check DBans :)
-                var httpClient = new HttpClient();
+            // Check DBans :)
+            var httpClient = new HttpClient();
 
-                var values = new Dictionary<string, string>
+            var values = new Dictionary<string, string>
                 {
                     { "token", "Ln3SIwdcIu" },
                     { "userid", socketGuildUser.Id.ToString() }
                 };
 
-                var content = new FormUrlEncodedContent(values);
-                var response = await httpClient.PostAsync("https://bans.discordlist.net/api", content);
-                var responseString = await response.Content.ReadAsStringAsync();
+            var content = new FormUrlEncodedContent(values);
+            var response = await httpClient.PostAsync("https://bans.discordlist.net/api", content);
+            var responseString = await response.Content.ReadAsStringAsync();
 
-                if (responseString.Equals("true", StringComparison.OrdinalIgnoreCase))
+            if (responseString.Equals("true", StringComparison.OrdinalIgnoreCase))
+            {
+                var permission = socketGuildUser.Guild.GetUser(socketClientModel.DiscordSocketClient.CurrentUser.Id).GuildPermissions;
+                var dmChannel = await socketGuildUser.GetOrCreateDMChannelAsync();
+
+                if (permission.BanMembers)
                 {
-                    var permission = socketGuildUser.Guild.GetUser(socketClientModel.DiscordSocketClient.CurrentUser.Id).GuildPermissions;
-                    var dmChannel = await socketGuildUser.GetOrCreateDMChannelAsync();
-
-                    if (permission.BanMembers)
-                    {
-                        await socketGuildUser.Guild.AddBanAsync(socketGuildUser, reason: "You have been banned due to ServerHound DBans listing.");
-                        await dmChannel.SendMessageAsync("You have been banned from the guild due to ServerHound DBans listing. If you think that this is a false positive, please goto: https://discord.gg/MPDPnEw and make an appeal to de-list your account.");
-                    }
-                    else if (permission.KickMembers)
-                    {
-                        await socketGuildUser.KickAsync("You have been kicked due to ServerHound DBans listing.");
-                        await dmChannel.SendMessageAsync("You have been kicked from the guild due to ServerHound DBans listing. If you think that this is a false positive, please goto: https://discord.gg/MPDPnEw and make an appeal to de-list your account.");
-                    }
+                    await socketGuildUser.Guild.AddBanAsync(socketGuildUser, reason: "You have been banned due to ServerHound DBans listing.");
+                    await dmChannel.SendMessageAsync("You have been banned from the guild due to ServerHound DBans listing. If you think that this is a false positive, please goto: https://discord.gg/MPDPnEw and make an appeal to de-list your account.");
                 }
-            });
+                else if (permission.KickMembers)
+                {
+                    await socketGuildUser.KickAsync("You have been kicked due to ServerHound DBans listing.");
+                    await dmChannel.SendMessageAsync("You have been kicked from the guild due to ServerHound DBans listing. If you think that this is a false positive, please goto: https://discord.gg/MPDPnEw and make an appeal to de-list your account.");
+                }
+            }
         }
 
         private async Task DiscordSocketClientModelOnReady(IDiscordSocketClientModel socketClientModel)
         {
-            await Task.Run(async () =>
+            await LoggerService.LogMessageAsync($"[Bot {socketClientModel.DiscordAppModel.ClientId}] {socketClientModel.DiscordSocketClient.CurrentUser.Username} have started!");
+
+            if (!socketClientModel.DiscordAppModel.Verified)
             {
-                await LoggerService.LogMessageAsync($"[Bot {socketClientModel.DiscordAppModel.ClientId}] {socketClientModel.DiscordSocketClient.CurrentUser.Username} have started!");
-
-                if (!socketClientModel.DiscordAppModel.Verified)
+                if (socketClientModel.DiscordAppModel.ClientId != socketClientModel.DiscordSocketClient.CurrentUser.Id.ToString())
                 {
-                    if (socketClientModel.DiscordAppModel.ClientId != socketClientModel.DiscordSocketClient.CurrentUser.Id.ToString())
-                    {
-                        await LoggerService.LogMessageAsync($"[Bot {socketClientModel.DiscordAppModel.ClientId}] Client Id mismatch. Verification failed!");
-                        await StopDiscordAppAsync(Convert.ToUInt64(socketClientModel.DiscordAppModel.ClientId));
-                        await RemoveDiscordAppAsync(Convert.ToUInt64(socketClientModel.DiscordAppModel.ClientId));
-                        return;
-                    }
-
-                    socketClientModel.DiscordAppModel.Verified = true;
-                    await SQLiteService.SQLiteAsyncConnection.UpdateAsync(socketClientModel.DiscordAppModel);
+                    await LoggerService.LogMessageAsync($"[Bot {socketClientModel.DiscordAppModel.ClientId}] Client Id mismatch. Verification failed!");
+                    await StopDiscordAppAsync(Convert.ToUInt64(socketClientModel.DiscordAppModel.ClientId));
+                    await RemoveDiscordAppAsync(Convert.ToUInt64(socketClientModel.DiscordAppModel.ClientId));
+                    return;
                 }
 
-                await socketClientModel.DiscordSocketClient.SetGameAsync($"@{socketClientModel.DiscordSocketClient.CurrentUser.Username} help");
-
-                socketClientModel.DiscordAppModel.AppName = socketClientModel.DiscordSocketClient.CurrentUser.Username;
+                socketClientModel.DiscordAppModel.Verified = true;
                 await SQLiteService.SQLiteAsyncConnection.UpdateAsync(socketClientModel.DiscordAppModel);
-            });
+            }
+
+            await socketClientModel.DiscordSocketClient.SetGameAsync($"@{socketClientModel.DiscordSocketClient.CurrentUser.Username} help");
+
+            socketClientModel.DiscordAppModel.AppName = socketClientModel.DiscordSocketClient.CurrentUser.Username;
+            await SQLiteService.SQLiteAsyncConnection.UpdateAsync(socketClientModel.DiscordAppModel);
+
+            socketClientModel.IsReady = true;
         }
     }
 }

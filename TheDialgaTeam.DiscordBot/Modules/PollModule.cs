@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using TheDialgaTeam.DiscordBot.Model.SQLite.Table.Modules;
 using TheDialgaTeam.DiscordBot.Services;
+using TheDialgaTeam.DiscordBot.Services.SQLite;
 
 namespace TheDialgaTeam.DiscordBot.Modules
 {
@@ -41,28 +42,36 @@ Polls can be run without a time limit and allow multiple choices. (People can vo
         [RequireContext(ContextType.Guild)]
         public async Task StartPollAsync([Summary("Title of the poll.")] string title, [Summary("Poll message.")] string message, [Summary("Poll options. Seperated by `;`")] string options, [Summary("Poll duration.")] TimeSpan duration, [Summary("List of emojis for the poll. (Do not need to be comma seperated)")] params IEmote[] emotes)
         {
-            if (duration.TotalSeconds < 0)
+            if (duration.TotalSeconds < 60)
+            {
+                await ReplyAsync(":negative_squared_cross_mark: Unable to build poll duration. Ensure that the duration is at least 1 minute long.");
                 return;
+            }
 
             var pollOptions = PollOptionsBuilder(options, emotes);
 
             if (pollOptions == null)
+            {
+                await ReplyAsync(":negative_squared_cross_mark: Unable to build poll options. Ensure that the number of options and emoji matches.");
                 return;
-
-            var startDateTime = DateTimeOffset.Now;
+            }
 
             var embedMessage = new EmbedBuilder()
                                .WithTitle(title)
                                .WithDescription(message)
                                .WithColor(Color.Orange)
-                               .WithFooter("Ends at")
-                               .WithTimestamp(startDateTime.Add(duration))
+                               .WithFooter("Building poll... Please wait. (If it takes too long, try again later)")
                                .AddField("Options:", pollOptions);
 
             var sentMessage = await ReplyAsync("", false, embedMessage.Build());
 
             foreach (var emote in emotes)
                 await sentMessage.AddReactionAsync(emote);
+
+            var startDateTime = DateTimeOffset.Now;
+
+            // Start the poll after all reaction is ready.
+            await sentMessage.ModifyAsync(a => a.Embed = embedMessage.WithFooter("Ends at").WithTimestamp(startDateTime.Add(duration)).Build());
 
             // Cache Poll to allow bot instance to restart with no issues.
             var clientId = Context.Client.CurrentUser.Id.ToString();
