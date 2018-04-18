@@ -5,6 +5,14 @@ VisualStudioVersion = 15.0.27130.2010
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TheDialgaTeam.DiscordBot", "TheDialgaTeam.DiscordBot\TheDialgaTeam.DiscordBot.csproj", "{A5DB3D7F-6436-498A-AEC6-F726976CD7CD}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Discord.Net.Rest", "Discord.Net\src\Discord.Net.Rest\Discord.Net.Rest.csproj", "{9215FC81-CBB8-4EFB-B455-99296FB4326E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Discord.Net.Core", "Discord.Net\src\Discord.Net.Core\Discord.Net.Core.csproj", "{AB6F3B27-60CD-43E9-8AFC-DF2D82C8FE62}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Discord.Net.Commands", "Discord.Net\src\Discord.Net.Commands\Discord.Net.Commands.csproj", "{2EFA6A29-B66D-4F2A-8940-87A6827A9420}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Discord.Net.WebSocket", "Discord.Net\src\Discord.Net.WebSocket\Discord.Net.WebSocket.csproj", "{ABC8E277-5592-4E3C-AFC1-DF822A11EDF5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +23,22 @@ Global
 		{A5DB3D7F-6436-498A-AEC6-F726976CD7CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A5DB3D7F-6436-498A-AEC6-F726976CD7CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A5DB3D7F-6436-498A-AEC6-F726976CD7CD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9215FC81-CBB8-4EFB-B455-99296FB4326E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9215FC81-CBB8-4EFB-B455-99296FB4326E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9215FC81-CBB8-4EFB-B455-99296FB4326E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9215FC81-CBB8-4EFB-B455-99296FB4326E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AB6F3B27-60CD-43E9-8AFC-DF2D82C8FE62}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AB6F3B27-60CD-43E9-8AFC-DF2D82C8FE62}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AB6F3B27-60CD-43E9-8AFC-DF2D82C8FE62}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AB6F3B27-60CD-43E9-8AFC-DF2D82C8FE62}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2EFA6A29-B66D-4F2A-8940-87A6827A9420}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2EFA6A29-B66D-4F2A-8940-87A6827A9420}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2EFA6A29-B66D-4F2A-8940-87A6827A9420}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2EFA6A29-B66D-4F2A-8940-87A6827A9420}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ABC8E277-5592-4E3C-AFC1-DF822A11EDF5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ABC8E277-5592-4E3C-AFC1-DF822A11EDF5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ABC8E277-5592-4E3C-AFC1-DF822A11EDF5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ABC8E277-5592-4E3C-AFC1-DF822A11EDF5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

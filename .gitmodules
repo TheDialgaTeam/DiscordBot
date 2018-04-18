@@ -1,3 +1,6 @@
 [submodule "TheDialgaTeam.Dashboard"]
 	path = TheDialgaTeam.Dashboard
 	url = https://github.com/TheDialgaTeam/Dashboard.git
+[submodule "Discord.Net"]
+	path = Discord.Net
+	url = https://github.com/RogueException/Discord.Net.git

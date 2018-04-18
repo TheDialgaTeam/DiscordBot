@@ -48,15 +48,15 @@ namespace TheDialgaTeam.DiscordBot.Services
                     if (DateTimeOffset.Now <= pollModel.StartDateTime.Add(pollModel.Duration))
                         continue;
 
-                    foreach (var discordSocketClientModel in DiscordAppService.DiscordSocketClientModels)
+                    foreach (var discordSocketClientModel in DiscordAppService.DiscordShardedClientModels)
                     {
                         if (discordSocketClientModel.DiscordAppModel.ClientId != pollModel.ClientId)
                             continue;
 
-                        if (!discordSocketClientModel.IsReady)
-                            continue;
+                        //if (!discordSocketClientModel.IsReady)
+                        //    continue;
 
-                        var guild = discordSocketClientModel.DiscordSocketClient.GetGuild(Convert.ToUInt64(pollModel.GuildId));
+                        var guild = discordSocketClientModel.DiscordShardedClient.GetGuild(Convert.ToUInt64(pollModel.GuildId));
                         var channel = guild?.GetTextChannel(Convert.ToUInt64(pollModel.ChannelId));
 
                         if (channel == null)

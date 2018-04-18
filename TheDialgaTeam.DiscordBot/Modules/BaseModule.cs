@@ -59,14 +59,14 @@ If you want to have a custom avatar and bot name, feel free to join our bot disc
         {
             var ignoreGuilds = new List<ulong>();
 
-            foreach (var discordSocketClientModel in DiscordAppService.DiscordSocketClientModels)
+            foreach (var discordSocketClientModel in DiscordAppService.DiscordShardedClientModels)
             {
-                foreach (var socketGuild in discordSocketClientModel.DiscordSocketClient.Guilds)
+                foreach (var socketGuild in discordSocketClientModel.DiscordShardedClient.Guilds)
                 {
                     if (ignoreGuilds.Contains(socketGuild.Id))
                         continue;
 
-                    var perms = socketGuild.GetUser(discordSocketClientModel.DiscordSocketClient.CurrentUser.Id).GetPermissions(socketGuild.DefaultChannel);
+                    var perms = socketGuild.GetUser(discordSocketClientModel.DiscordShardedClient.CurrentUser.Id).GetPermissions(socketGuild.DefaultChannel);
 
                     if (perms.SendMessages)
                         await socketGuild.DefaultChannel.SendMessageAsync(message);

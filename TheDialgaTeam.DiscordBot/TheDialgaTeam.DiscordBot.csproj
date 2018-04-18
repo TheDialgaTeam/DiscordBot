@@ -7,10 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Discord.Net.Commands" Version="2.0.0-beta" />
-    <PackageReference Include="Discord.Net.Core" Version="2.0.0-beta" />
-    <PackageReference Include="Discord.Net.Rest" Version="2.0.0-beta" />
-    <PackageReference Include="Discord.Net.WebSocket" Version="2.0.0-beta" />
     <PackageReference Include="Microsoft.AspNetCore.Owin" Version="2.1.0-preview2-final" />
     <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.1.0-preview2-final" />
     <PackageReference Include="Nancy" Version="2.0.0-clinteastwood" />
@@ -19,6 +15,13 @@
 
   <ItemGroup>
     <Folder Include="Services\Discord\Embed\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Discord.Net\src\Discord.Net.Commands\Discord.Net.Commands.csproj" />
+    <ProjectReference Include="..\Discord.Net\src\Discord.Net.Core\Discord.Net.Core.csproj" />
+    <ProjectReference Include="..\Discord.Net\src\Discord.Net.Rest\Discord.Net.Rest.csproj" />
+    <ProjectReference Include="..\Discord.Net\src\Discord.Net.WebSocket\Discord.Net.WebSocket.csproj" />
   </ItemGroup>
 
 </Project>
