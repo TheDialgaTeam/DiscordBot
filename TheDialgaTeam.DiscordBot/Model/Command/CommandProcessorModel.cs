@@ -7,7 +7,7 @@ namespace TheDialgaTeam.DiscordBot.Model.Command
     {
         string Command { get; }
 
-        object[] GetCommandParamenterTypeObjects(CommandProcessorModel.ParamenterType[] paramenterTypes);
+        object[] GetCommandParamenterTypeObjects(params CommandProcessorModel.ParamenterType[] paramenterTypes);
     }
 
     internal sealed class CommandProcessorModel : ICommandProcessorModel
@@ -42,9 +42,9 @@ namespace TheDialgaTeam.DiscordBot.Model.Command
             CommandArgs = command.IndexOf(' ') == -1 ? string.Empty : command.Remove(0, command.IndexOf(' ') + 1);
         }
 
-        public object[] GetCommandParamenterTypeObjects(ParamenterType[] paramenterTypes)
+        public object[] GetCommandParamenterTypeObjects(params ParamenterType[] paramenterTypes)
         {
-            if (paramenterTypes.Length <= 0)
+            if (paramenterTypes.Length == 0)
                 return null;
 
             var regexExp = "^";
@@ -58,62 +58,62 @@ namespace TheDialgaTeam.DiscordBot.Model.Command
                         break;
 
                     case ParamenterType.SByte:
-                        regexExp += "(0x[0-9A-F]{1,}|0b_?[0-1]{1,}(?:_?[0-1]{1,})*|-*\\d+)";
+                        regexExp += @"(0x[0-9A-F]{1,}|0b_?[0-1]{1,}(?:_?[0-1]{1,})*|-*\d+)";
                         break;
 
                     case ParamenterType.Byte:
-                        regexExp += "(0x[0-9A-F]{1,}|0b_?[0-1]{1,}(?:_?[0-1]{1,})*|\\d+)";
+                        regexExp += @"(0x[0-9A-F]{1,}|0b_?[0-1]{1,}(?:_?[0-1]{1,})*|\d+)";
                         break;
 
                     case ParamenterType.Short:
-                        regexExp += "(0x[0-9A-F]{1,}|0b_?[0-1]{1,}(?:_?[0-1]{1,})*|-*\\d+)";
+                        regexExp += @"(0x[0-9A-F]{1,}|0b_?[0-1]{1,}(?:_?[0-1]{1,})*|-*\d+)";
                         break;
 
                     case ParamenterType.UShort:
-                        regexExp += "(0x[0-9A-F]{1,}|0b_?[0-1]{1,}(?:_?[0-1]{1,})*|\\d+)";
+                        regexExp += @"(0x[0-9A-F]{1,}|0b_?[0-1]{1,}(?:_?[0-1]{1,})*|\d+)";
                         break;
 
                     case ParamenterType.Int:
-                        regexExp += "(0x[0-9A-F]{1,}|0b_?[0-1]{1,}(?:_?[0-1]{1,})*|-*\\d+)";
+                        regexExp += @"(0x[0-9A-F]{1,}|0b_?[0-1]{1,}(?:_?[0-1]{1,})*|-*\d+)";
                         break;
 
                     case ParamenterType.UInt:
-                        regexExp += "(0x[0-9A-F]{1,}|0b_?[0-1]{1,}(?:_?[0-1]{1,})*|\\d+)";
+                        regexExp += @"(0x[0-9A-F]{1,}|0b_?[0-1]{1,}(?:_?[0-1]{1,})*|\d+)";
                         break;
 
                     case ParamenterType.Long:
-                        regexExp += "(0x[0-9A-F]{1,}|0b_?[0-1]{1,}(?:_?[0-1]{1,})*|-*\\d+)";
+                        regexExp += @"(0x[0-9A-F]{1,}|0b_?[0-1]{1,}(?:_?[0-1]{1,})*|-*\d+)";
                         break;
 
                     case ParamenterType.ULong:
-                        regexExp += "(0x[0-9A-F]{1,}|0b_?[0-1]{1,}(?:_?[0-1]{1,})*|\\d+)";
+                        regexExp += @"(0x[0-9A-F]{1,}|0b_?[0-1]{1,}(?:_?[0-1]{1,})*|\d+)";
                         break;
 
                     case ParamenterType.Float:
-                        regexExp += "(-?\\d+\\.\\d+f|-?\\d+)";
+                        regexExp += @"(-?\d+\.\d+f|-?\d+)";
                         break;
 
                     case ParamenterType.Double:
-                        regexExp += "(-?\\d+\\.\\d+|-?\\d+)";
+                        regexExp += @"(-?\d+\.\d+|-?\d+)";
                         break;
 
                     case ParamenterType.Decimal:
-                        regexExp += "(-?\\d+\\.\\d+m|-?\\d+)";
+                        regexExp += @"(-?\d+\.\d+m|-?\d+)";
                         break;
 
                     case ParamenterType.Char:
-                        regexExp += "\"([\\s\\S])\"";
+                        regexExp += @"([\s\S])";
                         break;
 
                     case ParamenterType.String:
-                        regexExp += "\"([\\s\\S]+?)\"";
+                        regexExp += @"""([\s\S]+?)""";
                         break;
 
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
 
-                regexExp += "\\s+";
+                regexExp += @"\s+";
             }
 
             regexExp = regexExp.Remove(regexExp.Length - 3);

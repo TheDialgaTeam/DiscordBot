@@ -17,18 +17,6 @@ namespace TheDialgaTeam.DiscordBot.Services.Discord
     {
         List<IDiscordShardedClientModel> DiscordShardedClientModels { get; }
 
-        Task ListDiscordAppOwnerAsync(ulong clientId = 0);
-
-        Task AddDiscordAppOwnerAsync(ulong userId, ulong clientId = 0);
-
-        Task RemoveDiscordAppOwnerAsync(ulong userId, ulong clientId = 0);
-
-        Task ListDiscordAppAsync();
-
-        Task AddDiscordAppAsync(ulong clientId, string clientSecret, string botToken);
-
-        Task<bool> RemoveDiscordAppAsync(ulong clientId);
-
         Task ListRunningDiscordAppAsync();
 
         Task<bool> StartDiscordAppAsync(ulong clientId);
@@ -57,126 +45,14 @@ namespace TheDialgaTeam.DiscordBot.Services.Discord
             SQLiteService = sqliteService;
         }
 
-        public async Task ListDiscordAppOwnerAsync(ulong clientId = 0)
-        {
-            var stringClientId = clientId == 0 ? string.Empty : clientId.ToString();
-            var discordAppOwnerModels = await SQLiteService.SQLiteAsyncConnection.Table<DiscordAppOwnerModel>().Where(a => a.ClientId == stringClientId).ToArrayAsync();
-
-            if (discordAppOwnerModels.Length == 0)
-            {
-                await LoggerService.LogMessageAsync("No Discord App owner have been found!");
-                return;
-            }
-
-            await LoggerService.LogMessageAsync("==================================================");
-            await LoggerService.LogMessageAsync("List of Discord App owners:");
-            await LoggerService.LogMessageAsync("==================================================");
-
-            foreach (var discordAppOwnerModel in discordAppOwnerModels)
-                await LoggerService.LogMessageAsync($"Id: {discordAppOwnerModel.Id} | UserId: {discordAppOwnerModel.UserId}");
-        }
-
-        public async Task AddDiscordAppOwnerAsync(ulong userId, ulong clientId = 0)
-        {
-            var stringUserId = userId.ToString();
-            var stringClientId = clientId == 0 ? string.Empty : clientId.ToString();
-
-            if (await SQLiteService.SQLiteAsyncConnection.Table<DiscordAppOwnerModel>().Where(a => a.UserId == stringUserId && a.ClientId == stringClientId).CountAsync() > 0)
-            {
-                await LoggerService.LogMessageAsync("This user is already a discord app owner!");
-                return;
-            }
-
-            await SQLiteService.SQLiteAsyncConnection.InsertAsync(new DiscordAppOwnerModel { UserId = stringUserId, ClientId = stringClientId });
-            await LoggerService.LogMessageAsync("Successfully added a new discord app owner.");
-        }
-
-        public async Task RemoveDiscordAppOwnerAsync(ulong userId, ulong clientId = 0)
-        {
-            var stringUserId = userId.ToString();
-            var stringClientId = clientId == 0 ? string.Empty : clientId.ToString();
-            var discordAppOwnerModel = SQLiteService.SQLiteAsyncConnection.Table<DiscordAppOwnerModel>().Where(a => a.UserId == stringUserId && a.ClientId == stringClientId).FirstOrDefaultAsync();
-
-            if (discordAppOwnerModel == null)
-            {
-                await LoggerService.LogMessageAsync("This user is not a discord app owner!");
-                return;
-            }
-
-            await SQLiteService.SQLiteAsyncConnection.DeleteAsync(discordAppOwnerModel);
-            await LoggerService.LogMessageAsync("Successfully removed the discord app owner.");
-        }
-
-        public async Task ListDiscordAppAsync()
-        {
-            var discordAppModels = await SQLiteService.SQLiteAsyncConnection.Table<DiscordAppModel>().ToArrayAsync();
-
-            if (discordAppModels.Length == 0)
-            {
-                await LoggerService.LogMessageAsync("No discord app have been found!");
-                return;
-            }
-
-            await LoggerService.LogMessageAsync("==================================================");
-            await LoggerService.LogMessageAsync("List of discord app:");
-            await LoggerService.LogMessageAsync("==================================================");
-
-            foreach (var discordAppModel in discordAppModels)
-                await LoggerService.LogMessageAsync($"Id: {discordAppModel.Id} | ClientId: {discordAppModel.ClientId}");
-        }
-
-        public async Task AddDiscordAppAsync(ulong clientId, string clientSecret, string botToken)
-        {
-            var stringClientId = clientId.ToString();
-            var discordAppModel = await SQLiteService.SQLiteAsyncConnection.Table<DiscordAppModel>().Where(a => a.ClientId == stringClientId).FirstOrDefaultAsync();
-
-            if (discordAppModel == null)
-            {
-                var discordAppModelNew = new DiscordAppModel { ClientId = clientId.ToString(), ClientSecret = clientSecret, BotToken = botToken };
-
-                await SQLiteService.SQLiteAsyncConnection.InsertAsync(discordAppModelNew);
-                await LoggerService.LogMessageAsync("Successfully added new discord app.");
-            }
-            else
-            {
-                discordAppModel.ClientSecret = clientSecret;
-                discordAppModel.BotToken = botToken;
-
-                await SQLiteService.SQLiteAsyncConnection.UpdateAsync(discordAppModel);
-                await LoggerService.LogMessageAsync("Successfully updated the discord app.");
-            }
-        }
-
-        public async Task<bool> RemoveDiscordAppAsync(ulong clientId)
-        {
-            var stringClientId = clientId.ToString();
-            var discordAppModel = await SQLiteService.SQLiteAsyncConnection.Table<DiscordAppModel>().Where(a => a.ClientId == stringClientId).FirstOrDefaultAsync();
-
-            if (discordAppModel == null)
-            {
-                await LoggerService.LogMessageAsync("This discord app is does not exist!");
-                return false;
-            }
-
-            await SQLiteService.SQLiteAsyncConnection.DeleteAsync(discordAppModel);
-            await LoggerService.LogMessageAsync("Successfully remove the discord app.");
-            return true;
-        }
-
         public async Task ListRunningDiscordAppAsync()
         {
-            if (DiscordShardedClientModels.Count == 0)
-            {
-                await LoggerService.LogMessageAsync("No running discord app have been found!");
-                return;
-            }
-
             await LoggerService.LogMessageAsync("==================================================");
-            await LoggerService.LogMessageAsync("List of running discord app:");
+            await LoggerService.LogMessageAsync("List of running Discord App:");
             await LoggerService.LogMessageAsync("==================================================");
 
             foreach (var discordSocketClientModel in DiscordShardedClientModels)
-                await LoggerService.LogMessageAsync($"ClientId: {discordSocketClientModel.DiscordAppModel.ClientId}");
+                await LoggerService.LogMessageAsync($"{discordSocketClientModel.DiscordAppModel.ClientId}");
         }
 
         public async Task<bool> StartDiscordAppAsync(ulong clientId)
@@ -283,7 +159,7 @@ namespace TheDialgaTeam.DiscordBot.Services.Discord
 
         private async Task DiscordShardedClientModelOnLog(IDiscordShardedClientModel discordShardedClientModel, LogMessage logMessage)
         {
-            await LoggerService.LogMessageAsync($"[Bot {discordShardedClientModel.DiscordAppModel.ClientId}] {(string.IsNullOrEmpty(discordShardedClientModel.DiscordShardedClient?.CurrentUser?.Username) ? logMessage.Message : discordShardedClientModel.DiscordShardedClient?.CurrentUser?.Username + ": " + logMessage.Message)}");
+            await LoggerService.LogMessageAsync(discordShardedClientModel, logMessage);
         }
 
         private async Task DiscordShardedClientModelOnMessageReceived(IDiscordShardedClientModel discordShardedClientModel, SocketMessage socketMessage)
@@ -398,7 +274,7 @@ namespace TheDialgaTeam.DiscordBot.Services.Discord
                 {
                     await LoggerService.LogMessageAsync($"[Bot {discordShardedClientModel.DiscordAppModel.ClientId}] Client Id mismatch. Verification failed!");
                     await StopDiscordAppAsync(Convert.ToUInt64(discordShardedClientModel.DiscordAppModel.ClientId));
-                    await RemoveDiscordAppAsync(Convert.ToUInt64(discordShardedClientModel.DiscordAppModel.ClientId));
+                    //await RemoveDiscordAppAsync(Convert.ToUInt64(discordShardedClientModel.DiscordAppModel.ClientId));
                     return;
                 }
 

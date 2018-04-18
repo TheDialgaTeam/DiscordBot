@@ -3,6 +3,7 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 using TheDialgaTeam.DiscordBot.Extension.System.IO;
+using TheDialgaTeam.DiscordBot.Model.Discord;
 
 namespace TheDialgaTeam.DiscordBot.Services.Logger
 {
@@ -12,7 +13,7 @@ namespace TheDialgaTeam.DiscordBot.Services.Logger
 
         Task LogMessageAsync(string message);
 
-        Task LogMessageAsync(LogMessage logMessage);
+        Task LogMessageAsync(IDiscordShardedClientModel discordShardedClientModel, LogMessage logMessage);
 
         Task LogErrorMessageAsync(string message);
 
@@ -42,32 +43,63 @@ namespace TheDialgaTeam.DiscordBot.Services.Logger
 
         public async Task LogMessageAsync(string message)
         {
-            await InternalMessageAsync(Console.Out, $"{message}");
+            await InternalMessageAsync(Console.Out, ConsoleColor.White, $"{message}");
         }
 
-        public async Task LogMessageAsync(LogMessage logMessage)
+        public async Task LogMessageAsync(IDiscordShardedClientModel discordShardedClientModel, LogMessage logMessage)
         {
-            if (logMessage.Exception != null)
-                await InternalMessageAsync(Console.Error, $"[{logMessage.Severity.ToString()}] {logMessage.Exception}");
-            else
-                await InternalMessageAsync(Console.Out, $"[{logMessage.Severity.ToString()}] {logMessage.Message}");
+            var message = $"[Bot {discordShardedClientModel.DiscordAppModel.ClientId}] {(string.IsNullOrEmpty(discordShardedClientModel.DiscordShardedClient?.CurrentUser?.Username) ? logMessage.ToString() : discordShardedClientModel.DiscordShardedClient?.CurrentUser?.Username + ":\n" + logMessage.ToString())}";
+
+            switch (logMessage.Severity)
+            {
+                case LogSeverity.Critical:
+                    await InternalMessageAsync(Console.Error, ConsoleColor.Red, message);
+                    break;
+
+                case LogSeverity.Error:
+                    await InternalMessageAsync(Console.Error, ConsoleColor.Red, message);
+                    break;
+
+                case LogSeverity.Warning:
+                    await InternalMessageAsync(Console.Out, ConsoleColor.Yellow, message);
+                    break;
+
+                case LogSeverity.Info:
+                    await InternalMessageAsync(Console.Out, ConsoleColor.White, message);
+                    break;
+
+                case LogSeverity.Verbose:
+                    await InternalMessageAsync(Console.Out, ConsoleColor.White, message);
+                    break;
+
+                case LogSeverity.Debug:
+                    await InternalMessageAsync(Console.Out, ConsoleColor.White, message);
+                    break;
+
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
         }
 
         public async Task LogErrorMessageAsync(string message)
         {
-            await InternalMessageAsync(Console.Error, $"{message}");
+            await InternalMessageAsync(Console.Error, ConsoleColor.Red, $"{message}");
         }
 
         public async Task LogErrorMessageAsync(Exception exception)
         {
-            await InternalMessageAsync(Console.Error, $"{exception}");
+            await InternalMessageAsync(Console.Error, ConsoleColor.Red, $"{exception}");
         }
 
-        private async Task InternalMessageAsync(TextWriter writer, string message)
+        private async Task InternalMessageAsync(TextWriter writer, ConsoleColor consoleColor, string message)
         {
+            Console.ForegroundColor = consoleColor;
+
             await writer.WriteLineAsync(message);
             await StreamWriter.WriteLineAsync($"{DateTime.UtcNow:HH:mm:ss} {message}");
             await StreamWriter.FlushAsync();
+
+            Console.ResetColor();
         }
     }
 }

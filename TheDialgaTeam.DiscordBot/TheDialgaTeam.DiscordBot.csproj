@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="TheDialgaTeam.DiscordBot.csproj.DotSettings" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Owin" Version="2.1.0-preview2-final" />
     <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.1.0-preview2-final" />
     <PackageReference Include="Nancy" Version="2.0.0-clinteastwood" />
