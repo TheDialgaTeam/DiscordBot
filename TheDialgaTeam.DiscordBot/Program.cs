@@ -1,9 +1,9 @@
-﻿using Discord;
-using Discord.Commands;
-using Microsoft.Extensions.DependencyInjection;
-using System;
+﻿using System;
 using System.Reflection;
 using System.Threading.Tasks;
+using Discord;
+using Discord.Commands;
+using Microsoft.Extensions.DependencyInjection;
 using TheDialgaTeam.DiscordBot.Model.Command;
 using TheDialgaTeam.DiscordBot.Model.Discord.Command;
 using TheDialgaTeam.DiscordBot.Model.SQLite.Table;
@@ -67,9 +67,9 @@ namespace TheDialgaTeam.DiscordBot
 
             ServiceProvider = ServiceCollection.BuildServiceProvider();
 
-            CommandService = new CommandService(new CommandServiceConfig { CaseSensitiveCommands = false, DefaultRunMode = RunMode.Async });
+            CommandService = new CommandService(new CommandServiceConfig { CaseSensitiveCommands = false });
             CommandService.AddTypeReader<IEmote>(new EmoteTypeReader());
-            await CommandService.AddModulesAsync(Assembly.GetEntryAssembly());
+            await CommandService.AddModulesAsync(Assembly.GetEntryAssembly(), ServiceProvider);
 
             LoggerService = ServiceProvider.GetRequiredService<ILoggerService>();
             await LoggerService.LogMessageAsync("==================================================");

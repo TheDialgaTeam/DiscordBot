@@ -1,6 +1,7 @@
 ﻿using Discord;
 using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using TheDialgaTeam.DiscordBot.Extension.System.IO;
 using TheDialgaTeam.DiscordBot.Model.Discord;
@@ -25,6 +26,8 @@ namespace TheDialgaTeam.DiscordBot.Services.Logger
         private string ConsoleLogBasePath { get; } = $"{Environment.CurrentDirectory}/Logs/{DateTime.UtcNow:yyyy-MM-dd}.txt".ResolveFullPath();
 
         private StreamWriter StreamWriter { get; }
+
+        private SemaphoreSlim StreamLock { get; } = new SemaphoreSlim(1, 1);
 
         public LoggerService()
         {
@@ -93,13 +96,22 @@ namespace TheDialgaTeam.DiscordBot.Services.Logger
 
         private async Task InternalMessageAsync(TextWriter writer, ConsoleColor consoleColor, string message)
         {
-            Console.ForegroundColor = consoleColor;
+            await StreamLock.WaitAsync().ConfigureAwait(false);
 
-            await writer.WriteLineAsync(message);
-            await StreamWriter.WriteLineAsync($"{DateTime.UtcNow:HH:mm:ss} {message}");
-            await StreamWriter.FlushAsync();
+            try
+            {
+                Console.ForegroundColor = consoleColor;
 
-            Console.ResetColor();
+                await writer.WriteLineAsync(message);
+                await StreamWriter.WriteLineAsync($"{DateTime.UtcNow:HH:mm:ss} {message}");
+                await StreamWriter.FlushAsync();
+
+                Console.ResetColor();
+            }
+            finally
+            {
+                StreamLock.Release();
+            }
         }
     }
 }

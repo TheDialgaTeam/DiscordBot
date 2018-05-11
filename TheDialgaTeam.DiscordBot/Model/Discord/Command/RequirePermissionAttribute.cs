@@ -1,8 +1,8 @@
-﻿using Discord.Commands;
+﻿using System;
+using System.Threading.Tasks;
+using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Threading.Tasks;
 using TheDialgaTeam.DiscordBot.Model.SQLite.Table;
 using TheDialgaTeam.DiscordBot.Services.SQLite;
 
@@ -43,6 +43,7 @@ namespace TheDialgaTeam.DiscordBot.Model.Discord.Command
                                 continue;
 
                             currentUserPermission = RequiredPermissions.ChannelModerator;
+
                             break;
                         }
 
@@ -55,6 +56,7 @@ namespace TheDialgaTeam.DiscordBot.Model.Discord.Command
                             continue;
 
                         currentUserPermission = RequiredPermissions.ChannelModerator;
+
                         break;
                     }
                 }
@@ -72,6 +74,7 @@ namespace TheDialgaTeam.DiscordBot.Model.Discord.Command
                                 continue;
 
                             currentUserPermission = RequiredPermissions.GuildModerator;
+
                             break;
                         }
 
@@ -84,6 +87,7 @@ namespace TheDialgaTeam.DiscordBot.Model.Discord.Command
                             continue;
 
                         currentUserPermission = RequiredPermissions.GuildModerator;
+
                         break;
                     }
                 }
@@ -108,6 +112,7 @@ namespace TheDialgaTeam.DiscordBot.Model.Discord.Command
                         continue;
 
                     currentUserPermission = RequiredPermissions.DiscordAppOwner;
+
                     break;
                 }
             }
@@ -121,6 +126,7 @@ namespace TheDialgaTeam.DiscordBot.Model.Discord.Command
                     continue;
 
                 currentUserPermission = RequiredPermissions.GlobalDiscordAppOwner;
+
                 break;
             }
 
@@ -131,10 +137,15 @@ namespace TheDialgaTeam.DiscordBot.Model.Discord.Command
     public enum RequiredPermissions
     {
         GlobalDiscordAppOwner = 5,
+
         DiscordAppOwner = 4,
+
         GuildAdministrator = 3,
+
         GuildModerator = 2,
+
         ChannelModerator = 1,
+
         GuildMember = 0
     }
 }
