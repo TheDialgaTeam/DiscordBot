@@ -3,6 +3,7 @@ using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Threading.Tasks;
+using SQLiteNetExtensionsAsync.Extensions;
 using TheDialgaTeam.DiscordBot.Model.SQLite.Table;
 using TheDialgaTeam.DiscordBot.Services.SQLite;
 
@@ -21,7 +22,10 @@ namespace TheDialgaTeam.DiscordBot.Model.Discord.Command
             var guildId = context.Guild.Id.ToString();
             var moduleName = command.Module.Name;
 
-            var discordGuildModuleModel = await sqliteService.SQLiteAsyncConnection.Table<DiscordGuildModuleModel>().Where(a => a.ClientId == clientId && a.GuildId == guildId && a.Module == moduleName).FirstOrDefaultAsync();
+            var discordAppDetailTableId = await sqliteService.GetDiscordAppDetailTableIdAsync(context.Client.CurrentUser.Id.ToString());
+
+            if (discordAppDetailTableId == null)
+                return PreconditionResult.FromError("Missing DiscordAppDetail record from the database.");
 
             return discordGuildModuleModel?.Active ?? false ? PreconditionResult.FromSuccess() : PreconditionResult.FromError($"This command require {command.Module.Name} to be active in this guild.");
         }

@@ -1,10 +1,11 @@
-﻿using SQLite;
-using System;
+﻿using System;
 using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
+using SQLite;
 using TheDialgaTeam.DiscordBot.Extension.System.IO;
-using TheDialgaTeam.DiscordBot.Model.SQLite.Interface;
+using TheDialgaTeam.DiscordBot.Model.SQLite;
+using TheDialgaTeam.DiscordBot.Model.SQLite.Table;
 using TheDialgaTeam.DiscordBot.Services.Logger;
 
 namespace TheDialgaTeam.DiscordBot.Services.SQLite
@@ -14,6 +15,8 @@ namespace TheDialgaTeam.DiscordBot.Services.SQLite
         SQLiteAsyncConnection SQLiteAsyncConnection { get; }
 
         Task InitializeDatabaseAsync();
+
+        Task<long?> GetDiscordAppDetailTableIdAsync(string clientId);
     }
 
     internal sealed class SQLiteService : ISQLiteService
@@ -57,6 +60,13 @@ namespace TheDialgaTeam.DiscordBot.Services.SQLite
             {
                 await LoggerService.LogErrorMessageAsync(ex);
             }
+        }
+
+        public async Task<long?> GetDiscordAppDetailTableIdAsync(string clientId)
+        {
+            var discordAppDetailTable = await SQLiteAsyncConnection.Table<DiscordAppDetailTable>().Where(a => a.ClientId == clientId).FirstOrDefaultAsync();
+
+            return discordAppDetailTable?.Id;
         }
     }
 }
