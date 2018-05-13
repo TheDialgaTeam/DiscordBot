@@ -17,6 +17,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SQLiteNetExtensions", "SQLi
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SQLiteNetExtensionsAsync", "SQLiteNetExtensions\SQLiteNetExtensionsAsync\SQLiteNetExtensionsAsync.csproj", "{4C714CB6-01AE-4699-B2D5-4AEA7443EB69}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Discord.Net", "Discord.Net", "{4CE937D8-2CA2-4BDE-8165-8A0A33448DE9}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SQLite-Net Extensions", "SQLite-Net Extensions", "{C4A4E259-4053-4EA7-8E66-BF4168278502}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -54,6 +58,14 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{9215FC81-CBB8-4EFB-B455-99296FB4326E} = {4CE937D8-2CA2-4BDE-8165-8A0A33448DE9}
+		{AB6F3B27-60CD-43E9-8AFC-DF2D82C8FE62} = {4CE937D8-2CA2-4BDE-8165-8A0A33448DE9}
+		{2EFA6A29-B66D-4F2A-8940-87A6827A9420} = {4CE937D8-2CA2-4BDE-8165-8A0A33448DE9}
+		{ABC8E277-5592-4E3C-AFC1-DF822A11EDF5} = {4CE937D8-2CA2-4BDE-8165-8A0A33448DE9}
+		{750D88FF-8D21-4125-8107-5BB537423C93} = {C4A4E259-4053-4EA7-8E66-BF4168278502}
+		{4C714CB6-01AE-4699-B2D5-4AEA7443EB69} = {C4A4E259-4053-4EA7-8E66-BF4168278502}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F4B7B4B8-AF60-4F30-808D-993508B5F16B}
