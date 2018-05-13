@@ -13,6 +13,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Discord.Net.Commands", "Dis
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Discord.Net.WebSocket", "Discord.Net\src\Discord.Net.WebSocket\Discord.Net.WebSocket.csproj", "{ABC8E277-5592-4E3C-AFC1-DF822A11EDF5}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SQLiteNetExtensions", "SQLiteNetExtensions\SQLiteNetExtensions\SQLiteNetExtensions.csproj", "{750D88FF-8D21-4125-8107-5BB537423C93}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SQLiteNetExtensionsAsync", "SQLiteNetExtensions\SQLiteNetExtensionsAsync\SQLiteNetExtensionsAsync.csproj", "{4C714CB6-01AE-4699-B2D5-4AEA7443EB69}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +43,14 @@ Global
 		{ABC8E277-5592-4E3C-AFC1-DF822A11EDF5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{ABC8E277-5592-4E3C-AFC1-DF822A11EDF5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{ABC8E277-5592-4E3C-AFC1-DF822A11EDF5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{750D88FF-8D21-4125-8107-5BB537423C93}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{750D88FF-8D21-4125-8107-5BB537423C93}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{750D88FF-8D21-4125-8107-5BB537423C93}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{750D88FF-8D21-4125-8107-5BB537423C93}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4C714CB6-01AE-4699-B2D5-4AEA7443EB69}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4C714CB6-01AE-4699-B2D5-4AEA7443EB69}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4C714CB6-01AE-4699-B2D5-4AEA7443EB69}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4C714CB6-01AE-4699-B2D5-4AEA7443EB69}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

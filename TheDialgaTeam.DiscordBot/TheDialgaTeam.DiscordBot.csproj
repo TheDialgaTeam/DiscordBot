@@ -26,6 +26,8 @@
     <ProjectReference Include="..\Discord.Net\src\Discord.Net.Core\Discord.Net.Core.csproj" />
     <ProjectReference Include="..\Discord.Net\src\Discord.Net.Rest\Discord.Net.Rest.csproj" />
     <ProjectReference Include="..\Discord.Net\src\Discord.Net.WebSocket\Discord.Net.WebSocket.csproj" />
+    <ProjectReference Include="..\SQLiteNetExtensions\SQLiteNetExtensionsAsync\SQLiteNetExtensionsAsync.csproj" />
+    <ProjectReference Include="..\SQLiteNetExtensions\SQLiteNetExtensions\SQLiteNetExtensions.csproj" />
   </ItemGroup>
 
 </Project>

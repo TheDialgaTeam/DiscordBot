@@ -4,3 +4,6 @@
 [submodule "Discord.Net"]
 	path = Discord.Net
 	url = https://github.com/TheDialgaTeam/Discord.Net.git
+[submodule "SQLiteNetExtensions"]
+	path = SQLiteNetExtensions
+	url = https://bitbucket.org/twincoders/sqlite-net-extensions.git
