@@ -6,13 +6,11 @@ using Discord.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using TheDialgaTeam.DiscordBot.Model.Command;
 using TheDialgaTeam.DiscordBot.Model.Discord.Command;
-using TheDialgaTeam.DiscordBot.Model.SQLite.Table;
 using TheDialgaTeam.DiscordBot.Services;
 using TheDialgaTeam.DiscordBot.Services.Discord;
 using TheDialgaTeam.DiscordBot.Services.Logger;
 using TheDialgaTeam.DiscordBot.Services.Nancy;
 using TheDialgaTeam.DiscordBot.Services.SQLite;
-using TheDialgaTeam.DiscordBot.Services.SQLite.Table;
 
 namespace TheDialgaTeam.DiscordBot
 {
@@ -35,10 +33,6 @@ namespace TheDialgaTeam.DiscordBot
 
         private ISQLiteService SQLiteService { get; set; }
 
-        private IDiscordAppOwnerTableService DiscordAppOwnerTableService { get; set; }
-
-        private IDiscordAppTableService DiscordAppTableService { get; set; }
-
         private IDiscordAppService DiscordAppService { get; set; }
 
         private IPollHandlerService PollHandlerService { get; set; }
@@ -58,8 +52,6 @@ namespace TheDialgaTeam.DiscordBot
             ServiceCollection.AddSingleton<ILoggerService, LoggerService>();
 
             ServiceCollection.AddSingleton<ISQLiteService, SQLiteService>();
-            ServiceCollection.AddSingleton<IDiscordAppOwnerTableService, DiscordAppOwnerTableService>();
-            ServiceCollection.AddSingleton<IDiscordAppTableService, DiscordAppTableService>();
 
             ServiceCollection.AddSingleton<IDiscordAppService, DiscordAppService>();
             ServiceCollection.AddSingleton<IPollHandlerService, PollHandlerService>();
@@ -79,9 +71,6 @@ namespace TheDialgaTeam.DiscordBot
 
             SQLiteService = ServiceProvider.GetRequiredService<ISQLiteService>();
             await SQLiteService.InitializeDatabaseAsync();
-
-            DiscordAppOwnerTableService = ServiceProvider.GetRequiredService<IDiscordAppOwnerTableService>();
-            DiscordAppTableService = ServiceProvider.GetRequiredService<IDiscordAppTableService>();
 
             DiscordAppService = ServiceProvider.GetRequiredService<IDiscordAppService>();
 

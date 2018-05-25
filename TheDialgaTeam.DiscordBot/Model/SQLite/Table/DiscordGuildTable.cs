@@ -17,7 +17,7 @@ namespace TheDialgaTeam.DiscordBot.Model.SQLite.Table
         [ForeignKey(typeof(ServerHoundTable))]
         public long ServerHoundId { get; set; }
 
-        [OneToOne(CascadeOperations = CascadeOperation.All)]
+        [ManyToOne(CascadeOperations = CascadeOperation.All)]
         public DiscordAppDetailTable DiscordAppDetail { get; set; }
 
         [OneToMany(CascadeOperations = CascadeOperation.All)]

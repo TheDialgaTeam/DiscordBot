@@ -1,4 +1,5 @@
-﻿using SQLite;
+﻿using System.Collections.Generic;
+using SQLite;
 using SQLiteNetExtensions.Attributes;
 
 namespace TheDialgaTeam.DiscordBot.Model.SQLite.Table
@@ -13,7 +14,7 @@ namespace TheDialgaTeam.DiscordBot.Model.SQLite.Table
         [OneToOne(CascadeOperations = CascadeOperation.All)]
         public DiscordAppTable DiscordApp { get; set; }
 
-        [OneToOne(CascadeOperations = CascadeOperation.All)]
-        public DiscordGuildTable DiscordGuild { get; set; }
+        [OneToMany(CascadeOperations = CascadeOperation.All)]
+        public List<DiscordGuildTable> DiscordGuild { get; set; }
     }
 }
