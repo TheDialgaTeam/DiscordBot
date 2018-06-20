@@ -1,5 +1,4 @@
 ﻿using SQLite;
-using SQLiteNetExtensions.Attributes;
 
 namespace TheDialgaTeam.DiscordBot.Model.SQLite.Table
 {
@@ -8,10 +7,7 @@ namespace TheDialgaTeam.DiscordBot.Model.SQLite.Table
     {
         public string UserId { get; set; }
 
-        [ForeignKey(typeof(DiscordGuildTable))]
+        [Indexed]
         public long DiscordGuildId { get; set; }
-
-        [ManyToOne(CascadeOperations = CascadeOperation.All)]
-        public DiscordGuildTable DiscordGuild { get; set; }
     }
 }

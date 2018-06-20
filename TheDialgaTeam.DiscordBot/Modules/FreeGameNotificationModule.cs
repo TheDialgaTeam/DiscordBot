@@ -122,7 +122,7 @@ To enable this module, use `{Context.Client.CurrentUser.Mention} EnableFreeGameN
         [RequirePermission(RequiredPermissions.GlobalDiscordAppOwner)]
         public async Task FreeGameNotificationAnnounceAsync([Remainder] [Summary("Message to announce.")] string message)
         {
-            foreach (var discordSocketClientModel in DiscordAppService.DiscordShardedClientModels)
+            foreach (var discordSocketClientModel in DiscordAppService.DiscordShardedClientHelpers)
             {
                 var clientId = discordSocketClientModel.DiscordAppModel.ClientId;
                 var freeGameNotificationModels = await SQLiteService.SQLiteAsyncConnection.Table<FreeGameNotificationModel>().Where(a => a.ClientId == clientId).OrderBy(a => a.GuildId).ToArrayAsync();

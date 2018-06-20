@@ -3,22 +3,11 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.0</TargetFramework>
-    <StartupObject>TheDialgaTeam.DiscordBot.Program</StartupObject>
+    <StartupObject>TheDialgaTeam.Discord.Bot.Program</StartupObject>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="TheDialgaTeam.DiscordBot.csproj.DotSettings" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Owin" Version="2.1.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.1.0" />
-    <PackageReference Include="Nancy" Version="2.0.0-clinteastwood" />
     <PackageReference Include="sqlite-net-pcl" Version="1.5.166-beta" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Services\Discord\Embed\" />
   </ItemGroup>
 
   <ItemGroup>

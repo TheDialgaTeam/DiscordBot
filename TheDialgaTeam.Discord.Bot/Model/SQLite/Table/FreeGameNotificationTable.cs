@@ -1,10 +1,14 @@
 ﻿using SQLite;
 
-namespace TheDialgaTeam.DiscordBot.Model.SQLite.Table
+namespace TheDialgaTeam.Discord.Bot.Model.SQLite.Table
 {
     [Table("FreeGameNotification")]
-    internal sealed class FreeGameNotificationTable : BaseTable, IDatabaseTable
+    internal sealed class FreeGameNotificationTable : IDatabaseTable
     {
+        [PrimaryKey]
+        [AutoIncrement]
+        public long Id { get; set; }
+
         public bool Active { get; set; }
 
         public string RoleId { get; set; }

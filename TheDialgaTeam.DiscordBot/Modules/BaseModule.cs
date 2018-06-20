@@ -59,7 +59,7 @@ If you want to have a custom avatar and bot name, feel free to join our bot disc
         {
             var ignoreGuilds = new List<ulong>();
 
-            foreach (var discordSocketClientModel in DiscordAppService.DiscordShardedClientModels)
+            foreach (var discordSocketClientModel in DiscordAppService.DiscordShardedClientHelpers)
             {
                 foreach (var socketGuild in discordSocketClientModel.DiscordShardedClient.Guilds)
                 {

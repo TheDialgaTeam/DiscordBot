@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using SQLite;
-using SQLiteNetExtensions.Attributes;
+﻿using SQLite;
 
 namespace TheDialgaTeam.DiscordBot.Model.SQLite.Table
 {
@@ -9,25 +7,7 @@ namespace TheDialgaTeam.DiscordBot.Model.SQLite.Table
     {
         public string ChannelId { get; set; }
 
-        [ForeignKey(typeof(DiscordGuildTable))]
+        [Indexed]
         public long DiscordGuildId { get; set; }
-
-        [ForeignKey(typeof(FreeGameNotificationTable))]
-        public long FreeGameNotificationId { get; set; }
-
-        [ManyToOne(CascadeOperations = CascadeOperation.All)]
-        public DiscordGuildTable DiscordGuild { get; set; }
-
-        [OneToMany(CascadeOperations = CascadeOperation.All)]
-        public List<DiscordChannelModeratorRoleTable> DiscordChannelModeratorRole { get; set; }
-
-        [OneToMany(CascadeOperations = CascadeOperation.All)]
-        public List<DiscordChannelModeratorUserTable> DiscordChannelModeratorUser { get; set; }
-
-        [OneToOne(CascadeOperations = CascadeOperation.All)]
-        public FreeGameNotificationTable FreeGameNotification { get; set; }
-
-        [OneToMany(CascadeOperations = CascadeOperation.All)]
-        public List<PollTable> Poll { get; set; }
     }
 }

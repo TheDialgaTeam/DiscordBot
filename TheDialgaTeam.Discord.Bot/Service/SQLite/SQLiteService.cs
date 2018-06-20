@@ -1,13 +1,12 @@
 ﻿using System;
-using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
 using SQLite;
-using TheDialgaTeam.DiscordBot.Extension.System.IO;
-using TheDialgaTeam.DiscordBot.Model.SQLite;
-using TheDialgaTeam.DiscordBot.Services.Logger;
+using TheDialgaTeam.Discord.Bot.Model.SQLite;
+using TheDialgaTeam.Discord.Bot.Service.IO;
+using TheDialgaTeam.Discord.Bot.Service.Logger;
 
-namespace TheDialgaTeam.DiscordBot.Services.SQLite
+namespace TheDialgaTeam.Discord.Bot.Service.SQLite
 {
     public interface ISQLiteService
     {
@@ -18,28 +17,23 @@ namespace TheDialgaTeam.DiscordBot.Services.SQLite
 
     internal sealed class SQLiteService : ISQLiteService
     {
-        public SQLiteAsyncConnection SQLiteAsyncConnection { get; private set; }
+        public SQLiteAsyncConnection SQLiteAsyncConnection { get; }
+
+        private IFilePathService FilePathService { get; }
 
         private ILoggerService LoggerService { get; }
 
-        private string SQLiteDataBasePath { get; } = $"{Environment.CurrentDirectory}/Data/Application.db".ResolveFullPath();
-
-        public SQLiteService(ILoggerService loggerService)
+        public SQLiteService(IFilePathService filePathService, ILoggerService loggerService)
         {
+            FilePathService = filePathService;
             LoggerService = loggerService;
+            SQLiteAsyncConnection = new SQLiteAsyncConnection(filePathService.SQLiteDatabaseFilePath);
         }
 
         public async Task InitializeDatabaseAsync()
         {
             try
             {
-                var directory = $"{Environment.CurrentDirectory}/Data".ResolveFullPath();
-
-                if (!Directory.Exists(directory))
-                    Directory.CreateDirectory(directory);
-
-                SQLiteAsyncConnection = new SQLiteAsyncConnection(SQLiteDataBasePath);
-
                 var assemblyTypes = Assembly.GetExecutingAssembly().GetTypes();
 
                 foreach (var assemblyType in assemblyTypes)
@@ -51,7 +45,7 @@ namespace TheDialgaTeam.DiscordBot.Services.SQLite
                 }
 
                 await SQLiteAsyncConnection.ExecuteAsync("VACUUM;").ConfigureAwait(false);
-                await LoggerService.LogMessageAsync($"Database created at: {SQLiteDataBasePath}").ConfigureAwait(false);
+                await LoggerService.LogMessageAsync($"Database created at: {FilePathService.SQLiteDatabaseFilePath}").ConfigureAwait(false);
             }
             catch (Exception ex)
             {

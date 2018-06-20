@@ -1,11 +1,15 @@
 ﻿using System;
 using SQLite;
 
-namespace TheDialgaTeam.DiscordBot.Model.SQLite.Table
+namespace TheDialgaTeam.Discord.Bot.Model.SQLite.Table
 {
     [Table("ServerHound")]
-    internal sealed class ServerHoundTable : BaseTable, IDatabaseTable
+    internal sealed class ServerHoundTable : IDatabaseTable
     {
+        [PrimaryKey]
+        [AutoIncrement]
+        public long Id { get; set; }
+
         public bool Dbans { get; set; }
 
         public DateTimeOffset LastChecked { get; set; }

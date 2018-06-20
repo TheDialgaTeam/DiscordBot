@@ -1,11 +1,15 @@
 ﻿using System;
 using SQLite;
 
-namespace TheDialgaTeam.DiscordBot.Model.SQLite.Table
+namespace TheDialgaTeam.Discord.Bot.Model.SQLite.Table
 {
     [Table("Poll")]
-    internal sealed class PollTable : BaseTable, IDatabaseTable
+    internal sealed class PollTable : IDatabaseTable
     {
+        [PrimaryKey]
+        [AutoIncrement]
+        public long Id { get; set; }
+
         public string MessageId { get; set; }
 
         public DateTimeOffset StartDateTime { get; set; }

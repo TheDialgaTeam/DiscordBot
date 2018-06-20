@@ -48,7 +48,7 @@ namespace TheDialgaTeam.DiscordBot.Services
                     if (DateTimeOffset.Now <= pollModel.StartDateTime.Add(pollModel.Duration))
                         continue;
 
-                    foreach (var discordSocketClientModel in DiscordAppService.DiscordShardedClientModels)
+                    foreach (var discordSocketClientModel in DiscordAppService.DiscordShardedClientHelpers)
                     {
                         if (discordSocketClientModel.DiscordAppModel.ClientId != pollModel.ClientId)
                             continue;

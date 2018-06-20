@@ -1,10 +1,14 @@
 ﻿using SQLite;
 
-namespace TheDialgaTeam.DiscordBot.Model.SQLite.Table
+namespace TheDialgaTeam.Discord.Bot.Model.SQLite.Table
 {
     [Table("DiscordGuildModule")]
-    internal sealed class DiscordGuildModuleTable : BaseTable, IDatabaseTable
+    internal sealed class DiscordGuildModuleTable : IDatabaseTable
     {
+        [PrimaryKey]
+        [AutoIncrement]
+        public long Id { get; set; }
+
         public string Module { get; set; }
 
         public bool Active { get; set; }

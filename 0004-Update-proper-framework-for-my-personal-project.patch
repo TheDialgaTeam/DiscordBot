@@ -1,0 +1,61 @@
+From ba3550eef7c5067197e4cda7756516713890d889 Mon Sep 17 00:00:00 2001
+From: jianmingyong <jianming1993@gmail.com>
+Date: Sat, 12 May 2018 03:23:47 +0800
+Subject: [PATCH 4/6] Update proper framework for my personal project.
+
+---
+ src/Discord.Net.Commands/Discord.Net.Commands.csproj   | 2 +-
+ src/Discord.Net.Core/Discord.Net.Core.csproj           | 2 +-
+ src/Discord.Net.Rest/Discord.Net.Rest.csproj           | 2 +-
+ src/Discord.Net.WebSocket/Discord.Net.WebSocket.csproj | 2 +-
+ 4 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/src/Discord.Net.Commands/Discord.Net.Commands.csproj b/src/Discord.Net.Commands/Discord.Net.Commands.csproj
+index 48fcf900..3b50e7bc 100644
+--- a/src/Discord.Net.Commands/Discord.Net.Commands.csproj
++++ b/src/Discord.Net.Commands/Discord.Net.Commands.csproj
+@@ -4,7 +4,7 @@
+     <AssemblyName>Discord.Net.Commands</AssemblyName>
+     <RootNamespace>Discord.Commands</RootNamespace>
+     <Description>A Discord.Net extension adding support for bot commands.</Description>
+-    <TargetFrameworks>netstandard1.3</TargetFrameworks>
++    <TargetFramework>netstandard1.3</TargetFramework>
+   </PropertyGroup>
+   <ItemGroup>
+     <ProjectReference Include="..\Discord.Net.Core\Discord.Net.Core.csproj" />
+diff --git a/src/Discord.Net.Core/Discord.Net.Core.csproj b/src/Discord.Net.Core/Discord.Net.Core.csproj
+index c8c2d260..c5550eb4 100644
+--- a/src/Discord.Net.Core/Discord.Net.Core.csproj
++++ b/src/Discord.Net.Core/Discord.Net.Core.csproj
+@@ -11,4 +11,4 @@
+     <PackageReference Include="System.Collections.Immutable" Version="1.4.0" />
+     <PackageReference Include="System.Interactive.Async" Version="3.1.1" />
+   </ItemGroup>
+-</Project>
++</Project>
+\ No newline at end of file
+diff --git a/src/Discord.Net.Rest/Discord.Net.Rest.csproj b/src/Discord.Net.Rest/Discord.Net.Rest.csproj
+index 567a775c..7a372a9c 100644
+--- a/src/Discord.Net.Rest/Discord.Net.Rest.csproj
++++ b/src/Discord.Net.Rest/Discord.Net.Rest.csproj
+@@ -16,4 +16,4 @@
+   <ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">
+     <Reference Include="System.Net.Http" />
+   </ItemGroup>
+-</Project>
++</Project>
+\ No newline at end of file
+diff --git a/src/Discord.Net.WebSocket/Discord.Net.WebSocket.csproj b/src/Discord.Net.WebSocket/Discord.Net.WebSocket.csproj
+index 1fd8529a..a22649b4 100644
+--- a/src/Discord.Net.WebSocket/Discord.Net.WebSocket.csproj
++++ b/src/Discord.Net.WebSocket/Discord.Net.WebSocket.csproj
+@@ -14,4 +14,4 @@
+   <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.3' ">
+     <PackageReference Include="System.Net.WebSockets.Client" Version="4.3.2" />
+   </ItemGroup>
+-</Project>
++</Project>
+\ No newline at end of file
+-- 
+2.17.1.windows.2
+

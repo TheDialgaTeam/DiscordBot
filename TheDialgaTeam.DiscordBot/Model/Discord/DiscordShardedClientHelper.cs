@@ -1,176 +1,173 @@
-﻿using Discord;
-using Discord.WebSocket;
-using System;
+﻿using System;
 using System.Threading.Tasks;
-using TheDialgaTeam.DiscordBot.Model.SQLite.Table;
+using Discord;
+using Discord.WebSocket;
 
 namespace TheDialgaTeam.DiscordBot.Model.Discord
 {
-    public interface IDiscordShardedClientModel
+    public interface IDiscordShardedClientHelper
     {
-        event Func<IDiscordShardedClientModel, LogMessage, Task> Log;
+        event Func<IDiscordShardedClientHelper, LogMessage, Task> Log;
 
-        event Func<IDiscordShardedClientModel, Task> LoggedIn;
+        event Func<IDiscordShardedClientHelper, Task> LoggedIn;
 
-        event Func<IDiscordShardedClientModel, Task> LoggedOut;
+        event Func<IDiscordShardedClientHelper, Task> LoggedOut;
 
-        event Func<IDiscordShardedClientModel, SocketChannel, Task> ChannelCreated;
+        event Func<IDiscordShardedClientHelper, SocketChannel, Task> ChannelCreated;
 
-        event Func<IDiscordShardedClientModel, SocketChannel, Task> ChannelDestroyed;
+        event Func<IDiscordShardedClientHelper, SocketChannel, Task> ChannelDestroyed;
 
-        event Func<IDiscordShardedClientModel, SocketChannel, SocketChannel, Task> ChannelUpdated;
+        event Func<IDiscordShardedClientHelper, SocketChannel, SocketChannel, Task> ChannelUpdated;
 
-        event Func<IDiscordShardedClientModel, SocketMessage, Task> MessageReceived;
+        event Func<IDiscordShardedClientHelper, SocketMessage, Task> MessageReceived;
 
-        event Func<IDiscordShardedClientModel, Cacheable<IMessage, ulong>, ISocketMessageChannel, Task> MessageDeleted;
+        event Func<IDiscordShardedClientHelper, Cacheable<IMessage, ulong>, ISocketMessageChannel, Task> MessageDeleted;
 
-        event Func<IDiscordShardedClientModel, Cacheable<IMessage, ulong>, SocketMessage, ISocketMessageChannel, Task> MessageUpdated;
+        event Func<IDiscordShardedClientHelper, Cacheable<IMessage, ulong>, SocketMessage, ISocketMessageChannel, Task> MessageUpdated;
 
-        event Func<IDiscordShardedClientModel, Cacheable<IUserMessage, ulong>, ISocketMessageChannel, SocketReaction, Task> ReactionAdded;
+        event Func<IDiscordShardedClientHelper, Cacheable<IUserMessage, ulong>, ISocketMessageChannel, SocketReaction, Task> ReactionAdded;
 
-        event Func<IDiscordShardedClientModel, Cacheable<IUserMessage, ulong>, ISocketMessageChannel, SocketReaction, Task> ReactionRemoved;
+        event Func<IDiscordShardedClientHelper, Cacheable<IUserMessage, ulong>, ISocketMessageChannel, SocketReaction, Task> ReactionRemoved;
 
-        event Func<IDiscordShardedClientModel, Cacheable<IUserMessage, ulong>, ISocketMessageChannel, Task> ReactionsCleared;
+        event Func<IDiscordShardedClientHelper, Cacheable<IUserMessage, ulong>, ISocketMessageChannel, Task> ReactionsCleared;
 
-        event Func<IDiscordShardedClientModel, SocketRole, Task> RoleCreated;
+        event Func<IDiscordShardedClientHelper, SocketRole, Task> RoleCreated;
 
-        event Func<IDiscordShardedClientModel, SocketRole, Task> RoleDeleted;
+        event Func<IDiscordShardedClientHelper, SocketRole, Task> RoleDeleted;
 
-        event Func<IDiscordShardedClientModel, SocketRole, SocketRole, Task> RoleUpdated;
+        event Func<IDiscordShardedClientHelper, SocketRole, SocketRole, Task> RoleUpdated;
 
-        event Func<IDiscordShardedClientModel, SocketGuild, Task> JoinedGuild;
+        event Func<IDiscordShardedClientHelper, SocketGuild, Task> JoinedGuild;
 
-        event Func<IDiscordShardedClientModel, SocketGuild, Task> LeftGuild;
+        event Func<IDiscordShardedClientHelper, SocketGuild, Task> LeftGuild;
 
-        event Func<IDiscordShardedClientModel, SocketGuild, Task> GuildAvailable;
+        event Func<IDiscordShardedClientHelper, SocketGuild, Task> GuildAvailable;
 
-        event Func<IDiscordShardedClientModel, SocketGuild, Task> GuildUnavailable;
+        event Func<IDiscordShardedClientHelper, SocketGuild, Task> GuildUnavailable;
 
-        event Func<IDiscordShardedClientModel, SocketGuild, Task> GuildMembersDownloaded;
+        event Func<IDiscordShardedClientHelper, SocketGuild, Task> GuildMembersDownloaded;
 
-        event Func<IDiscordShardedClientModel, SocketGuild, SocketGuild, Task> GuildUpdated;
+        event Func<IDiscordShardedClientHelper, SocketGuild, SocketGuild, Task> GuildUpdated;
 
-        event Func<IDiscordShardedClientModel, SocketGuildUser, Task> UserJoined;
+        event Func<IDiscordShardedClientHelper, SocketGuildUser, Task> UserJoined;
 
-        event Func<IDiscordShardedClientModel, SocketGuildUser, Task> UserLeft;
+        event Func<IDiscordShardedClientHelper, SocketGuildUser, Task> UserLeft;
 
-        event Func<IDiscordShardedClientModel, SocketUser, SocketGuild, Task> UserBanned;
+        event Func<IDiscordShardedClientHelper, SocketUser, SocketGuild, Task> UserBanned;
 
-        event Func<IDiscordShardedClientModel, SocketUser, SocketGuild, Task> UserUnbanned;
+        event Func<IDiscordShardedClientHelper, SocketUser, SocketGuild, Task> UserUnbanned;
 
-        event Func<IDiscordShardedClientModel, SocketUser, SocketUser, Task> UserUpdated;
+        event Func<IDiscordShardedClientHelper, SocketUser, SocketUser, Task> UserUpdated;
 
-        event Func<IDiscordShardedClientModel, SocketGuildUser, SocketGuildUser, Task> GuildMemberUpdated;
+        event Func<IDiscordShardedClientHelper, SocketGuildUser, SocketGuildUser, Task> GuildMemberUpdated;
 
-        event Func<IDiscordShardedClientModel, SocketUser, SocketVoiceState, SocketVoiceState, Task> UserVoiceStateUpdated;
+        event Func<IDiscordShardedClientHelper, SocketUser, SocketVoiceState, SocketVoiceState, Task> UserVoiceStateUpdated;
 
-        event Func<IDiscordShardedClientModel, SocketSelfUser, SocketSelfUser, Task> CurrentUserUpdated;
+        event Func<IDiscordShardedClientHelper, SocketSelfUser, SocketSelfUser, Task> CurrentUserUpdated;
 
-        event Func<IDiscordShardedClientModel, SocketUser, ISocketMessageChannel, Task> UserIsTyping;
+        event Func<IDiscordShardedClientHelper, SocketUser, ISocketMessageChannel, Task> UserIsTyping;
 
-        event Func<IDiscordShardedClientModel, SocketGroupUser, Task> RecipientAdded;
+        event Func<IDiscordShardedClientHelper, SocketGroupUser, Task> RecipientAdded;
 
-        event Func<IDiscordShardedClientModel, SocketGroupUser, Task> RecipientRemoved;
+        event Func<IDiscordShardedClientHelper, SocketGroupUser, Task> RecipientRemoved;
 
-        event Func<IDiscordShardedClientModel, DiscordSocketClient, Task> ShardConnected;
+        event Func<IDiscordShardedClientHelper, DiscordSocketClient, Task> ShardConnected;
 
-        event Func<IDiscordShardedClientModel, Exception, DiscordSocketClient, Task> ShardDisconnected;
+        event Func<IDiscordShardedClientHelper, Exception, DiscordSocketClient, Task> ShardDisconnected;
 
-        event Func<IDiscordShardedClientModel, DiscordSocketClient, Task> ShardReady;
+        event Func<IDiscordShardedClientHelper, DiscordSocketClient, Task> ShardReady;
 
-        event Func<IDiscordShardedClientModel, int, int, DiscordSocketClient, Task> ShardLatencyUpdated;
+        event Func<IDiscordShardedClientHelper, int, int, DiscordSocketClient, Task> ShardLatencyUpdated;
 
         DiscordShardedClient DiscordShardedClient { get; }
-
-        IDiscordAppModel DiscordAppModel { get; }
 
         Task StartListeningAsync();
 
         Task StopListeningAsync();
     }
 
-    internal sealed class DiscordShardedClientModel : IDiscordShardedClientModel
+    internal sealed class DiscordShardedClientHelper : IDiscordShardedClientHelper
     {
-        public event Func<IDiscordShardedClientModel, LogMessage, Task> Log;
+        public event Func<IDiscordShardedClientHelper, LogMessage, Task> Log;
 
-        public event Func<IDiscordShardedClientModel, Task> LoggedIn;
+        public event Func<IDiscordShardedClientHelper, Task> LoggedIn;
 
-        public event Func<IDiscordShardedClientModel, Task> LoggedOut;
+        public event Func<IDiscordShardedClientHelper, Task> LoggedOut;
 
-        public event Func<IDiscordShardedClientModel, SocketChannel, Task> ChannelCreated;
+        public event Func<IDiscordShardedClientHelper, SocketChannel, Task> ChannelCreated;
 
-        public event Func<IDiscordShardedClientModel, SocketChannel, Task> ChannelDestroyed;
+        public event Func<IDiscordShardedClientHelper, SocketChannel, Task> ChannelDestroyed;
 
-        public event Func<IDiscordShardedClientModel, SocketChannel, SocketChannel, Task> ChannelUpdated;
+        public event Func<IDiscordShardedClientHelper, SocketChannel, SocketChannel, Task> ChannelUpdated;
 
-        public event Func<IDiscordShardedClientModel, SocketMessage, Task> MessageReceived;
+        public event Func<IDiscordShardedClientHelper, SocketMessage, Task> MessageReceived;
 
-        public event Func<IDiscordShardedClientModel, Cacheable<IMessage, ulong>, ISocketMessageChannel, Task> MessageDeleted;
+        public event Func<IDiscordShardedClientHelper, Cacheable<IMessage, ulong>, ISocketMessageChannel, Task> MessageDeleted;
 
-        public event Func<IDiscordShardedClientModel, Cacheable<IMessage, ulong>, SocketMessage, ISocketMessageChannel, Task> MessageUpdated;
+        public event Func<IDiscordShardedClientHelper, Cacheable<IMessage, ulong>, SocketMessage, ISocketMessageChannel, Task> MessageUpdated;
 
-        public event Func<IDiscordShardedClientModel, Cacheable<IUserMessage, ulong>, ISocketMessageChannel, SocketReaction, Task> ReactionAdded;
+        public event Func<IDiscordShardedClientHelper, Cacheable<IUserMessage, ulong>, ISocketMessageChannel, SocketReaction, Task> ReactionAdded;
 
-        public event Func<IDiscordShardedClientModel, Cacheable<IUserMessage, ulong>, ISocketMessageChannel, SocketReaction, Task> ReactionRemoved;
+        public event Func<IDiscordShardedClientHelper, Cacheable<IUserMessage, ulong>, ISocketMessageChannel, SocketReaction, Task> ReactionRemoved;
 
-        public event Func<IDiscordShardedClientModel, Cacheable<IUserMessage, ulong>, ISocketMessageChannel, Task> ReactionsCleared;
+        public event Func<IDiscordShardedClientHelper, Cacheable<IUserMessage, ulong>, ISocketMessageChannel, Task> ReactionsCleared;
 
-        public event Func<IDiscordShardedClientModel, SocketRole, Task> RoleCreated;
+        public event Func<IDiscordShardedClientHelper, SocketRole, Task> RoleCreated;
 
-        public event Func<IDiscordShardedClientModel, SocketRole, Task> RoleDeleted;
+        public event Func<IDiscordShardedClientHelper, SocketRole, Task> RoleDeleted;
 
-        public event Func<IDiscordShardedClientModel, SocketRole, SocketRole, Task> RoleUpdated;
+        public event Func<IDiscordShardedClientHelper, SocketRole, SocketRole, Task> RoleUpdated;
 
-        public event Func<IDiscordShardedClientModel, SocketGuild, Task> JoinedGuild;
+        public event Func<IDiscordShardedClientHelper, SocketGuild, Task> JoinedGuild;
 
-        public event Func<IDiscordShardedClientModel, SocketGuild, Task> LeftGuild;
+        public event Func<IDiscordShardedClientHelper, SocketGuild, Task> LeftGuild;
 
-        public event Func<IDiscordShardedClientModel, SocketGuild, Task> GuildAvailable;
+        public event Func<IDiscordShardedClientHelper, SocketGuild, Task> GuildAvailable;
 
-        public event Func<IDiscordShardedClientModel, SocketGuild, Task> GuildUnavailable;
+        public event Func<IDiscordShardedClientHelper, SocketGuild, Task> GuildUnavailable;
 
-        public event Func<IDiscordShardedClientModel, SocketGuild, Task> GuildMembersDownloaded;
+        public event Func<IDiscordShardedClientHelper, SocketGuild, Task> GuildMembersDownloaded;
 
-        public event Func<IDiscordShardedClientModel, SocketGuild, SocketGuild, Task> GuildUpdated;
+        public event Func<IDiscordShardedClientHelper, SocketGuild, SocketGuild, Task> GuildUpdated;
 
-        public event Func<IDiscordShardedClientModel, SocketGuildUser, Task> UserJoined;
+        public event Func<IDiscordShardedClientHelper, SocketGuildUser, Task> UserJoined;
 
-        public event Func<IDiscordShardedClientModel, SocketGuildUser, Task> UserLeft;
+        public event Func<IDiscordShardedClientHelper, SocketGuildUser, Task> UserLeft;
 
-        public event Func<IDiscordShardedClientModel, SocketUser, SocketGuild, Task> UserBanned;
+        public event Func<IDiscordShardedClientHelper, SocketUser, SocketGuild, Task> UserBanned;
 
-        public event Func<IDiscordShardedClientModel, SocketUser, SocketGuild, Task> UserUnbanned;
+        public event Func<IDiscordShardedClientHelper, SocketUser, SocketGuild, Task> UserUnbanned;
 
-        public event Func<IDiscordShardedClientModel, SocketUser, SocketUser, Task> UserUpdated;
+        public event Func<IDiscordShardedClientHelper, SocketUser, SocketUser, Task> UserUpdated;
 
-        public event Func<IDiscordShardedClientModel, SocketGuildUser, SocketGuildUser, Task> GuildMemberUpdated;
+        public event Func<IDiscordShardedClientHelper, SocketGuildUser, SocketGuildUser, Task> GuildMemberUpdated;
 
-        public event Func<IDiscordShardedClientModel, SocketUser, SocketVoiceState, SocketVoiceState, Task> UserVoiceStateUpdated;
+        public event Func<IDiscordShardedClientHelper, SocketUser, SocketVoiceState, SocketVoiceState, Task> UserVoiceStateUpdated;
 
-        public event Func<IDiscordShardedClientModel, SocketSelfUser, SocketSelfUser, Task> CurrentUserUpdated;
+        public event Func<IDiscordShardedClientHelper, SocketSelfUser, SocketSelfUser, Task> CurrentUserUpdated;
 
-        public event Func<IDiscordShardedClientModel, SocketUser, ISocketMessageChannel, Task> UserIsTyping;
+        public event Func<IDiscordShardedClientHelper, SocketUser, ISocketMessageChannel, Task> UserIsTyping;
 
-        public event Func<IDiscordShardedClientModel, SocketGroupUser, Task> RecipientAdded;
+        public event Func<IDiscordShardedClientHelper, SocketGroupUser, Task> RecipientAdded;
 
-        public event Func<IDiscordShardedClientModel, SocketGroupUser, Task> RecipientRemoved;
+        public event Func<IDiscordShardedClientHelper, SocketGroupUser, Task> RecipientRemoved;
 
-        public event Func<IDiscordShardedClientModel, DiscordSocketClient, Task> ShardConnected;
+        public event Func<IDiscordShardedClientHelper, DiscordSocketClient, Task> ShardConnected;
 
-        public event Func<IDiscordShardedClientModel, Exception, DiscordSocketClient, Task> ShardDisconnected;
+        public event Func<IDiscordShardedClientHelper, Exception, DiscordSocketClient, Task> ShardDisconnected;
 
-        public event Func<IDiscordShardedClientModel, DiscordSocketClient, Task> ShardReady;
+        public event Func<IDiscordShardedClientHelper, DiscordSocketClient, Task> ShardReady;
 
-        public event Func<IDiscordShardedClientModel, int, int, DiscordSocketClient, Task> ShardLatencyUpdated;
+        public event Func<IDiscordShardedClientHelper, int, int, DiscordSocketClient, Task> ShardLatencyUpdated;
 
         public DiscordShardedClient DiscordShardedClient { get; }
 
-        public IDiscordAppModel DiscordAppModel { get; }
+        private string BotToken { get; }
 
-        public DiscordShardedClientModel(IDiscordAppModel discordAppModel)
+        public DiscordShardedClientHelper(string botToken)
         {
             DiscordShardedClient = new DiscordShardedClient(new DiscordSocketConfig { LogLevel = LogSeverity.Verbose });
-            DiscordAppModel = discordAppModel;
+            BotToken = botToken;
         }
 
         public async Task StartListeningAsync()
@@ -217,7 +214,7 @@ namespace TheDialgaTeam.DiscordBot.Model.Discord
                 DiscordShardedClient.ShardReady += DiscordShardedClientOnShardReady;
                 DiscordShardedClient.ShardLatencyUpdated += DiscordShardedClientOnShardLatencyUpdated;
 
-                await DiscordShardedClient.LoginAsync(TokenType.Bot, DiscordAppModel.BotToken);
+                await DiscordShardedClient.LoginAsync(TokenType.Bot, BotToken);
                 await DiscordShardedClient.StartAsync();
             }
         }
