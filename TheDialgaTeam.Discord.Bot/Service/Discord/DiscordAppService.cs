@@ -14,218 +14,294 @@ namespace TheDialgaTeam.Discord.Bot.Service.Discord
 {
     public interface IDiscordAppService
     {
-        List<IDiscordShardedClientHelper> DiscordShardedClientHelpers { get; }
+        List<IDiscordAppInstance> DiscordAppInstances { get; }
 
         Task<ICommandExecuteResult> StartDiscordAppAsync(ulong clientId);
 
-        Task<ICommandExecuteResult> StartDiscordAppsAsync();
+        Task<ICommandExecuteResult> StartAllDiscordAppsAsync();
 
         Task<ICommandExecuteResult> StopDiscordAppAsync(ulong clientId);
 
-        Task<ICommandExecuteResult> StopDiscordAppsAsync();
+        Task<ICommandExecuteResult> StopAllDiscordAppsAsync();
     }
 
     internal class DiscordAppService : IDiscordAppService
     {
-        public List<IDiscordShardedClientHelper> DiscordShardedClientHelpers { get; } = new List<IDiscordShardedClientHelper>();
+        public List<IDiscordAppInstance> DiscordAppInstances { get; } = new List<IDiscordAppInstance>();
 
         private ILoggerService LoggerService { get; }
 
         private ISQLiteService SQLiteService { get; }
 
-        private SemaphoreSlim DiscordShardedClientHelpersLock { get; } = new SemaphoreSlim(1, 1);
+        private SemaphoreSlim DiscordAppInstancesLock { get; } = new SemaphoreSlim(1, 1);
+
+        private Task BackgroundTask { get; }
 
         public DiscordAppService(ILoggerService loggerService, ISQLiteService sqliteService)
         {
             LoggerService = loggerService;
             SQLiteService = sqliteService;
+            BackgroundTask = DiscordAppInstanceCheckTask();
         }
 
         public async Task<ICommandExecuteResult> StartDiscordAppAsync(ulong clientId)
         {
-            return await ExecuteCommand(async () =>
+            await StopDiscordAppAsync(clientId).ConfigureAwait(false);
+
+            try
             {
-                await StopDiscordAppAsync(clientId).ConfigureAwait(false);
+                await DiscordAppInstancesLock.WaitAsync().ConfigureAwait(false);
+
+                var clientIdString = clientId.ToString();
+                var discordAppTable = await SQLiteService.SQLiteAsyncConnection.Table<DiscordAppTable>().Where(a => a.ClientId == clientIdString).FirstOrDefaultAsync().ConfigureAwait(false);
+
+                if (string.IsNullOrEmpty(discordAppTable?.BotToken))
+                    return CommandExecuteResult.FromError("Failed to request a discord app instance to start.");
+
+                var isSuccess = true;
+                var discordApp = new DiscordAppInstance(Convert.ToUInt64(discordAppTable.ClientId), discordAppTable.BotToken);
 
                 try
                 {
-                    var discordAppTable = await DiscordAppTable.GetRowAsync(SQLiteService, clientId).ConfigureAwait(false);
-
-                    if (string.IsNullOrEmpty(discordAppTable?.BotToken))
-                        return CommandExecuteResult.FromError($"Failed to start a discord app instance ({clientId}).");
-
-                    var discordApp = await InternalStartDiscordApp(Convert.ToUInt64(discordAppTable.ClientId), discordAppTable.BotToken).ConfigureAwait(false);
-
-                    if (discordApp.DiscordShardedClient.LoginState == LoginState.LoggedOut)
-                        return CommandExecuteResult.FromError($"Failed to start a discord app instance ({clientId}).");
-
-                    DiscordShardedClientHelpers.Add(discordApp);
-
-                    return CommandExecuteResult.FromSuccess($"Successfully started a discord app instance ({clientId}).");
+                    await InternalStartDiscordAppAsync(discordApp).ConfigureAwait(false);
+                    DiscordAppInstances.Add(discordApp);
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
-                    await LoggerService.LogErrorMessageAsync(ex).ConfigureAwait(false);
+                    await InternalStopDiscordAppAsync(discordApp);
+                    isSuccess = false;
+                }
 
-                    return CommandExecuteResult.FromError($"Failed to start a discord app instance ({clientId}).");
-                }
-                finally
-                {
-                    DiscordShardedClientHelpersLock.Release();
-                }
-            }).ConfigureAwait(false);
+                return isSuccess ? CommandExecuteResult.FromSuccess("Successfully requested a discord app instance to start.") : CommandExecuteResult.FromError("Failed to request a discord app instance to start.");
+            }
+            finally
+            {
+                DiscordAppInstancesLock.Release();
+            }
         }
 
-        public async Task<ICommandExecuteResult> StartDiscordAppsAsync()
+        public async Task<ICommandExecuteResult> StartAllDiscordAppsAsync()
         {
-            return await ExecuteCommand(async () =>
+            if (DiscordAppInstances.Count > 0)
+                await StopAllDiscordAppsAsync().ConfigureAwait(false);
+
+            try
             {
-                if (DiscordShardedClientHelpers.Count > 0)
-                    await StopDiscordAppsAsync().ConfigureAwait(false);
+                await DiscordAppInstancesLock.WaitAsync().ConfigureAwait(false);
 
-                try
+                var discordAppTables = await SQLiteService.SQLiteAsyncConnection.Table<DiscordAppTable>().ToArrayAsync().ConfigureAwait(false);
+                var isSuccess = true;
+
+                foreach (var discordAppTable in discordAppTables)
                 {
-                    await DiscordShardedClientHelpersLock.WaitAsync().ConfigureAwait(false);
+                    if (string.IsNullOrEmpty(discordAppTable.ClientId) || string.IsNullOrEmpty(discordAppTable.BotToken))
+                        continue;
 
-                    var discordAppTables = await DiscordAppTable.GetAllRowsAsync(SQLiteService).ConfigureAwait(false);
+                    var discordApp = new DiscordAppInstance(Convert.ToUInt64(discordAppTable.ClientId), discordAppTable.BotToken);
 
-                    foreach (var discordAppTable in discordAppTables)
+                    try
                     {
-                        if (string.IsNullOrEmpty(discordAppTable.BotToken))
-                            continue;
-
-                        var discordApp = await InternalStartDiscordApp(Convert.ToUInt64(discordAppTable.ClientId), discordAppTable.BotToken).ConfigureAwait(false);
-
-                        if (discordApp.DiscordShardedClient.LoginState == LoginState.LoggedOut)
-                            return CommandExecuteResult.FromError($"Failed to start a discord app instance ({discordAppTable.ClientId}).");
-
-                        DiscordShardedClientHelpers.Add(discordApp);
+                        await InternalStartDiscordAppAsync(discordApp).ConfigureAwait(false);
+                        DiscordAppInstances.Add(discordApp);
                     }
+                    catch (Exception)
+                    {
+                        await InternalStopDiscordAppAsync(discordApp);
+                        isSuccess = false;
+                    }
+                }
 
-                    return CommandExecuteResult.FromSuccess("Successfully started all discord app instances.");
-                }
-                catch (Exception ex)
-                {
-                    await LoggerService.LogErrorMessageAsync(ex).ConfigureAwait(false);
-
-                    return CommandExecuteResult.FromError("Failed to start all discord app instances.");
-                }
-                finally
-                {
-                    DiscordShardedClientHelpersLock.Release();
-                }
-            }).ConfigureAwait(false);
+                return isSuccess ? CommandExecuteResult.FromSuccess("Successfully requested all discord app instances to start.") : CommandExecuteResult.FromError("Failed to request all discord app instances to start.");
+            }
+            finally
+            {
+                DiscordAppInstancesLock.Release();
+            }
         }
 
         public async Task<ICommandExecuteResult> StopDiscordAppAsync(ulong clientId)
         {
-            return await ExecuteCommand(async () =>
+            try
             {
-                try
+                await DiscordAppInstancesLock.WaitAsync().ConfigureAwait(false);
+
+                if (DiscordAppInstances.Count == 0)
+                    return CommandExecuteResult.FromError("There are no discord app instances running.");
+
+                for (var i = DiscordAppInstances.Count - 1; i >= 0; i--)
                 {
-                    await DiscordShardedClientHelpersLock.WaitAsync().ConfigureAwait(false);
+                    if (DiscordAppInstances[i].ClientId != clientId)
+                        continue;
 
-                    for (var i = 0; i < DiscordShardedClientHelpers.Count; i++)
+                    await InternalStopDiscordAppAsync(DiscordAppInstances[i]).ConfigureAwait(false);
+                    DiscordAppInstances.Remove(DiscordAppInstances[i]);
+
+                    break;
+                }
+
+                return CommandExecuteResult.FromSuccess("Successfully requested a discord app instance to stop.");
+            }
+            finally
+            {
+                DiscordAppInstancesLock.Release();
+            }
+        }
+
+        public async Task<ICommandExecuteResult> StopAllDiscordAppsAsync()
+        {
+            try
+            {
+                await DiscordAppInstancesLock.WaitAsync().ConfigureAwait(false);
+
+                if (DiscordAppInstances.Count == 0)
+                    return CommandExecuteResult.FromError("There are no discord app instances running.");
+
+                foreach (var discordShardedClientHelper in DiscordAppInstances)
+                    await InternalStopDiscordAppAsync(discordShardedClientHelper).ConfigureAwait(false);
+
+                DiscordAppInstances.Clear();
+
+                return CommandExecuteResult.FromSuccess("Successfully requested all discord app instances to stop.");
+            }
+            finally
+            {
+                DiscordAppInstancesLock.Release();
+            }
+        }
+
+        private async Task InternalStartDiscordAppAsync(IDiscordAppInstance discordAppInstance)
+        {
+            AddListener(discordAppInstance);
+            await discordAppInstance.StartDiscordAppAsync().ConfigureAwait(false);
+        }
+
+        private async Task InternalStopDiscordAppAsync(IDiscordAppInstance discordAppInstance)
+        {
+            await discordAppInstance.StopDiscordAppAsync().ConfigureAwait(false);
+            discordAppInstance.Dispose();
+            RemoveListener(discordAppInstance);
+        }
+
+        private Task DiscordAppInstanceCheckTask()
+        {
+            return Task.Factory.StartNew(async () =>
+            {
+                while (true)
+                {
+                    await DiscordAppInstancesLock.WaitAsync().ConfigureAwait(false);
+
+                    try
                     {
-                        if (DiscordShardedClientHelpers[i].DiscordShardedClient.CurrentUser.Id != clientId)
-                            continue;
+                        for (var i = DiscordAppInstances.Count - 1; i >= 0; i--)
+                        {
+                            var discordAppInstance = DiscordAppInstances[i];
 
-                        await InternalStopDiscordApp(DiscordShardedClientHelpers[i]).ConfigureAwait(false);
-                        DiscordShardedClientHelpers.Remove(DiscordShardedClientHelpers[i]);
+                            // Check if instance is verified or not.
+                            if (!discordAppInstance.IsVerified)
+                            {
+                                var shouldKeep = await VerifyDiscordAppInstance(discordAppInstance).ConfigureAwait(false);
 
-                        break;
+                                if (!shouldKeep)
+                                {
+                                    DiscordAppInstances.Remove(discordAppInstance);
+
+                                    continue;
+                                }
+                            }
+
+                            // Check if instance is logged in.
+                            try
+                            {
+                                if (discordAppInstance.DiscordShardedClient.LoginState == LoginState.LoggingOut || discordAppInstance.DiscordShardedClient.LoginState == LoginState.LoggedOut)
+                                    await discordAppInstance.RequestLoginAsync().ConfigureAwait(false);
+                            }
+                            catch (Exception ex)
+                            {
+                                await LoggerService.LogErrorMessageAsync(ex).ConfigureAwait(false);
+
+                                continue;
+                            }
+
+                            // Check if instance is connected.
+                            foreach (var discordSocketClient in discordAppInstance.DiscordShardedClient.Shards)
+                            {
+                                try
+                                {
+                                    if (discordSocketClient.ConnectionState == ConnectionState.Disconnected || discordSocketClient.ConnectionState == ConnectionState.Disconnecting)
+                                        await discordSocketClient.StartAsync().ConfigureAwait(false);
+                                }
+                                catch (Exception ex)
+                                {
+                                    await LoggerService.LogErrorMessageAsync(ex).ConfigureAwait(false);
+                                }
+                            }
+                        }
+                    }
+                    finally
+                    {
+                        DiscordAppInstancesLock.Release();
                     }
 
-                    return CommandExecuteResult.FromSuccess($"Successfully stopped a discord app instance ({clientId}).");
+                    await Task.Delay(TimeSpan.FromMinutes(1));
                 }
-                catch (Exception ex)
-                {
-                    await LoggerService.LogErrorMessageAsync(ex).ConfigureAwait(false);
-
-                    return CommandExecuteResult.FromError($"Failed to stop a discord app instance ({clientId}).");
-                }
-                finally
-                {
-                    DiscordShardedClientHelpersLock.Release();
-                }
-            }).ConfigureAwait(false);
+            }, TaskCreationOptions.LongRunning);
         }
 
-        public async Task<ICommandExecuteResult> StopDiscordAppsAsync()
+        private async Task<bool> VerifyDiscordAppInstance(IDiscordAppInstance discordAppInstance)
         {
-            return await ExecuteCommand(async () =>
+            if (discordAppInstance.IsVerified)
+                return true;
+
+            if (discordAppInstance.DiscordShardedClient.CurrentUser == null)
+                return true;
+
+            var clientIdString = discordAppInstance.ClientId.ToString();
+
+            if (discordAppInstance.ClientId != discordAppInstance.DiscordShardedClient.CurrentUser.Id)
             {
-                try
-                {
-                    await DiscordShardedClientHelpersLock.WaitAsync().ConfigureAwait(false);
+                await LoggerService.LogMessageAsync(discordAppInstance.DiscordShardedClient, new LogMessage(LogSeverity.Error, "", "Discord App client id mismatch found! Forced application to stop!")).ConfigureAwait(false);
+                await InternalStopDiscordAppAsync(discordAppInstance).ConfigureAwait(false);
+                await SQLiteService.SQLiteAsyncConnection.Table<DiscordAppTable>().DeleteAsync(a => a.ClientId == clientIdString).ConfigureAwait(false);
 
-                    if (DiscordShardedClientHelpers.Count == 0)
-                        return CommandExecuteResult.FromError("There are no discord app instances running.");
+                return false;
+            }
 
-                    foreach (var discordShardedClientHelper in DiscordShardedClientHelpers)
-                        await InternalStopDiscordApp(discordShardedClientHelper).ConfigureAwait(false);
+            var discordAppTable = await SQLiteService.SQLiteAsyncConnection.Table<DiscordAppTable>().Where(a => a.ClientId == clientIdString).FirstOrDefaultAsync().ConfigureAwait(false);
+            var discordAppInstanceInfo = await discordAppInstance.DiscordShardedClient.GetApplicationInfoAsync().ConfigureAwait(false);
 
-                    DiscordShardedClientHelpers.Clear();
+            discordAppTable.AppName = discordAppInstanceInfo.Name;
+            discordAppTable.AppDescription = discordAppInstanceInfo.Description;
+            discordAppTable.LastUpdateCheck = DateTimeOffset.Now;
 
-                    return CommandExecuteResult.FromSuccess("Successfully stopped all discord app instances.");
-                }
-                catch (Exception ex)
-                {
-                    await LoggerService.LogErrorMessageAsync(ex).ConfigureAwait(false);
+            await SQLiteService.SQLiteAsyncConnection.UpdateAsync(discordAppTable).ConfigureAwait(false);
 
-                    return CommandExecuteResult.FromError("Failed to stop all discord app instances.");
-                }
-                finally
-                {
-                    DiscordShardedClientHelpersLock.Release();
-                }
-            }).ConfigureAwait(false);
+            discordAppInstance.IsVerified = true;
+
+            return true;
         }
 
-        private async Task<ICommandExecuteResult> ExecuteCommand(Func<Task<ICommandExecuteResult>> commandAction)
+        private void AddListener(IDiscordAppInstance discordAppInstance)
         {
-            var result = await commandAction.Invoke().ConfigureAwait(false);
-
-            await LoggerService.LogMessageAsync(result.Message, result.IsSuccess ? ConsoleColor.Green : ConsoleColor.Red).ConfigureAwait(false);
-
-            return result;
+            discordAppInstance.Log += DiscordAppInstanceOnLog;
+            discordAppInstance.ShardReady += DiscordAppInstanceOnShardReady;
         }
 
-        private async Task<IDiscordShardedClientHelper> InternalStartDiscordApp(ulong clientId, string botToken)
+        private void RemoveListener(IDiscordAppInstance discordAppInstance)
         {
-            var discordApp = new DiscordShardedClientHelper(clientId, botToken);
-            AddListener(discordApp);
-
-            await discordApp.StartListeningAsync().ConfigureAwait(false);
-
-            if (discordApp.DiscordShardedClient.LoginState == LoginState.LoggedOut)
-                await InternalStopDiscordApp(discordApp).ConfigureAwait(false);
-
-            return discordApp;
+            discordAppInstance.ShardReady -= DiscordAppInstanceOnShardReady;
+            discordAppInstance.Log -= DiscordAppInstanceOnLog;
         }
 
-        private async Task InternalStopDiscordApp(IDiscordShardedClientHelper discordShardedClientHelper)
+        private Task DiscordAppInstanceOnLog(IDiscordAppInstance discordAppInstance, LogMessage logMessage)
         {
-            await discordShardedClientHelper.StopListeningAsync().ConfigureAwait(false);
-            discordShardedClientHelper.Dispose();
-            RemoveListener(discordShardedClientHelper);
-        }
-
-        private void AddListener(IDiscordShardedClientHelper discordShardedClientHelper)
-        {
-            discordShardedClientHelper.Log += DiscordShardedClientHelperOnLog;
-        }
-
-        private void RemoveListener(IDiscordShardedClientHelper discordShardedClientHelper)
-        {
-            discordShardedClientHelper.Log -= DiscordShardedClientHelperOnLog;
-        }
-
-        private Task DiscordShardedClientHelperOnLog(DiscordShardedClient discordShardedClient, LogMessage logMessage)
-        {
-            Task.Run(async () => await LoggerService.LogMessageAsync(discordShardedClient, logMessage).ConfigureAwait(false)).ConfigureAwait(false);
+            Task.Run(async () => await LoggerService.LogMessageAsync(discordAppInstance.DiscordShardedClient, logMessage).ConfigureAwait(false)).ConfigureAwait(false);
 
             return Task.CompletedTask;
+        }
+
+        private Task DiscordAppInstanceOnShardReady(IDiscordAppInstance arg1, DiscordSocketClient arg2)
+        {
+            throw new NotImplementedException();
         }
     }
 }

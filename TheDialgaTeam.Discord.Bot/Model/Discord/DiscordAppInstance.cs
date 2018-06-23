@@ -1,205 +1,253 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
 
 namespace TheDialgaTeam.Discord.Bot.Model.Discord
 {
-    public interface IDiscordShardedClientHelper : IDisposable
+    public interface IDiscordAppInstance : IDisposable
     {
-        event Func<DiscordShardedClient, LogMessage, Task> Log;
+        event Func<IDiscordAppInstance, LogMessage, Task> Log;
 
-        event Func<DiscordShardedClient, Task> LoggedIn;
+        event Func<IDiscordAppInstance, Task> LoggedIn;
 
-        event Func<DiscordShardedClient, Task> LoggedOut;
+        event Func<IDiscordAppInstance, Task> LoggedOut;
 
-        event Func<DiscordShardedClient, SocketChannel, Task> ChannelCreated;
+        event Func<IDiscordAppInstance, SocketChannel, Task> ChannelCreated;
 
-        event Func<DiscordShardedClient, SocketChannel, Task> ChannelDestroyed;
+        event Func<IDiscordAppInstance, SocketChannel, Task> ChannelDestroyed;
 
-        event Func<DiscordShardedClient, SocketChannel, SocketChannel, Task> ChannelUpdated;
+        event Func<IDiscordAppInstance, SocketChannel, SocketChannel, Task> ChannelUpdated;
 
-        event Func<DiscordShardedClient, SocketMessage, Task> MessageReceived;
+        event Func<IDiscordAppInstance, SocketMessage, Task> MessageReceived;
 
-        event Func<DiscordShardedClient, Cacheable<IMessage, ulong>, ISocketMessageChannel, Task> MessageDeleted;
+        event Func<IDiscordAppInstance, Cacheable<IMessage, ulong>, ISocketMessageChannel, Task> MessageDeleted;
 
-        event Func<DiscordShardedClient, Cacheable<IMessage, ulong>, SocketMessage, ISocketMessageChannel, Task> MessageUpdated;
+        event Func<IDiscordAppInstance, Cacheable<IMessage, ulong>, SocketMessage, ISocketMessageChannel, Task> MessageUpdated;
 
-        event Func<DiscordShardedClient, Cacheable<IUserMessage, ulong>, ISocketMessageChannel, SocketReaction, Task> ReactionAdded;
+        event Func<IDiscordAppInstance, Cacheable<IUserMessage, ulong>, ISocketMessageChannel, SocketReaction, Task> ReactionAdded;
 
-        event Func<DiscordShardedClient, Cacheable<IUserMessage, ulong>, ISocketMessageChannel, SocketReaction, Task> ReactionRemoved;
+        event Func<IDiscordAppInstance, Cacheable<IUserMessage, ulong>, ISocketMessageChannel, SocketReaction, Task> ReactionRemoved;
 
-        event Func<DiscordShardedClient, Cacheable<IUserMessage, ulong>, ISocketMessageChannel, Task> ReactionsCleared;
+        event Func<IDiscordAppInstance, Cacheable<IUserMessage, ulong>, ISocketMessageChannel, Task> ReactionsCleared;
 
-        event Func<DiscordShardedClient, SocketRole, Task> RoleCreated;
+        event Func<IDiscordAppInstance, SocketRole, Task> RoleCreated;
 
-        event Func<DiscordShardedClient, SocketRole, Task> RoleDeleted;
+        event Func<IDiscordAppInstance, SocketRole, Task> RoleDeleted;
 
-        event Func<DiscordShardedClient, SocketRole, SocketRole, Task> RoleUpdated;
+        event Func<IDiscordAppInstance, SocketRole, SocketRole, Task> RoleUpdated;
 
-        event Func<DiscordShardedClient, SocketGuild, Task> JoinedGuild;
+        event Func<IDiscordAppInstance, SocketGuild, Task> JoinedGuild;
 
-        event Func<DiscordShardedClient, SocketGuild, Task> LeftGuild;
+        event Func<IDiscordAppInstance, SocketGuild, Task> LeftGuild;
 
-        event Func<DiscordShardedClient, SocketGuild, Task> GuildAvailable;
+        event Func<IDiscordAppInstance, SocketGuild, Task> GuildAvailable;
 
-        event Func<DiscordShardedClient, SocketGuild, Task> GuildUnavailable;
+        event Func<IDiscordAppInstance, SocketGuild, Task> GuildUnavailable;
 
-        event Func<DiscordShardedClient, SocketGuild, Task> GuildMembersDownloaded;
+        event Func<IDiscordAppInstance, SocketGuild, Task> GuildMembersDownloaded;
 
-        event Func<DiscordShardedClient, SocketGuild, SocketGuild, Task> GuildUpdated;
+        event Func<IDiscordAppInstance, SocketGuild, SocketGuild, Task> GuildUpdated;
 
-        event Func<DiscordShardedClient, SocketGuildUser, Task> UserJoined;
+        event Func<IDiscordAppInstance, SocketGuildUser, Task> UserJoined;
 
-        event Func<DiscordShardedClient, SocketGuildUser, Task> UserLeft;
+        event Func<IDiscordAppInstance, SocketGuildUser, Task> UserLeft;
 
-        event Func<DiscordShardedClient, SocketUser, SocketGuild, Task> UserBanned;
+        event Func<IDiscordAppInstance, SocketUser, SocketGuild, Task> UserBanned;
 
-        event Func<DiscordShardedClient, SocketUser, SocketGuild, Task> UserUnbanned;
+        event Func<IDiscordAppInstance, SocketUser, SocketGuild, Task> UserUnbanned;
 
-        event Func<DiscordShardedClient, SocketUser, SocketUser, Task> UserUpdated;
+        event Func<IDiscordAppInstance, SocketUser, SocketUser, Task> UserUpdated;
 
-        event Func<DiscordShardedClient, SocketGuildUser, SocketGuildUser, Task> GuildMemberUpdated;
+        event Func<IDiscordAppInstance, SocketGuildUser, SocketGuildUser, Task> GuildMemberUpdated;
 
-        event Func<DiscordShardedClient, SocketUser, SocketVoiceState, SocketVoiceState, Task> UserVoiceStateUpdated;
+        event Func<IDiscordAppInstance, SocketUser, SocketVoiceState, SocketVoiceState, Task> UserVoiceStateUpdated;
 
-        event Func<DiscordShardedClient, SocketSelfUser, SocketSelfUser, Task> CurrentUserUpdated;
+        event Func<IDiscordAppInstance, SocketSelfUser, SocketSelfUser, Task> CurrentUserUpdated;
 
-        event Func<DiscordShardedClient, SocketUser, ISocketMessageChannel, Task> UserIsTyping;
+        event Func<IDiscordAppInstance, SocketUser, ISocketMessageChannel, Task> UserIsTyping;
 
-        event Func<DiscordShardedClient, SocketGroupUser, Task> RecipientAdded;
+        event Func<IDiscordAppInstance, SocketGroupUser, Task> RecipientAdded;
 
-        event Func<DiscordShardedClient, SocketGroupUser, Task> RecipientRemoved;
+        event Func<IDiscordAppInstance, SocketGroupUser, Task> RecipientRemoved;
 
-        event Func<DiscordShardedClient, DiscordSocketClient, Task> ShardConnected;
+        event Func<IDiscordAppInstance, DiscordSocketClient, Task> ShardConnected;
 
-        event Func<DiscordShardedClient, Exception, DiscordSocketClient, Task> ShardDisconnected;
+        event Func<IDiscordAppInstance, Exception, DiscordSocketClient, Task> ShardDisconnected;
 
-        event Func<DiscordShardedClient, DiscordSocketClient, Task> ShardReady;
+        event Func<IDiscordAppInstance, DiscordSocketClient, Task> ShardReady;
 
-        event Func<DiscordShardedClient, int, int, DiscordSocketClient, Task> ShardLatencyUpdated;
+        event Func<IDiscordAppInstance, int, int, DiscordSocketClient, Task> ShardLatencyUpdated;
 
         DiscordShardedClient DiscordShardedClient { get; }
 
-        Task StartListeningAsync();
+        ulong ClientId { get; }
 
-        Task StopListeningAsync();
+        bool IsStarted { get; }
+
+        bool IsVerified { get; set; }
+
+        Task StartDiscordAppAsync();
+
+        Task StopDiscordAppAsync();
+
+        Task RequestLoginAsync();
     }
 
-    internal sealed class DiscordShardedClientHelper : IDiscordShardedClientHelper
+    internal sealed class DiscordAppInstance : IDiscordAppInstance
     {
-        public event Func<DiscordShardedClient, LogMessage, Task> Log;
+        public event Func<IDiscordAppInstance, LogMessage, Task> Log;
 
-        public event Func<DiscordShardedClient, Task> LoggedIn;
+        public event Func<IDiscordAppInstance, Task> LoggedIn;
 
-        public event Func<DiscordShardedClient, Task> LoggedOut;
+        public event Func<IDiscordAppInstance, Task> LoggedOut;
 
-        public event Func<DiscordShardedClient, SocketChannel, Task> ChannelCreated;
+        public event Func<IDiscordAppInstance, SocketChannel, Task> ChannelCreated;
 
-        public event Func<DiscordShardedClient, SocketChannel, Task> ChannelDestroyed;
+        public event Func<IDiscordAppInstance, SocketChannel, Task> ChannelDestroyed;
 
-        public event Func<DiscordShardedClient, SocketChannel, SocketChannel, Task> ChannelUpdated;
+        public event Func<IDiscordAppInstance, SocketChannel, SocketChannel, Task> ChannelUpdated;
 
-        public event Func<DiscordShardedClient, SocketMessage, Task> MessageReceived;
+        public event Func<IDiscordAppInstance, SocketMessage, Task> MessageReceived;
 
-        public event Func<DiscordShardedClient, Cacheable<IMessage, ulong>, ISocketMessageChannel, Task> MessageDeleted;
+        public event Func<IDiscordAppInstance, Cacheable<IMessage, ulong>, ISocketMessageChannel, Task> MessageDeleted;
 
-        public event Func<DiscordShardedClient, Cacheable<IMessage, ulong>, SocketMessage, ISocketMessageChannel, Task> MessageUpdated;
+        public event Func<IDiscordAppInstance, Cacheable<IMessage, ulong>, SocketMessage, ISocketMessageChannel, Task> MessageUpdated;
 
-        public event Func<DiscordShardedClient, Cacheable<IUserMessage, ulong>, ISocketMessageChannel, SocketReaction, Task> ReactionAdded;
+        public event Func<IDiscordAppInstance, Cacheable<IUserMessage, ulong>, ISocketMessageChannel, SocketReaction, Task> ReactionAdded;
 
-        public event Func<DiscordShardedClient, Cacheable<IUserMessage, ulong>, ISocketMessageChannel, SocketReaction, Task> ReactionRemoved;
+        public event Func<IDiscordAppInstance, Cacheable<IUserMessage, ulong>, ISocketMessageChannel, SocketReaction, Task> ReactionRemoved;
 
-        public event Func<DiscordShardedClient, Cacheable<IUserMessage, ulong>, ISocketMessageChannel, Task> ReactionsCleared;
+        public event Func<IDiscordAppInstance, Cacheable<IUserMessage, ulong>, ISocketMessageChannel, Task> ReactionsCleared;
 
-        public event Func<DiscordShardedClient, SocketRole, Task> RoleCreated;
+        public event Func<IDiscordAppInstance, SocketRole, Task> RoleCreated;
 
-        public event Func<DiscordShardedClient, SocketRole, Task> RoleDeleted;
+        public event Func<IDiscordAppInstance, SocketRole, Task> RoleDeleted;
 
-        public event Func<DiscordShardedClient, SocketRole, SocketRole, Task> RoleUpdated;
+        public event Func<IDiscordAppInstance, SocketRole, SocketRole, Task> RoleUpdated;
 
-        public event Func<DiscordShardedClient, SocketGuild, Task> JoinedGuild;
+        public event Func<IDiscordAppInstance, SocketGuild, Task> JoinedGuild;
 
-        public event Func<DiscordShardedClient, SocketGuild, Task> LeftGuild;
+        public event Func<IDiscordAppInstance, SocketGuild, Task> LeftGuild;
 
-        public event Func<DiscordShardedClient, SocketGuild, Task> GuildAvailable;
+        public event Func<IDiscordAppInstance, SocketGuild, Task> GuildAvailable;
 
-        public event Func<DiscordShardedClient, SocketGuild, Task> GuildUnavailable;
+        public event Func<IDiscordAppInstance, SocketGuild, Task> GuildUnavailable;
 
-        public event Func<DiscordShardedClient, SocketGuild, Task> GuildMembersDownloaded;
+        public event Func<IDiscordAppInstance, SocketGuild, Task> GuildMembersDownloaded;
 
-        public event Func<DiscordShardedClient, SocketGuild, SocketGuild, Task> GuildUpdated;
+        public event Func<IDiscordAppInstance, SocketGuild, SocketGuild, Task> GuildUpdated;
 
-        public event Func<DiscordShardedClient, SocketGuildUser, Task> UserJoined;
+        public event Func<IDiscordAppInstance, SocketGuildUser, Task> UserJoined;
 
-        public event Func<DiscordShardedClient, SocketGuildUser, Task> UserLeft;
+        public event Func<IDiscordAppInstance, SocketGuildUser, Task> UserLeft;
 
-        public event Func<DiscordShardedClient, SocketUser, SocketGuild, Task> UserBanned;
+        public event Func<IDiscordAppInstance, SocketUser, SocketGuild, Task> UserBanned;
 
-        public event Func<DiscordShardedClient, SocketUser, SocketGuild, Task> UserUnbanned;
+        public event Func<IDiscordAppInstance, SocketUser, SocketGuild, Task> UserUnbanned;
 
-        public event Func<DiscordShardedClient, SocketUser, SocketUser, Task> UserUpdated;
+        public event Func<IDiscordAppInstance, SocketUser, SocketUser, Task> UserUpdated;
 
-        public event Func<DiscordShardedClient, SocketGuildUser, SocketGuildUser, Task> GuildMemberUpdated;
+        public event Func<IDiscordAppInstance, SocketGuildUser, SocketGuildUser, Task> GuildMemberUpdated;
 
-        public event Func<DiscordShardedClient, SocketUser, SocketVoiceState, SocketVoiceState, Task> UserVoiceStateUpdated;
+        public event Func<IDiscordAppInstance, SocketUser, SocketVoiceState, SocketVoiceState, Task> UserVoiceStateUpdated;
 
-        public event Func<DiscordShardedClient, SocketSelfUser, SocketSelfUser, Task> CurrentUserUpdated;
+        public event Func<IDiscordAppInstance, SocketSelfUser, SocketSelfUser, Task> CurrentUserUpdated;
 
-        public event Func<DiscordShardedClient, SocketUser, ISocketMessageChannel, Task> UserIsTyping;
+        public event Func<IDiscordAppInstance, SocketUser, ISocketMessageChannel, Task> UserIsTyping;
 
-        public event Func<DiscordShardedClient, SocketGroupUser, Task> RecipientAdded;
+        public event Func<IDiscordAppInstance, SocketGroupUser, Task> RecipientAdded;
 
-        public event Func<DiscordShardedClient, SocketGroupUser, Task> RecipientRemoved;
+        public event Func<IDiscordAppInstance, SocketGroupUser, Task> RecipientRemoved;
 
-        public event Func<DiscordShardedClient, DiscordSocketClient, Task> ShardConnected;
+        public event Func<IDiscordAppInstance, DiscordSocketClient, Task> ShardConnected;
 
-        public event Func<DiscordShardedClient, Exception, DiscordSocketClient, Task> ShardDisconnected;
+        public event Func<IDiscordAppInstance, Exception, DiscordSocketClient, Task> ShardDisconnected;
 
-        public event Func<DiscordShardedClient, DiscordSocketClient, Task> ShardReady;
+        public event Func<IDiscordAppInstance, DiscordSocketClient, Task> ShardReady;
 
-        public event Func<DiscordShardedClient, int, int, DiscordSocketClient, Task> ShardLatencyUpdated;
+        public event Func<IDiscordAppInstance, int, int, DiscordSocketClient, Task> ShardLatencyUpdated;
 
         public DiscordShardedClient DiscordShardedClient { get; }
 
-        private ulong ClientId { get; }
+        public ulong ClientId { get; }
+
+        public bool IsStarted { get; private set; }
+
+        public bool IsVerified { get; set; }
 
         private string BotToken { get; }
 
-        public DiscordShardedClientHelper(ulong clientId, string botToken, DiscordSocketConfig config = null)
+        private SemaphoreSlim ConnectionLock { get; } = new SemaphoreSlim(1, 1);
+
+        public DiscordAppInstance(ulong clientId, string botToken, DiscordSocketConfig config = null)
         {
             DiscordShardedClient = new DiscordShardedClient(config ?? new DiscordSocketConfig { LogLevel = LogSeverity.Verbose });
             ClientId = clientId;
             BotToken = botToken;
         }
 
-        public async Task StartListeningAsync()
+        public async Task StartDiscordAppAsync()
         {
+            await ConnectionLock.WaitAsync();
+
+            if (IsStarted)
+            {
+                ConnectionLock.Release();
+
+                return;
+            }
+
+            AddListener();
+
             try
             {
-                AddListener();
-
                 await DiscordShardedClient.LoginAsync(TokenType.Bot, BotToken).ConfigureAwait(false);
                 await DiscordShardedClient.StartAsync().ConfigureAwait(false);
 
-                if (DiscordShardedClient.LoginState == LoginState.LoggedIn)
-                {
-                    if (ClientId != DiscordShardedClient.CurrentUser.Id)
-                        await StopListeningAsync().ConfigureAwait(false);
-                }
+                IsStarted = true;
             }
             catch (Exception)
             {
-                await StopListeningAsync().ConfigureAwait(false);
+                RemoveListener();
+                IsStarted = false;
+
+                throw;
+            }
+            finally
+            {
+                ConnectionLock.Release();
             }
         }
 
-        public async Task StopListeningAsync()
+        public async Task StopDiscordAppAsync()
         {
-            await DiscordShardedClient.LogoutAsync().ConfigureAwait(false);
-            await DiscordShardedClient.StopAsync().ConfigureAwait(false);
+            await ConnectionLock.WaitAsync();
 
-            RemoveListener();
+            if (!IsStarted)
+            {
+                ConnectionLock.Release();
+
+                return;
+            }
+
+            try
+            {
+                await DiscordShardedClient.LogoutAsync().ConfigureAwait(false);
+                await DiscordShardedClient.StopAsync().ConfigureAwait(false);
+            }
+            finally
+            {
+                RemoveListener();
+                IsStarted = false;
+                ConnectionLock.Release();
+            }
+        }
+
+        public async Task RequestLoginAsync()
+        {
+            await DiscordShardedClient.LoginAsync(TokenType.Bot, BotToken).ConfigureAwait(false);
         }
 
         private void AddListener()
@@ -285,222 +333,223 @@ namespace TheDialgaTeam.Discord.Bot.Model.Discord
         private async Task DiscordShardedClientOnLog(LogMessage arg)
         {
             if (Log != null)
-                await Log.Invoke(DiscordShardedClient, arg).ConfigureAwait(false);
+                await Log.Invoke(this, arg).ConfigureAwait(false);
         }
 
         private async Task DiscordShardedClientOnLoggedIn()
         {
             if (LoggedIn != null)
-                await LoggedIn.Invoke(DiscordShardedClient).ConfigureAwait(false);
+                await LoggedIn.Invoke(this).ConfigureAwait(false);
         }
 
         private async Task DiscordShardedClientOnLoggedOut()
         {
             if (LoggedOut != null)
-                await LoggedOut.Invoke(DiscordShardedClient).ConfigureAwait(false);
+                await LoggedOut.Invoke(this).ConfigureAwait(false);
         }
 
         private async Task DiscordShardedClientOnChannelCreated(SocketChannel arg)
         {
             if (ChannelCreated != null)
-                await ChannelCreated.Invoke(DiscordShardedClient, arg).ConfigureAwait(false);
+                await ChannelCreated.Invoke(this, arg).ConfigureAwait(false);
         }
 
         private async Task DiscordShardedClientOnChannelDestroyed(SocketChannel arg)
         {
             if (ChannelDestroyed != null)
-                await ChannelDestroyed.Invoke(DiscordShardedClient, arg).ConfigureAwait(false);
+                await ChannelDestroyed.Invoke(this, arg).ConfigureAwait(false);
         }
 
         private async Task DiscordShardedClientOnChannelUpdated(SocketChannel arg1, SocketChannel arg2)
         {
             if (ChannelUpdated != null)
-                await ChannelUpdated.Invoke(DiscordShardedClient, arg1, arg2).ConfigureAwait(false);
+                await ChannelUpdated.Invoke(this, arg1, arg2).ConfigureAwait(false);
         }
 
         private async Task DiscordShardedClientOnMessageReceived(SocketMessage arg)
         {
             if (MessageReceived != null)
-                await MessageReceived.Invoke(DiscordShardedClient, arg).ConfigureAwait(false);
+                await MessageReceived.Invoke(this, arg).ConfigureAwait(false);
         }
 
         private async Task DiscordShardedClientOnMessageDeleted(Cacheable<IMessage, ulong> arg1, ISocketMessageChannel arg2)
         {
             if (MessageDeleted != null)
-                await MessageDeleted.Invoke(DiscordShardedClient, arg1, arg2).ConfigureAwait(false);
+                await MessageDeleted.Invoke(this, arg1, arg2).ConfigureAwait(false);
         }
 
         private async Task DiscordShardedClientOnMessageUpdated(Cacheable<IMessage, ulong> arg1, SocketMessage arg2, ISocketMessageChannel arg3)
         {
             if (MessageUpdated != null)
-                await MessageUpdated.Invoke(DiscordShardedClient, arg1, arg2, arg3).ConfigureAwait(false);
+                await MessageUpdated.Invoke(this, arg1, arg2, arg3).ConfigureAwait(false);
         }
 
         private async Task DiscordShardedClientOnReactionAdded(Cacheable<IUserMessage, ulong> arg1, ISocketMessageChannel arg2, SocketReaction arg3)
         {
             if (ReactionAdded != null)
-                await ReactionAdded.Invoke(DiscordShardedClient, arg1, arg2, arg3).ConfigureAwait(false);
+                await ReactionAdded.Invoke(this, arg1, arg2, arg3).ConfigureAwait(false);
         }
 
         private async Task DiscordShardedClientOnReactionRemoved(Cacheable<IUserMessage, ulong> arg1, ISocketMessageChannel arg2, SocketReaction arg3)
         {
             if (ReactionRemoved != null)
-                await ReactionRemoved.Invoke(DiscordShardedClient, arg1, arg2, arg3).ConfigureAwait(false);
+                await ReactionRemoved.Invoke(this, arg1, arg2, arg3).ConfigureAwait(false);
         }
 
         private async Task DiscordShardedClientOnReactionsCleared(Cacheable<IUserMessage, ulong> arg1, ISocketMessageChannel arg2)
         {
             if (ReactionsCleared != null)
-                await ReactionsCleared.Invoke(DiscordShardedClient, arg1, arg2).ConfigureAwait(false);
+                await ReactionsCleared.Invoke(this, arg1, arg2).ConfigureAwait(false);
         }
 
         private async Task DiscordShardedClientOnRoleCreated(SocketRole arg)
         {
             if (RoleCreated != null)
-                await RoleCreated.Invoke(DiscordShardedClient, arg).ConfigureAwait(false);
+                await RoleCreated.Invoke(this, arg).ConfigureAwait(false);
         }
 
         private async Task DiscordShardedClientOnRoleDeleted(SocketRole arg)
         {
             if (RoleDeleted != null)
-                await RoleDeleted.Invoke(DiscordShardedClient, arg).ConfigureAwait(false);
+                await RoleDeleted.Invoke(this, arg).ConfigureAwait(false);
         }
 
         private async Task DiscordShardedClientOnRoleUpdated(SocketRole arg1, SocketRole arg2)
         {
             if (RoleUpdated != null)
-                await RoleUpdated.Invoke(DiscordShardedClient, arg1, arg2).ConfigureAwait(false);
+                await RoleUpdated.Invoke(this, arg1, arg2).ConfigureAwait(false);
         }
 
         private async Task DiscordShardedClientOnJoinedGuild(SocketGuild arg)
         {
             if (JoinedGuild != null)
-                await JoinedGuild.Invoke(DiscordShardedClient, arg).ConfigureAwait(false);
+                await JoinedGuild.Invoke(this, arg).ConfigureAwait(false);
         }
 
         private async Task DiscordShardedClientOnLeftGuild(SocketGuild arg)
         {
             if (LeftGuild != null)
-                await LeftGuild.Invoke(DiscordShardedClient, arg).ConfigureAwait(false);
+                await LeftGuild.Invoke(this, arg).ConfigureAwait(false);
         }
 
         private async Task DiscordShardedClientOnGuildAvailable(SocketGuild arg)
         {
             if (GuildAvailable != null)
-                await GuildAvailable.Invoke(DiscordShardedClient, arg).ConfigureAwait(false);
+                await GuildAvailable.Invoke(this, arg).ConfigureAwait(false);
         }
 
         private async Task DiscordShardedClientOnGuildUnavailable(SocketGuild arg)
         {
             if (GuildUnavailable != null)
-                await GuildUnavailable.Invoke(DiscordShardedClient, arg).ConfigureAwait(false);
+                await GuildUnavailable.Invoke(this, arg).ConfigureAwait(false);
         }
 
         private async Task DiscordShardedClientOnGuildMembersDownloaded(SocketGuild arg)
         {
             if (GuildMembersDownloaded != null)
-                await GuildMembersDownloaded.Invoke(DiscordShardedClient, arg).ConfigureAwait(false);
+                await GuildMembersDownloaded.Invoke(this, arg).ConfigureAwait(false);
         }
 
         private async Task DiscordShardedClientOnGuildUpdated(SocketGuild arg1, SocketGuild arg2)
         {
             if (GuildUpdated != null)
-                await GuildUpdated.Invoke(DiscordShardedClient, arg1, arg2).ConfigureAwait(false);
+                await GuildUpdated.Invoke(this, arg1, arg2).ConfigureAwait(false);
         }
 
         private async Task DiscordShardedClientOnUserJoined(SocketGuildUser arg)
         {
             if (UserJoined != null)
-                await UserJoined.Invoke(DiscordShardedClient, arg).ConfigureAwait(false);
+                await UserJoined.Invoke(this, arg).ConfigureAwait(false);
         }
 
         private async Task DiscordShardedClientOnUserLeft(SocketGuildUser arg)
         {
             if (UserLeft != null)
-                await UserLeft.Invoke(DiscordShardedClient, arg).ConfigureAwait(false);
+                await UserLeft.Invoke(this, arg).ConfigureAwait(false);
         }
 
         private async Task DiscordShardedClientOnUserBanned(SocketUser arg1, SocketGuild arg2)
         {
             if (UserBanned != null)
-                await UserBanned.Invoke(DiscordShardedClient, arg1, arg2).ConfigureAwait(false);
+                await UserBanned.Invoke(this, arg1, arg2).ConfigureAwait(false);
         }
 
         private async Task DiscordShardedClientOnUserUnbanned(SocketUser arg1, SocketGuild arg2)
         {
             if (UserUnbanned != null)
-                await UserUnbanned.Invoke(DiscordShardedClient, arg1, arg2).ConfigureAwait(false);
+                await UserUnbanned.Invoke(this, arg1, arg2).ConfigureAwait(false);
         }
 
         private async Task DiscordShardedClientOnUserUpdated(SocketUser arg1, SocketUser arg2)
         {
             if (UserUpdated != null)
-                await UserUpdated.Invoke(DiscordShardedClient, arg1, arg2).ConfigureAwait(false);
+                await UserUpdated.Invoke(this, arg1, arg2).ConfigureAwait(false);
         }
 
         private async Task DiscordShardedClientOnGuildMemberUpdated(SocketGuildUser arg1, SocketGuildUser arg2)
         {
             if (GuildMemberUpdated != null)
-                await GuildMemberUpdated.Invoke(DiscordShardedClient, arg1, arg2).ConfigureAwait(false);
+                await GuildMemberUpdated.Invoke(this, arg1, arg2).ConfigureAwait(false);
         }
 
         private async Task DiscordShardedClientOnUserVoiceStateUpdated(SocketUser arg1, SocketVoiceState arg2, SocketVoiceState arg3)
         {
             if (UserVoiceStateUpdated != null)
-                await UserVoiceStateUpdated.Invoke(DiscordShardedClient, arg1, arg2, arg3).ConfigureAwait(false);
+                await UserVoiceStateUpdated.Invoke(this, arg1, arg2, arg3).ConfigureAwait(false);
         }
 
         private async Task DiscordShardedClientOnCurrentUserUpdated(SocketSelfUser arg1, SocketSelfUser arg2)
         {
             if (CurrentUserUpdated != null)
-                await CurrentUserUpdated.Invoke(DiscordShardedClient, arg1, arg2).ConfigureAwait(false);
+                await CurrentUserUpdated.Invoke(this, arg1, arg2).ConfigureAwait(false);
         }
 
         private async Task DiscordShardedClientOnUserIsTyping(SocketUser arg1, ISocketMessageChannel arg2)
         {
             if (UserIsTyping != null)
-                await UserIsTyping.Invoke(DiscordShardedClient, arg1, arg2).ConfigureAwait(false);
+                await UserIsTyping.Invoke(this, arg1, arg2).ConfigureAwait(false);
         }
 
         private async Task DiscordShardedClientOnRecipientAdded(SocketGroupUser arg)
         {
             if (RecipientAdded != null)
-                await RecipientAdded.Invoke(DiscordShardedClient, arg).ConfigureAwait(false);
+                await RecipientAdded.Invoke(this, arg).ConfigureAwait(false);
         }
 
         private async Task DiscordShardedClientOnRecipientRemoved(SocketGroupUser arg)
         {
             if (RecipientRemoved != null)
-                await RecipientRemoved.Invoke(DiscordShardedClient, arg).ConfigureAwait(false);
+                await RecipientRemoved.Invoke(this, arg).ConfigureAwait(false);
         }
 
         private async Task DiscordShardedClientOnShardConnected(DiscordSocketClient arg)
         {
             if (ShardConnected != null)
-                await ShardConnected.Invoke(DiscordShardedClient, arg).ConfigureAwait(false);
+                await ShardConnected.Invoke(this, arg).ConfigureAwait(false);
         }
 
         private async Task DiscordShardedClientOnShardDisconnected(Exception arg1, DiscordSocketClient arg2)
         {
             if (ShardDisconnected != null)
-                await ShardDisconnected.Invoke(DiscordShardedClient, arg1, arg2).ConfigureAwait(false);
+                await ShardDisconnected.Invoke(this, arg1, arg2).ConfigureAwait(false);
         }
 
         private async Task DiscordShardedClientOnShardReady(DiscordSocketClient arg)
         {
             if (ShardReady != null)
-                await ShardReady.Invoke(DiscordShardedClient, arg).ConfigureAwait(false);
+                await ShardReady.Invoke(this, arg).ConfigureAwait(false);
         }
 
         private async Task DiscordShardedClientOnShardLatencyUpdated(int arg1, int arg2, DiscordSocketClient arg3)
         {
             if (ShardLatencyUpdated != null)
-                await ShardLatencyUpdated.Invoke(DiscordShardedClient, arg1, arg2, arg3).ConfigureAwait(false);
+                await ShardLatencyUpdated.Invoke(this, arg1, arg2, arg3).ConfigureAwait(false);
         }
 
         public void Dispose()
         {
             DiscordShardedClient?.Dispose();
+            ConnectionLock?.Dispose();
         }
     }
 }

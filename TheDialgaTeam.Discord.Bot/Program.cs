@@ -57,7 +57,7 @@ namespace TheDialgaTeam.Discord.Bot
             await loggerService.LogMessageAsync("\nDone initializing!").ConfigureAwait(false);
 
             var discordAppService = ServiceProvider.GetRequiredService<IDiscordAppService>();
-            await discordAppService.StartDiscordAppsAsync();
+            await discordAppService.StartAllDiscordAppsAsync();
 
             await Task.Delay(-1).ConfigureAwait(false);
         }
