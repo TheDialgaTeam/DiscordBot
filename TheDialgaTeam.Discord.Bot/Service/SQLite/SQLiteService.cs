@@ -8,22 +8,15 @@ using TheDialgaTeam.Discord.Bot.Service.Logger;
 
 namespace TheDialgaTeam.Discord.Bot.Service.SQLite
 {
-    public interface ISQLiteService
-    {
-        SQLiteAsyncConnection SQLiteAsyncConnection { get; }
-
-        Task InitializeDatabaseAsync();
-    }
-
-    internal sealed class SQLiteService : ISQLiteService
+    internal sealed class SQLiteService
     {
         public SQLiteAsyncConnection SQLiteAsyncConnection { get; }
 
-        private IFilePathService FilePathService { get; }
+        private FilePathService FilePathService { get; }
 
-        private ILoggerService LoggerService { get; }
+        private LoggerService LoggerService { get; }
 
-        public SQLiteService(IFilePathService filePathService, ILoggerService loggerService)
+        public SQLiteService(FilePathService filePathService, LoggerService loggerService)
         {
             FilePathService = filePathService;
             LoggerService = loggerService;

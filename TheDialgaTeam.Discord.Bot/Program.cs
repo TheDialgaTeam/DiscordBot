@@ -12,14 +12,7 @@ using TheDialgaTeam.Discord.Bot.Service.SQLite;
 
 namespace TheDialgaTeam.Discord.Bot
 {
-    public interface IProgram
-    {
-        IServiceProvider ServiceProvider { get; }
-
-        CommandService CommandService { get; }
-    }
-
-    internal sealed class Program : IProgram
+    internal sealed class Program
     {
         public IServiceProvider ServiceProvider { get; private set; }
 
@@ -34,30 +27,30 @@ namespace TheDialgaTeam.Discord.Bot
         private async Task MainAsync()
         {
             var serviceCollection = new ServiceCollection();
-            serviceCollection.AddSingleton<IProgram>(this);
-            serviceCollection.AddSingleton<IFilePathService, FilePathService>();
-            serviceCollection.AddSingleton<ILoggerService, LoggerService>();
-            serviceCollection.AddSingleton<ISQLiteService, SQLiteService>();
-            serviceCollection.AddSingleton<IDiscordAppService, DiscordAppService>();
+            serviceCollection.AddSingleton(this);
+            serviceCollection.AddSingleton<FilePathService>();
+            serviceCollection.AddSingleton<LoggerService>();
+            serviceCollection.AddSingleton<SQLiteService>();
+            serviceCollection.AddSingleton<DiscordAppService>();
             ServiceProvider = serviceCollection.BuildServiceProvider();
 
             CommandService = new CommandService(new CommandServiceConfig { CaseSensitiveCommands = false });
             CommandService.AddTypeReader<IEmote>(new EmoteTypeReader());
-            await CommandService.AddModulesAsync(Assembly.GetEntryAssembly(), ServiceProvider).ConfigureAwait(false);
+            await CommandService.AddModulesAsync(Assembly.GetExecutingAssembly(), ServiceProvider).ConfigureAwait(false);
 
-            var loggerService = ServiceProvider.GetRequiredService<ILoggerService>();
+            var loggerService = ServiceProvider.GetRequiredService<LoggerService>();
             await loggerService.LogMessageAsync("==================================================").ConfigureAwait(false);
             await loggerService.LogMessageAsync("The Dialga Team Discord Bot (.NET Core)").ConfigureAwait(false);
             await loggerService.LogMessageAsync("==================================================").ConfigureAwait(false);
             await loggerService.LogMessageAsync("Please wait while the bot is initializing...\n").ConfigureAwait(false);
 
-            var sqliteService = ServiceProvider.GetRequiredService<ISQLiteService>();
+            var sqliteService = ServiceProvider.GetRequiredService<SQLiteService>();
             await sqliteService.InitializeDatabaseAsync().ConfigureAwait(false);
 
             await loggerService.LogMessageAsync("\nDone initializing!").ConfigureAwait(false);
 
-            var discordAppService = ServiceProvider.GetRequiredService<IDiscordAppService>();
-            await discordAppService.StartAllDiscordAppsAsync();
+            var discordAppService = ServiceProvider.GetRequiredService<DiscordAppService>();
+            await discordAppService.StartDiscordAppAsync(434237369088999427);
 
             await Task.Delay(-1).ConfigureAwait(false);
         }

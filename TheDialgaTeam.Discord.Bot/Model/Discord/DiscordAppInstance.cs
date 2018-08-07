@@ -1,253 +1,153 @@
 ﻿using System;
-using System.Threading;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
 
 namespace TheDialgaTeam.Discord.Bot.Model.Discord
 {
-    public interface IDiscordAppInstance : IDisposable
+    internal sealed class DiscordAppInstance : IDisposable
     {
-        event Func<IDiscordAppInstance, LogMessage, Task> Log;
+        public event Func<DiscordAppInstance, LogMessage, Task> Log;
 
-        event Func<IDiscordAppInstance, Task> LoggedIn;
+        public event Func<DiscordAppInstance, Task> LoggedIn;
 
-        event Func<IDiscordAppInstance, Task> LoggedOut;
+        public event Func<DiscordAppInstance, Task> LoggedOut;
 
-        event Func<IDiscordAppInstance, SocketChannel, Task> ChannelCreated;
+        public event Func<DiscordAppInstance, SocketChannel, Task> ChannelCreated;
 
-        event Func<IDiscordAppInstance, SocketChannel, Task> ChannelDestroyed;
+        public event Func<DiscordAppInstance, SocketChannel, Task> ChannelDestroyed;
 
-        event Func<IDiscordAppInstance, SocketChannel, SocketChannel, Task> ChannelUpdated;
+        public event Func<DiscordAppInstance, SocketChannel, SocketChannel, Task> ChannelUpdated;
 
-        event Func<IDiscordAppInstance, SocketMessage, Task> MessageReceived;
+        public event Func<DiscordAppInstance, SocketMessage, Task> MessageReceived;
 
-        event Func<IDiscordAppInstance, Cacheable<IMessage, ulong>, ISocketMessageChannel, Task> MessageDeleted;
+        public event Func<DiscordAppInstance, Cacheable<IMessage, ulong>, ISocketMessageChannel, Task> MessageDeleted;
 
-        event Func<IDiscordAppInstance, Cacheable<IMessage, ulong>, SocketMessage, ISocketMessageChannel, Task> MessageUpdated;
+        public event Func<DiscordAppInstance, Cacheable<IMessage, ulong>, SocketMessage, ISocketMessageChannel, Task> MessageUpdated;
 
-        event Func<IDiscordAppInstance, Cacheable<IUserMessage, ulong>, ISocketMessageChannel, SocketReaction, Task> ReactionAdded;
+        public event Func<DiscordAppInstance, Cacheable<IUserMessage, ulong>, ISocketMessageChannel, SocketReaction, Task> ReactionAdded;
 
-        event Func<IDiscordAppInstance, Cacheable<IUserMessage, ulong>, ISocketMessageChannel, SocketReaction, Task> ReactionRemoved;
+        public event Func<DiscordAppInstance, Cacheable<IUserMessage, ulong>, ISocketMessageChannel, SocketReaction, Task> ReactionRemoved;
 
-        event Func<IDiscordAppInstance, Cacheable<IUserMessage, ulong>, ISocketMessageChannel, Task> ReactionsCleared;
+        public event Func<DiscordAppInstance, Cacheable<IUserMessage, ulong>, ISocketMessageChannel, Task> ReactionsCleared;
 
-        event Func<IDiscordAppInstance, SocketRole, Task> RoleCreated;
+        public event Func<DiscordAppInstance, SocketRole, Task> RoleCreated;
 
-        event Func<IDiscordAppInstance, SocketRole, Task> RoleDeleted;
+        public event Func<DiscordAppInstance, SocketRole, Task> RoleDeleted;
 
-        event Func<IDiscordAppInstance, SocketRole, SocketRole, Task> RoleUpdated;
+        public event Func<DiscordAppInstance, SocketRole, SocketRole, Task> RoleUpdated;
 
-        event Func<IDiscordAppInstance, SocketGuild, Task> JoinedGuild;
+        public event Func<DiscordAppInstance, SocketGuild, Task> JoinedGuild;
 
-        event Func<IDiscordAppInstance, SocketGuild, Task> LeftGuild;
+        public event Func<DiscordAppInstance, SocketGuild, Task> LeftGuild;
 
-        event Func<IDiscordAppInstance, SocketGuild, Task> GuildAvailable;
+        public event Func<DiscordAppInstance, SocketGuild, Task> GuildAvailable;
 
-        event Func<IDiscordAppInstance, SocketGuild, Task> GuildUnavailable;
+        public event Func<DiscordAppInstance, SocketGuild, Task> GuildUnavailable;
 
-        event Func<IDiscordAppInstance, SocketGuild, Task> GuildMembersDownloaded;
+        public event Func<DiscordAppInstance, SocketGuild, Task> GuildMembersDownloaded;
 
-        event Func<IDiscordAppInstance, SocketGuild, SocketGuild, Task> GuildUpdated;
+        public event Func<DiscordAppInstance, SocketGuild, SocketGuild, Task> GuildUpdated;
 
-        event Func<IDiscordAppInstance, SocketGuildUser, Task> UserJoined;
+        public event Func<DiscordAppInstance, SocketGuildUser, Task> UserJoined;
 
-        event Func<IDiscordAppInstance, SocketGuildUser, Task> UserLeft;
+        public event Func<DiscordAppInstance, SocketGuildUser, Task> UserLeft;
 
-        event Func<IDiscordAppInstance, SocketUser, SocketGuild, Task> UserBanned;
+        public event Func<DiscordAppInstance, SocketUser, SocketGuild, Task> UserBanned;
 
-        event Func<IDiscordAppInstance, SocketUser, SocketGuild, Task> UserUnbanned;
+        public event Func<DiscordAppInstance, SocketUser, SocketGuild, Task> UserUnbanned;
 
-        event Func<IDiscordAppInstance, SocketUser, SocketUser, Task> UserUpdated;
+        public event Func<DiscordAppInstance, SocketUser, SocketUser, Task> UserUpdated;
 
-        event Func<IDiscordAppInstance, SocketGuildUser, SocketGuildUser, Task> GuildMemberUpdated;
+        public event Func<DiscordAppInstance, SocketGuildUser, SocketGuildUser, Task> GuildMemberUpdated;
 
-        event Func<IDiscordAppInstance, SocketUser, SocketVoiceState, SocketVoiceState, Task> UserVoiceStateUpdated;
+        public event Func<DiscordAppInstance, SocketUser, SocketVoiceState, SocketVoiceState, Task> UserVoiceStateUpdated;
 
-        event Func<IDiscordAppInstance, SocketSelfUser, SocketSelfUser, Task> CurrentUserUpdated;
+        public event Func<DiscordAppInstance, SocketSelfUser, SocketSelfUser, Task> CurrentUserUpdated;
 
-        event Func<IDiscordAppInstance, SocketUser, ISocketMessageChannel, Task> UserIsTyping;
+        public event Func<DiscordAppInstance, SocketUser, ISocketMessageChannel, Task> UserIsTyping;
 
-        event Func<IDiscordAppInstance, SocketGroupUser, Task> RecipientAdded;
+        public event Func<DiscordAppInstance, SocketGroupUser, Task> RecipientAdded;
 
-        event Func<IDiscordAppInstance, SocketGroupUser, Task> RecipientRemoved;
+        public event Func<DiscordAppInstance, SocketGroupUser, Task> RecipientRemoved;
 
-        event Func<IDiscordAppInstance, DiscordSocketClient, Task> ShardConnected;
+        public event Func<DiscordAppInstance, DiscordSocketClient, Task> ShardConnected;
 
-        event Func<IDiscordAppInstance, Exception, DiscordSocketClient, Task> ShardDisconnected;
+        public event Func<DiscordAppInstance, Exception, DiscordSocketClient, Task> ShardDisconnected;
 
-        event Func<IDiscordAppInstance, DiscordSocketClient, Task> ShardReady;
+        public event Func<DiscordAppInstance, DiscordSocketClient, Task> ShardReady;
 
-        event Func<IDiscordAppInstance, int, int, DiscordSocketClient, Task> ShardLatencyUpdated;
-
-        DiscordShardedClient DiscordShardedClient { get; }
-
-        ulong ClientId { get; }
-
-        bool IsStarted { get; }
-
-        bool IsVerified { get; set; }
-
-        Task StartDiscordAppAsync();
-
-        Task StopDiscordAppAsync();
-
-        Task RequestLoginAsync();
-    }
-
-    internal sealed class DiscordAppInstance : IDiscordAppInstance
-    {
-        public event Func<IDiscordAppInstance, LogMessage, Task> Log;
-
-        public event Func<IDiscordAppInstance, Task> LoggedIn;
-
-        public event Func<IDiscordAppInstance, Task> LoggedOut;
-
-        public event Func<IDiscordAppInstance, SocketChannel, Task> ChannelCreated;
-
-        public event Func<IDiscordAppInstance, SocketChannel, Task> ChannelDestroyed;
-
-        public event Func<IDiscordAppInstance, SocketChannel, SocketChannel, Task> ChannelUpdated;
-
-        public event Func<IDiscordAppInstance, SocketMessage, Task> MessageReceived;
-
-        public event Func<IDiscordAppInstance, Cacheable<IMessage, ulong>, ISocketMessageChannel, Task> MessageDeleted;
-
-        public event Func<IDiscordAppInstance, Cacheable<IMessage, ulong>, SocketMessage, ISocketMessageChannel, Task> MessageUpdated;
-
-        public event Func<IDiscordAppInstance, Cacheable<IUserMessage, ulong>, ISocketMessageChannel, SocketReaction, Task> ReactionAdded;
-
-        public event Func<IDiscordAppInstance, Cacheable<IUserMessage, ulong>, ISocketMessageChannel, SocketReaction, Task> ReactionRemoved;
-
-        public event Func<IDiscordAppInstance, Cacheable<IUserMessage, ulong>, ISocketMessageChannel, Task> ReactionsCleared;
-
-        public event Func<IDiscordAppInstance, SocketRole, Task> RoleCreated;
-
-        public event Func<IDiscordAppInstance, SocketRole, Task> RoleDeleted;
-
-        public event Func<IDiscordAppInstance, SocketRole, SocketRole, Task> RoleUpdated;
-
-        public event Func<IDiscordAppInstance, SocketGuild, Task> JoinedGuild;
-
-        public event Func<IDiscordAppInstance, SocketGuild, Task> LeftGuild;
-
-        public event Func<IDiscordAppInstance, SocketGuild, Task> GuildAvailable;
-
-        public event Func<IDiscordAppInstance, SocketGuild, Task> GuildUnavailable;
-
-        public event Func<IDiscordAppInstance, SocketGuild, Task> GuildMembersDownloaded;
-
-        public event Func<IDiscordAppInstance, SocketGuild, SocketGuild, Task> GuildUpdated;
-
-        public event Func<IDiscordAppInstance, SocketGuildUser, Task> UserJoined;
-
-        public event Func<IDiscordAppInstance, SocketGuildUser, Task> UserLeft;
-
-        public event Func<IDiscordAppInstance, SocketUser, SocketGuild, Task> UserBanned;
-
-        public event Func<IDiscordAppInstance, SocketUser, SocketGuild, Task> UserUnbanned;
-
-        public event Func<IDiscordAppInstance, SocketUser, SocketUser, Task> UserUpdated;
-
-        public event Func<IDiscordAppInstance, SocketGuildUser, SocketGuildUser, Task> GuildMemberUpdated;
-
-        public event Func<IDiscordAppInstance, SocketUser, SocketVoiceState, SocketVoiceState, Task> UserVoiceStateUpdated;
-
-        public event Func<IDiscordAppInstance, SocketSelfUser, SocketSelfUser, Task> CurrentUserUpdated;
-
-        public event Func<IDiscordAppInstance, SocketUser, ISocketMessageChannel, Task> UserIsTyping;
-
-        public event Func<IDiscordAppInstance, SocketGroupUser, Task> RecipientAdded;
-
-        public event Func<IDiscordAppInstance, SocketGroupUser, Task> RecipientRemoved;
-
-        public event Func<IDiscordAppInstance, DiscordSocketClient, Task> ShardConnected;
-
-        public event Func<IDiscordAppInstance, Exception, DiscordSocketClient, Task> ShardDisconnected;
-
-        public event Func<IDiscordAppInstance, DiscordSocketClient, Task> ShardReady;
-
-        public event Func<IDiscordAppInstance, int, int, DiscordSocketClient, Task> ShardLatencyUpdated;
+        public event Func<DiscordAppInstance, int, int, DiscordSocketClient, Task> ShardLatencyUpdated;
 
         public DiscordShardedClient DiscordShardedClient { get; }
 
         public ulong ClientId { get; }
 
+        public bool IsLoggedIn { get; private set; }
+
         public bool IsStarted { get; private set; }
 
         public bool IsVerified { get; set; }
 
-        private string BotToken { get; }
+        public DateTimeOffset NextCheck { get; set; }
 
-        private SemaphoreSlim ConnectionLock { get; } = new SemaphoreSlim(1, 1);
+        private string BotToken { get; }
 
         public DiscordAppInstance(ulong clientId, string botToken, DiscordSocketConfig config = null)
         {
             DiscordShardedClient = new DiscordShardedClient(config ?? new DiscordSocketConfig { LogLevel = LogSeverity.Verbose });
             ClientId = clientId;
             BotToken = botToken;
-        }
-
-        public async Task StartDiscordAppAsync()
-        {
-            await ConnectionLock.WaitAsync();
-
-            if (IsStarted)
-            {
-                ConnectionLock.Release();
-
-                return;
-            }
 
             AddListener();
+        }
 
+        public async Task DiscordAppLoginAsync()
+        {
             try
             {
                 await DiscordShardedClient.LoginAsync(TokenType.Bot, BotToken).ConfigureAwait(false);
-                await DiscordShardedClient.StartAsync().ConfigureAwait(false);
-
-                IsStarted = true;
-            }
-            catch (Exception)
-            {
-                RemoveListener();
-                IsStarted = false;
-
-                throw;
             }
             finally
             {
-                ConnectionLock.Release();
+                IsLoggedIn = true;
             }
         }
 
-        public async Task StopDiscordAppAsync()
+        public async Task DiscordAppLogoutAsync()
         {
-            await ConnectionLock.WaitAsync();
-
-            if (!IsStarted)
-            {
-                ConnectionLock.Release();
-
-                return;
-            }
-
             try
             {
                 await DiscordShardedClient.LogoutAsync().ConfigureAwait(false);
+            }
+            finally
+            {
+                IsLoggedIn = false;
+            }
+        }
+
+        public async Task DiscordAppStartAsync()
+        {
+            try
+            {
+                await DiscordShardedClient.StartAsync().ConfigureAwait(false);
+            }
+            finally
+            {
+                IsStarted = true;
+            }
+        }
+
+        public async Task DiscordAppStopAsync()
+        {
+            try
+            {
                 await DiscordShardedClient.StopAsync().ConfigureAwait(false);
             }
             finally
             {
-                RemoveListener();
                 IsStarted = false;
-                ConnectionLock.Release();
             }
-        }
-
-        public async Task RequestLoginAsync()
-        {
-            await DiscordShardedClient.LoginAsync(TokenType.Bot, BotToken).ConfigureAwait(false);
         }
 
         private void AddListener()
@@ -548,8 +448,8 @@ namespace TheDialgaTeam.Discord.Bot.Model.Discord
 
         public void Dispose()
         {
+            RemoveListener();
             DiscordShardedClient?.Dispose();
-            ConnectionLock?.Dispose();
         }
     }
 }

@@ -8,24 +8,13 @@ using TheDialgaTeam.Discord.Bot.Service.IO;
 
 namespace TheDialgaTeam.Discord.Bot.Service.Logger
 {
-    public interface ILoggerService : IDisposable
-    {
-        Task<string> ReadLineAsync();
-
-        Task LogMessageAsync(string message, ConsoleColor consoleColor = ConsoleColor.White);
-
-        Task LogMessageAsync(DiscordShardedClient discordShardedClient, LogMessage logMessage);
-
-        Task LogErrorMessageAsync(Exception exception);
-    }
-
-    internal sealed class LoggerService : ILoggerService
+    internal sealed class LoggerService : IDisposable
     {
         private StreamWriter StreamWriter { get; }
 
         private SemaphoreSlim StreamWriterLock { get; } = new SemaphoreSlim(1, 1);
 
-        public LoggerService(IFilePathService filePathService)
+        public LoggerService(FilePathService filePathService)
         {
             StreamWriter = new StreamWriter(new FileStream(filePathService.ConsoleLogFilePath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite));
         }
@@ -44,43 +33,35 @@ namespace TheDialgaTeam.Discord.Bot.Service.Logger
         {
             var botId = discordShardedClient?.CurrentUser?.Id;
             var botName = discordShardedClient?.CurrentUser?.ToString();
-
             var message = discordShardedClient?.CurrentUser == null ? $"[Bot] {logMessage.ToString()}" : $"[Bot {botId}] {botName}:\n{logMessage.ToString()}";
 
             switch (logMessage.Severity)
             {
                 case LogSeverity.Critical:
                     await InternalLogMessageAsync(Console.Error, ConsoleColor.Red, message).ConfigureAwait(false);
-
                     break;
 
                 case LogSeverity.Error:
                     await InternalLogMessageAsync(Console.Error, ConsoleColor.Red, message).ConfigureAwait(false);
-
                     break;
 
                 case LogSeverity.Warning:
                     await InternalLogMessageAsync(Console.Out, ConsoleColor.Yellow, message).ConfigureAwait(false);
-
                     break;
 
                 case LogSeverity.Info:
                     await InternalLogMessageAsync(Console.Out, ConsoleColor.White, message).ConfigureAwait(false);
-
                     break;
 
                 case LogSeverity.Verbose:
                     await InternalLogMessageAsync(Console.Out, ConsoleColor.White, message).ConfigureAwait(false);
-
                     break;
 
                 case LogSeverity.Debug:
                     await InternalLogMessageAsync(Console.Out, ConsoleColor.White, message).ConfigureAwait(false);
-
                     break;
 
                 default:
-
                     throw new ArgumentOutOfRangeException();
             }
         }
@@ -95,20 +76,23 @@ namespace TheDialgaTeam.Discord.Bot.Service.Logger
             try
             {
                 await StreamWriterLock.WaitAsync().ConfigureAwait(false);
-
                 Console.ForegroundColor = consoleColor;
 
                 await writer.WriteLineAsync(message).ConfigureAwait(false);
                 await writer.FlushAsync().ConfigureAwait(false);
 
-                await StreamWriter.WriteLineAsync($"{DateTime.UtcNow:HH:mm:ss} {message}").ConfigureAwait(false);
+                await StreamWriter.WriteLineAsync($"{DateTime.UtcNow:u} {message}").ConfigureAwait(false);
                 await StreamWriter.FlushAsync().ConfigureAwait(false);
-
-                Console.ResetColor();
+            }
+            catch (Exception ex)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                await Console.Error.WriteLineAsync(ex.ToString()).ConfigureAwait(false);
             }
             finally
             {
                 StreamWriterLock.Release();
+                Console.ResetColor();
             }
         }
 
