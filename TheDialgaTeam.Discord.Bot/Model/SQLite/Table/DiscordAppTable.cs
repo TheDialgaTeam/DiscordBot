@@ -4,12 +4,13 @@ using SQLite;
 namespace TheDialgaTeam.Discord.Bot.Model.SQLite.Table
 {
     [Table("DiscordApp")]
-    internal sealed class DiscordAppTable : IDatabaseTable
+    public sealed class DiscordAppTable : IDatabaseTable
     {
         [PrimaryKey]
         [AutoIncrement]
-        public long Id { get; set; }
+        public long? Id { get; set; }
 
+        [Unique]
         public string ClientId { get; set; }
 
         public string ClientSecret { get; set; }

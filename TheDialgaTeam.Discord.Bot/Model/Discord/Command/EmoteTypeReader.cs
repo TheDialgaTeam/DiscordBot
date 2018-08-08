@@ -6,7 +6,7 @@ using Discord.Commands;
 
 namespace TheDialgaTeam.Discord.Bot.Model.Discord.Command
 {
-    internal sealed class EmoteTypeReader : TypeReader
+    public sealed class EmoteTypeReader : TypeReader
     {
         public override async Task<TypeReaderResult> ReadAsync(ICommandContext context, string input, IServiceProvider services)
         {

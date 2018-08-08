@@ -8,7 +8,7 @@ using TheDialgaTeam.Discord.Bot.Service.IO;
 
 namespace TheDialgaTeam.Discord.Bot.Service.Logger
 {
-    internal sealed class LoggerService : IDisposable
+    public sealed class LoggerService : IDisposable
     {
         private StreamWriter StreamWriter { get; }
 

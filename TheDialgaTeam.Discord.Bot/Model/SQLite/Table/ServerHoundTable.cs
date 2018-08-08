@@ -4,11 +4,11 @@ using SQLite;
 namespace TheDialgaTeam.Discord.Bot.Model.SQLite.Table
 {
     [Table("ServerHound")]
-    internal sealed class ServerHoundTable : IDatabaseTable
+    public sealed class ServerHoundTable : IDatabaseTable
     {
         [PrimaryKey]
         [AutoIncrement]
-        public long Id { get; set; }
+        public long? Id { get; set; }
 
         public bool Dbans { get; set; }
 

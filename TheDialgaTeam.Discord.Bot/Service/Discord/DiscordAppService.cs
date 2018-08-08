@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using Discord;
+using Discord.Commands;
+using Discord.WebSocket;
 using TheDialgaTeam.Discord.Bot.Model.Discord;
 using TheDialgaTeam.Discord.Bot.Model.Discord.Command;
 using TheDialgaTeam.Discord.Bot.Model.SQLite.Table;
@@ -12,11 +14,13 @@ using TheDialgaTeam.Discord.Bot.Service.SQLite;
 
 namespace TheDialgaTeam.Discord.Bot.Service.Discord
 {
-    internal class DiscordAppService
+    public sealed class DiscordAppService
     {
         private LoggerService LoggerService { get; }
 
         private SQLiteService SQLiteService { get; }
+
+        private Program Program { get; }
 
         private Task BackgroundTask { get; }
 
@@ -30,10 +34,11 @@ namespace TheDialgaTeam.Discord.Bot.Service.Discord
 
         private ConcurrentQueue<(Func<List<DiscordAppInstance>, Task> callbackFunc, Action<bool> callbackAction)> GeneralQueue { get; } = new ConcurrentQueue<(Func<List<DiscordAppInstance>, Task> callbackFunc, Action<bool> callbackAction)>();
 
-        public DiscordAppService(LoggerService loggerService, SQLiteService sqliteService)
+        public DiscordAppService(LoggerService loggerService, SQLiteService sqliteService, Program program)
         {
             LoggerService = loggerService;
             SQLiteService = sqliteService;
+            Program = program;
             BackgroundTask = DiscordAppServiceTask();
         }
 
@@ -89,6 +94,15 @@ namespace TheDialgaTeam.Discord.Bot.Service.Discord
 
                 while (true)
                 {
+                    // Process stop discord app queue.
+                    while (StopDiscordAppQueue.Count > 0)
+                    {
+                        if (StopDiscordAppQueue.TryDequeue(out var item))
+                            await StopDiscordAppInstanceAsync(item.clientId, item.callbackAction);
+                        else
+                            await WaitForNextSecondAsync().ConfigureAwait(false);
+                    }
+
                     // Process start discord app queue.
                     while (StartDiscordAppQueue.Count > 0)
                     {
@@ -98,13 +112,16 @@ namespace TheDialgaTeam.Discord.Bot.Service.Discord
                             await WaitForNextSecondAsync().ConfigureAwait(false);
                     }
 
-                    // Process stop discord app queue.
-                    while (StopDiscordAppQueue.Count > 0)
+                    // Process discord app to remove.
+                    for (var i = DiscordAppInstances.Count - 1; i >= 0; i--)
                     {
-                        if (StopDiscordAppQueue.TryDequeue(out var item))
-                            await StopDiscordAppInstanceAsync(item.clientId, item.callbackAction);
-                        else
-                            await WaitForNextSecondAsync().ConfigureAwait(false);
+                        var discordAppInstance = DiscordAppInstances[i];
+
+                        if (discordAppInstance.IsStarted || discordAppInstance.IsLoggedIn)
+                            continue;
+
+                        discordAppInstance.Dispose();
+                        DiscordAppInstances.RemoveAt(i);
                     }
 
                     // Process General Task on queue.
@@ -187,18 +204,6 @@ namespace TheDialgaTeam.Discord.Bot.Service.Discord
                                 await LoggerService.LogErrorMessageAsync(ex);
                             }
                         }
-                    }
-
-                    // Process discord app to remove.
-                    for (var i = DiscordAppInstances.Count - 1; i >= 0; i--)
-                    {
-                        var discordAppInstance = DiscordAppInstances[i];
-
-                        if (discordAppInstance.IsStarted || discordAppInstance.IsLoggedIn)
-                            continue;
-
-                        discordAppInstance.Dispose();
-                        DiscordAppInstances.RemoveAt(i);
                     }
 
                     await WaitForNextSecondAsync().ConfigureAwait(false);
@@ -309,16 +314,77 @@ namespace TheDialgaTeam.Discord.Bot.Service.Discord
         private void AddListener(DiscordAppInstance discordAppInstance)
         {
             discordAppInstance.Log += DiscordAppInstanceOnLog;
+            discordAppInstance.ShardReady += DiscordAppInstanceOnShardReady;
+            discordAppInstance.MessageReceived += DiscordAppInstanceOnMessageReceived;
         }
 
         private void RemoveListener(DiscordAppInstance discordAppInstance)
         {
+            discordAppInstance.MessageReceived -= DiscordAppInstanceOnMessageReceived;
+            discordAppInstance.ShardReady -= DiscordAppInstanceOnShardReady;
             discordAppInstance.Log -= DiscordAppInstanceOnLog;
         }
 
         private Task DiscordAppInstanceOnLog(DiscordAppInstance discordAppInstance, LogMessage logMessage)
         {
             Task.Run(async () => await LoggerService.LogMessageAsync(discordAppInstance.DiscordShardedClient, logMessage).ConfigureAwait(false)).ConfigureAwait(false);
+            return Task.CompletedTask;
+        }
+
+        private Task DiscordAppInstanceOnShardReady(DiscordAppInstance discordAppInstance, DiscordSocketClient discordSocketClient)
+        {
+            Task.Run(async () =>
+            {
+                await discordSocketClient.SetGameAsync($"{discordAppInstance.DiscordShardedClient.CurrentUser.Mention} help").ConfigureAwait(false);
+                await LoggerService.LogMessageAsync($"{discordAppInstance.DiscordShardedClient.CurrentUser}: Shard {discordSocketClient.ShardId + 1}/{discordAppInstance.DiscordShardedClient.Shards.Count} is ready!", ConsoleColor.Green).ConfigureAwait(false);
+            }).ConfigureAwait(false);
+            return Task.CompletedTask;
+        }
+
+        private Task DiscordAppInstanceOnMessageReceived(DiscordAppInstance discordAppInstance, SocketMessage socketMessage)
+        {
+            Task.Run(async () =>
+            {
+                if (!(socketMessage is SocketUserMessage socketUserMessage))
+                    return;
+
+                ICommandContext context = null;
+
+                switch (socketUserMessage.Channel)
+                {
+                    case SocketDMChannel _:
+                    case SocketGroupChannel _:
+                        context = new SocketCommandContext(discordAppInstance.DiscordShardedClient.GetShard(0), socketUserMessage);
+                        break;
+
+                    case SocketGuildChannel socketGuildChannel:
+                        context = new SocketCommandContext(discordAppInstance.DiscordShardedClient.GetShardFor(socketGuildChannel.Guild), socketUserMessage);
+                        break;
+                }
+
+                if (context == null)
+                    return;
+
+                var argPos = 0;
+
+                if (socketUserMessage.Channel is SocketDMChannel)
+                    socketUserMessage.HasMentionPrefix(discordAppInstance.DiscordShardedClient.CurrentUser, ref argPos);
+                else
+                {
+                    var discordAppId = await SQLiteService.GetDiscordAppIdAsync(context.Client.CurrentUser.Id).ConfigureAwait(false);
+                    var guildId = context.Guild.Id.ToString();
+                    var discordGuild = await SQLiteService.SQLiteAsyncConnection.Table<DiscordGuildTable>().Where(a => a.DiscordAppId == discordAppId && a.GuildId == guildId).FirstOrDefaultAsync().ConfigureAwait(false);
+
+                    if (discordGuild == null && !socketUserMessage.HasMentionPrefix(discordAppInstance.DiscordShardedClient.CurrentUser, ref argPos))
+                        return;
+
+                    if (!socketUserMessage.HasMentionPrefix(discordAppInstance.DiscordShardedClient.CurrentUser, ref argPos) &&
+                        !socketUserMessage.HasStringPrefix(discordGuild?.Prefix ?? "", ref argPos, StringComparison.OrdinalIgnoreCase))
+                        return;
+                }
+
+                await Program.CommandService.ExecuteAsync(context, argPos, Program.ServiceProvider).ConfigureAwait(false);
+            }).ConfigureAwait(false);
             return Task.CompletedTask;
         }
     }

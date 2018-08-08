@@ -5,7 +5,7 @@ using Discord.WebSocket;
 
 namespace TheDialgaTeam.Discord.Bot.Model.Discord
 {
-    internal sealed class DiscordAppInstance : IDisposable
+    public sealed class DiscordAppInstance : IDisposable
     {
         public event Func<DiscordAppInstance, LogMessage, Task> Log;
 
@@ -98,7 +98,6 @@ namespace TheDialgaTeam.Discord.Bot.Model.Discord
             DiscordShardedClient = new DiscordShardedClient(config ?? new DiscordSocketConfig { LogLevel = LogSeverity.Verbose });
             ClientId = clientId;
             BotToken = botToken;
-
             AddListener();
         }
 

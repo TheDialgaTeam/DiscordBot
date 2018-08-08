@@ -2,7 +2,7 @@
 
 namespace TheDialgaTeam.Discord.Bot.Model.Discord.Command
 {
-    internal sealed class CommandExecuteResult
+    public sealed class CommandExecuteResult
     {
         public string Message { get; }
 

@@ -3,11 +3,11 @@
 namespace TheDialgaTeam.Discord.Bot.Model.SQLite.Table
 {
     [Table("DiscordGuildModeratorRole")]
-    internal sealed class DiscordGuildModeratorRoleTable : IDatabaseTable
+    public sealed class DiscordGuildModeratorRoleTable : IDatabaseTable
     {
         [PrimaryKey]
         [AutoIncrement]
-        public long Id { get; set; }
+        public long? Id { get; set; }
 
         public string RoleId { get; set; }
 

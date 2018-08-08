@@ -3,7 +3,7 @@ using System.IO;
 
 namespace TheDialgaTeam.Discord.Bot.Service.IO
 {
-    internal sealed class FilePathService
+    public sealed class FilePathService
     {
         public string ConsoleLogFilePath { get; } = ResolveFullPath($"{Environment.CurrentDirectory}/Logs/{DateTime.UtcNow:yyyy-MM-dd}.txt");
 

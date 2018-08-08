@@ -3,11 +3,11 @@
 namespace TheDialgaTeam.Discord.Bot.Model.SQLite.Table
 {
     [Table("FreeGameNotification")]
-    internal sealed class FreeGameNotificationTable : IDatabaseTable
+    public sealed class FreeGameNotificationTable : IDatabaseTable
     {
         [PrimaryKey]
         [AutoIncrement]
-        public long Id { get; set; }
+        public long? Id { get; set; }
 
         public bool Active { get; set; }
 
