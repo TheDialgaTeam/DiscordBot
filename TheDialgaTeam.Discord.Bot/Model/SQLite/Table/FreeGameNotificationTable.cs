@@ -9,11 +9,10 @@ namespace TheDialgaTeam.Discord.Bot.Model.SQLite.Table
         [AutoIncrement]
         public long? Id { get; set; }
 
-        public bool Active { get; set; }
+        public bool? Active { get; set; }
 
         public string RoleId { get; set; }
 
-        [Indexed]
-        public long DiscordChannelId { get; set; }
+        public long? DiscordChannelId { get; set; }
     }
 }

@@ -9,6 +9,7 @@ using TheDialgaTeam.Discord.Bot.Model.SQLite.Table;
 using TheDialgaTeam.Discord.Bot.Service.Discord;
 using TheDialgaTeam.Discord.Bot.Service.IO;
 using TheDialgaTeam.Discord.Bot.Service.Logger;
+using TheDialgaTeam.Discord.Bot.Service.Nancy;
 using TheDialgaTeam.Discord.Bot.Service.SQLite;
 
 namespace TheDialgaTeam.Discord.Bot
@@ -39,6 +40,7 @@ namespace TheDialgaTeam.Discord.Bot
             serviceCollection.AddSingleton<LoggerService>();
             serviceCollection.AddSingleton<SQLiteService>();
             serviceCollection.AddSingleton<DiscordAppService>();
+            serviceCollection.AddSingleton<RestWebService>();
             ServiceProvider = serviceCollection.BuildServiceProvider();
 
             CommandService = new CommandService(new CommandServiceConfig { CaseSensitiveCommands = false });
@@ -59,6 +61,9 @@ namespace TheDialgaTeam.Discord.Bot
             await LoggerService.LogMessageAsync("\nDone initializing!").ConfigureAwait(false);
 
             DiscordAppService = ServiceProvider.GetRequiredService<DiscordAppService>();
+
+            var restWebService = ServiceProvider.GetRequiredService<RestWebService>();
+            await restWebService.StartAsync();
 
             while (true)
             {
@@ -86,6 +91,8 @@ namespace TheDialgaTeam.Discord.Bot
 
             foreach (var discordAppTable in discordApps)
                 await DiscordAppService.StopDiscordAppAsync(Convert.ToUInt64(discordAppTable.ClientId)).ConfigureAwait(false);
+
+            await restWebService.StopAsync();
         }
 
         private async Task ShowHelpMenuAsync()
@@ -186,7 +193,7 @@ namespace TheDialgaTeam.Discord.Bot
                 else
                 {
                     var clientIdString = clientId.ToString();
-                    discordApp = await SQLiteService.SQLiteAsyncConnection.Table<DiscordAppTable>().Where(a => a.ClientId == clientIdString).FirstOrDefaultAsync();
+                    discordApp = await SQLiteService.SQLiteAsyncConnection.Table<DiscordAppTable>().Where(a => a.ClientId == clientIdString).FirstOrDefaultAsync().ConfigureAwait(false);
 
                     if (discordApp != null)
                         continue;

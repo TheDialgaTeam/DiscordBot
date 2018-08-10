@@ -13,7 +13,8 @@ namespace TheDialgaTeam.Discord.Bot.Model.SQLite.Table
 
         public string Prefix { get; set; }
 
-        [Indexed]
-        public long DiscordAppId { get; set; }
+        public bool? DeleteCommandAfterUse { get; set; }
+
+        public long? DiscordAppId { get; set; }
     }
 }

@@ -11,7 +11,6 @@ namespace TheDialgaTeam.Discord.Bot.Model.SQLite.Table
 
         public string RoleId { get; set; }
 
-        [Indexed]
-        public long DiscordChannelId { get; set; }
+        public long? DiscordChannelId { get; set; }
     }
 }

@@ -10,11 +10,10 @@ namespace TheDialgaTeam.Discord.Bot.Model.SQLite.Table
         [AutoIncrement]
         public long? Id { get; set; }
 
-        public bool Dbans { get; set; }
+        public bool? Dbans { get; set; }
 
-        public DateTimeOffset LastChecked { get; set; }
+        public DateTimeOffset? LastChecked { get; set; }
 
-        [Indexed]
-        public long DiscordGuildId { get; set; }
+        public long? DiscordGuildId { get; set; }
     }
 }

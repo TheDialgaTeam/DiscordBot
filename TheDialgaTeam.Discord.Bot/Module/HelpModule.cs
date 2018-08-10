@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using TheDialgaTeam.Discord.Bot.Model.Discord.Command;
+using TheDialgaTeam.Discord.Bot.Service.SQLite;
 
 namespace TheDialgaTeam.Discord.Bot.Module
 {
@@ -15,7 +16,7 @@ namespace TheDialgaTeam.Discord.Bot.Module
 
         private CommandService CommandService { get; }
 
-        public HelpModule(Program program)
+        public HelpModule(Program program, SQLiteService sqliteService) : base(sqliteService)
         {
             ServiceProvider = program.ServiceProvider;
             CommandService = program.CommandService;
@@ -192,7 +193,7 @@ s: Optional seconds, ranging from 0 to 59.");
                     helpMessage = helpMessage.AddField(moduleName, commandInfo.ToString());
             }
 
-            await ReplyDMAsync("", false, helpMessage.Build());
+            await ReplyDMAsync("", false, helpMessage.Build()).ConfigureAwait(false);
         }
 
         [Command("Help")]
@@ -300,7 +301,7 @@ s: Optional seconds, ranging from 0 to 59.");
 
                     helpMessage = helpMessage.AddField($"{command.Name} command:", commandInfo.ToString());
 
-                    await ReplyAsync("", false, helpMessage.Build());
+                    await ReplyAsync("", false, helpMessage.Build()).ConfigureAwait(false);
                     return;
                 }
             }

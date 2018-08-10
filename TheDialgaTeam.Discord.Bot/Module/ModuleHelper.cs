@@ -2,20 +2,26 @@
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using TheDialgaTeam.Discord.Bot.Service.SQLite;
 
 namespace TheDialgaTeam.Discord.Bot.Module
 {
-    public abstract class ModuleHelper : ModuleBase<SocketCommandContext>
+    public abstract class ModuleHelper : ModuleBase<ShardedCommandContext>
     {
+        protected SQLiteService SqliteService { get; }
+
+        protected ModuleHelper(SQLiteService sqliteService)
+        {
+            SqliteService = sqliteService;
+        }
+
         protected override async Task<IUserMessage> ReplyAsync(string message = null, bool isTTS = false, Embed embed = null, RequestOptions options = null)
         {
             if (Context.Message.Channel is SocketDMChannel || Context.Message.Channel is SocketGroupChannel)
-                return await Context.Channel.SendMessageAsync(message, isTTS, embed, options);
+                return await Context.Channel.SendMessageAsync(message, isTTS, embed, options).ConfigureAwait(false);
 
-            var perms = Context.Guild.GetUser(Context.Client.CurrentUser.Id).GetPermissions(Context.Guild.GetChannel(Context.Channel.Id));
-
-            if (perms.SendMessages)
-                return await Context.Channel.SendMessageAsync(message, isTTS, embed, options);
+            if (GetChannelPermissions().SendMessages)
+                return await Context.Channel.SendMessageAsync(message, isTTS, embed, options).ConfigureAwait(false);
 
             return null;
         }
@@ -25,19 +31,24 @@ namespace TheDialgaTeam.Discord.Bot.Module
             if (Context.Message.Channel is SocketDMChannel || Context.Message.Channel is SocketGroupChannel)
                 return;
 
-            var perms = Context.Guild.GetUser(Context.Client.CurrentUser.Id).GetPermissions(Context.Guild.GetChannel(Context.Channel.Id));
+            var discordGuild = await SqliteService.GetOrCreateDiscordGuildTableAsync(Context.Client.CurrentUser.Id, Context.Guild.Id).ConfigureAwait(false);
 
-            if (perms.ManageMessages)
-                await Context.Message.DeleteAsync();
+            if ((discordGuild?.DeleteCommandAfterUse ?? false) && GetChannelPermissions().ManageMessages)
+                await Context.Message.DeleteAsync().ConfigureAwait(false);
         }
 
         protected async Task<IUserMessage> ReplyDMAsync(string text, bool isTTS = false, Embed embed = null, RequestOptions options = null)
         {
             if (Context.Message.Channel is SocketDMChannel || Context.Message.Channel is SocketGroupChannel)
-                return await ReplyAsync(text, isTTS, embed, options);
+                return await ReplyAsync(text, isTTS, embed, options).ConfigureAwait(false);
 
-            var dmChannel = await Context.Message.Author.GetOrCreateDMChannelAsync();
-            return await dmChannel.SendMessageAsync(text, isTTS, embed, options);
+            var dmChannel = await Context.Message.Author.GetOrCreateDMChannelAsync().ConfigureAwait(false);
+            return await dmChannel.SendMessageAsync(text, isTTS, embed, options).ConfigureAwait(false);
+        }
+
+        protected ChannelPermissions GetChannelPermissions(ulong? channelId = null)
+        {
+            return Context.Guild.GetUser(Context.Client.CurrentUser.Id).GetPermissions(Context.Guild.GetChannel(channelId ?? Context.Channel.Id));
         }
     }
 }

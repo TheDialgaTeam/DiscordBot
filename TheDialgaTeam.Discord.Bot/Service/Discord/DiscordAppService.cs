@@ -348,23 +348,7 @@ namespace TheDialgaTeam.Discord.Bot.Service.Discord
                 if (!(socketMessage is SocketUserMessage socketUserMessage))
                     return;
 
-                ICommandContext context = null;
-
-                switch (socketUserMessage.Channel)
-                {
-                    case SocketDMChannel _:
-                    case SocketGroupChannel _:
-                        context = new SocketCommandContext(discordAppInstance.DiscordShardedClient.GetShard(0), socketUserMessage);
-                        break;
-
-                    case SocketGuildChannel socketGuildChannel:
-                        context = new SocketCommandContext(discordAppInstance.DiscordShardedClient.GetShardFor(socketGuildChannel.Guild), socketUserMessage);
-                        break;
-                }
-
-                if (context == null)
-                    return;
-
+                ICommandContext context = new ShardedCommandContext(discordAppInstance.DiscordShardedClient, socketUserMessage);
                 var argPos = 0;
 
                 if (socketUserMessage.Channel is SocketDMChannel)

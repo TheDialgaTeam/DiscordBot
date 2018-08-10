@@ -38,7 +38,7 @@ namespace TheDialgaTeam.Discord.Bot.Model.Discord.Command
 
             var currentUserPermission = RequiredPermission.GuildMember;
 
-            if (context.Message.Channel is SocketGuildChannel channel)
+            if (context.Message.Channel is SocketGuildChannel)
             {
                 var discordGuildId = await sqliteService.GetDiscordGuildIdAsync(context.Client.CurrentUser.Id, context.Guild.Id).ConfigureAwait(false);
                 var discordChannelId = await sqliteService.GetDiscordChannelIdAsync(context.Client.CurrentUser.Id, context.Guild.Id, context.Channel.Id).ConfigureAwait(false);

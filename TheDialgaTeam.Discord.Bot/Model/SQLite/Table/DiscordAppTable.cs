@@ -21,6 +21,6 @@ namespace TheDialgaTeam.Discord.Bot.Model.SQLite.Table
 
         public string BotToken { get; set; }
 
-        public DateTimeOffset LastUpdateCheck { get; set; }
+        public DateTimeOffset? LastUpdateCheck { get; set; }
     }
 }

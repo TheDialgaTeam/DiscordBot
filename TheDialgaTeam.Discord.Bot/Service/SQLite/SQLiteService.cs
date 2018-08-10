@@ -33,18 +33,38 @@ namespace TheDialgaTeam.Discord.Bot.Service.SQLite
 
         public async Task<long?> GetDiscordGuildIdAsync(ulong clientId, ulong guildId)
         {
-            var discordAppId = await GetDiscordAppIdAsync(clientId).ConfigureAwait(false);
-            var guildIdString = guildId.ToString();
-            var discordGuild = await SQLiteAsyncConnection.Table<DiscordGuildTable>().Where(a => a.DiscordAppId == discordAppId && a.GuildId == guildIdString).FirstOrDefaultAsync().ConfigureAwait(false);
-            return discordGuild?.Id;
+            var discordGuild = await GetOrCreateDiscordGuildTableAsync(clientId, guildId).ConfigureAwait(false);
+            return discordGuild.Id;
         }
 
         public async Task<long?> GetDiscordChannelIdAsync(ulong clientId, ulong guildId, ulong channelId)
         {
+            var discordChannel = await GetOrCreateDiscordChannelTableAsync(clientId, guildId, channelId).ConfigureAwait(false);
+            return discordChannel.Id;
+        }
+
+        public async Task<DiscordGuildTable> GetOrCreateDiscordGuildTableAsync(ulong clientId, ulong guildId)
+        {
+            var discordAppId = await GetDiscordAppIdAsync(clientId).ConfigureAwait(false);
+            var guildIdString = guildId.ToString();
+            var discordGuild = await SQLiteAsyncConnection.Table<DiscordGuildTable>().Where(a => a.DiscordAppId == discordAppId && a.GuildId == guildIdString).FirstOrDefaultAsync().ConfigureAwait(false);
+
+            if (discordGuild == null)
+                await SQLiteAsyncConnection.InsertAsync(new DiscordGuildTable { GuildId = guildIdString, DiscordAppId = discordAppId.Value }).ConfigureAwait(false);
+
+            return await SQLiteAsyncConnection.Table<DiscordGuildTable>().Where(a => a.DiscordAppId == discordAppId && a.GuildId == guildIdString).FirstOrDefaultAsync().ConfigureAwait(false);
+        }
+
+        public async Task<DiscordChannelTable> GetOrCreateDiscordChannelTableAsync(ulong clientId, ulong guildId, ulong channelId)
+        {
             var discordGuildId = await GetDiscordGuildIdAsync(clientId, guildId).ConfigureAwait(false);
             var channelIdString = channelId.ToString();
             var discordChannel = await SQLiteAsyncConnection.Table<DiscordChannelTable>().Where(a => a.DiscordGuildId == discordGuildId && a.ChannelId == channelIdString).FirstOrDefaultAsync().ConfigureAwait(false);
-            return discordChannel?.Id;
+
+            if (discordChannel == null)
+                await SQLiteAsyncConnection.InsertAsync(new DiscordChannelTable { ChannelId = channelIdString, DiscordGuildId = discordGuildId.Value }).ConfigureAwait(false);
+
+            return await SQLiteAsyncConnection.Table<DiscordChannelTable>().Where(a => a.DiscordGuildId == discordGuildId && a.ChannelId == channelIdString).FirstOrDefaultAsync().ConfigureAwait(false);
         }
 
         public async Task InitializeDatabaseAsync()
