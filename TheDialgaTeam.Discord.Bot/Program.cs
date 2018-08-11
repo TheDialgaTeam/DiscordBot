@@ -83,6 +83,10 @@ namespace TheDialgaTeam.Discord.Bot
                     await StartDiscordAppsAsync().ConfigureAwait(false);
                 else if (commandInput.Equals("StopDiscordApps", StringComparison.OrdinalIgnoreCase))
                     await StopDiscordAppsAsync().ConfigureAwait(false);
+                else if (commandInput.Equals("AddGlobalAdmin", StringComparison.OrdinalIgnoreCase))
+                    await AddGlobalAdminAsync().ConfigureAwait(false);
+                else if (commandInput.Equals("RemoveGlobalAdmin", StringComparison.OrdinalIgnoreCase))
+                    await RemoveGlobalAdminAsync().ConfigureAwait(false);
                 else if (!string.IsNullOrEmpty(commandInput))
                     await LoggerService.LogMessageAsync("Unknown command. Please try again.", ConsoleColor.Red).ConfigureAwait(false);
             }
@@ -106,6 +110,8 @@ namespace TheDialgaTeam.Discord.Bot
             await LoggerService.LogMessageAsync("RemoveDiscordApp - Remove a discord app from the database.").ConfigureAwait(false);
             await LoggerService.LogMessageAsync("StartDiscordApps - Start all discord app.").ConfigureAwait(false);
             await LoggerService.LogMessageAsync("StopDiscordApps - Start all discord app.").ConfigureAwait(false);
+            await LoggerService.LogMessageAsync("AddGlobalAdmin - Add a user as a global admin.").ConfigureAwait(false);
+            await LoggerService.LogMessageAsync("RemoveGlobalAdmin - Remove a user as a global admin.").ConfigureAwait(false);
             await LoggerService.LogMessageAsync("==================================================").ConfigureAwait(false);
         }
 
@@ -254,6 +260,103 @@ namespace TheDialgaTeam.Discord.Bot
             }
 
             await LoggerService.LogMessageAsync("All discord apps have been stopped.", ConsoleColor.Green).ConfigureAwait(false);
+        }
+
+        private async Task AddGlobalAdminAsync()
+        {
+            ulong userId;
+
+            do
+            {
+                await LoggerService.LogMessageAsync("Enter the User ID that you wish to add as a global admin:").ConfigureAwait(false);
+                var commandInput = await LoggerService.ReadLineAsync().ConfigureAwait(false);
+                commandInput = commandInput.Trim();
+
+                if (!ulong.TryParse(commandInput, out userId))
+                    await LoggerService.LogMessageAsync("Invalid ID, try again!", ConsoleColor.Red).ConfigureAwait(false);
+            } while (userId == 0);
+
+            while (true)
+            {
+                await LoggerService.LogMessageAsync("Do you wish to add this user as a global admin with the following information:").ConfigureAwait(false);
+                await LoggerService.LogMessageAsync($"User ID: {userId}").ConfigureAwait(false);
+                await LoggerService.LogMessageAsync("Y/n?").ConfigureAwait(false);
+
+                var commandInput = await LoggerService.ReadLineAsync().ConfigureAwait(false);
+                commandInput = commandInput.Trim();
+
+                if (string.IsNullOrEmpty(commandInput) || commandInput.Equals("y", StringComparison.OrdinalIgnoreCase))
+                {
+                    var userIdString = userId.ToString();
+                    var discordAppOwner = await SQLiteService.SQLiteAsyncConnection.Table<DiscordAppOwnerTable>().Where(a => a.DiscordAppId == null && a.UserId == userIdString).FirstOrDefaultAsync().ConfigureAwait(false);
+
+                    if (discordAppOwner == null)
+                        await SQLiteService.SQLiteAsyncConnection.InsertAsync(new DiscordAppOwnerTable { UserId = userIdString }).ConfigureAwait(false);
+
+                    await LoggerService.LogMessageAsync("User is now a global admin.", ConsoleColor.Green);
+                    break;
+                }
+
+                if (commandInput.Equals("n", StringComparison.OrdinalIgnoreCase))
+                {
+                    await LoggerService.LogMessageAsync("User will not be made global admin.", ConsoleColor.Red);
+                    break;
+                }
+
+                await LoggerService.LogMessageAsync("Invalid input, try again!", ConsoleColor.Red);
+            }
+        }
+
+        private async Task RemoveGlobalAdminAsync()
+        {
+            ulong userId;
+            DiscordAppOwnerTable discordAppOwner = null;
+
+            do
+            {
+                await LoggerService.LogMessageAsync("Enter the User ID that you wish to remove as a global admin:").ConfigureAwait(false);
+                var commandInput = await LoggerService.ReadLineAsync().ConfigureAwait(false);
+                commandInput = commandInput.Trim();
+
+                if (!ulong.TryParse(commandInput, out userId))
+                    await LoggerService.LogMessageAsync("Invalid ID, try again!", ConsoleColor.Red).ConfigureAwait(false);
+                else
+                {
+                    var userIdString = userId.ToString();
+                    discordAppOwner = await SQLiteService.SQLiteAsyncConnection.Table<DiscordAppOwnerTable>().Where(a => a.DiscordAppId == null && a.UserId == userIdString).FirstOrDefaultAsync();
+
+                    if (discordAppOwner != null)
+                        continue;
+
+                    await LoggerService.LogMessageAsync("Could not find any global admin with this ID!", ConsoleColor.Red).ConfigureAwait(false);
+                    return;
+                }
+            } while (userId == 0);
+
+            while (true)
+            {
+                await LoggerService.LogMessageAsync("Do you wish to remove this user as a global admin with the following information:").ConfigureAwait(false);
+                await LoggerService.LogMessageAsync($"User ID: {userId}").ConfigureAwait(false);
+                await LoggerService.LogMessageAsync("Y/n?").ConfigureAwait(false);
+
+                var commandInput = await LoggerService.ReadLineAsync().ConfigureAwait(false);
+                commandInput = commandInput.Trim();
+
+                if (string.IsNullOrEmpty(commandInput) || commandInput.Equals("y", StringComparison.OrdinalIgnoreCase))
+                {
+                    await SQLiteService.SQLiteAsyncConnection.DeleteAsync(discordAppOwner).ConfigureAwait(false);
+                    await LoggerService.LogMessageAsync("User is now not a global admin.", ConsoleColor.Green);
+                    break;
+                }
+
+                if (commandInput.Equals("n", StringComparison.OrdinalIgnoreCase))
+                {
+                    await LoggerService.LogMessageAsync("User will remain as a global admin.", ConsoleColor.Red);
+                    break;
+                }
+
+                await LoggerService.LogMessageAsync("Invalid input, try again!", ConsoleColor.Red);
+            }
         }
     }
 }
