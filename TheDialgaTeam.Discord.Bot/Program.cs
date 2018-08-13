@@ -58,12 +58,13 @@ namespace TheDialgaTeam.Discord.Bot
             SQLiteService = ServiceProvider.GetRequiredService<SQLiteService>();
             await SQLiteService.InitializeDatabaseAsync().ConfigureAwait(false);
 
-            await LoggerService.LogMessageAsync("\nDone initializing!").ConfigureAwait(false);
-
             DiscordAppService = ServiceProvider.GetRequiredService<DiscordAppService>();
+            await StartDiscordAppsAsync().ConfigureAwait(false);
 
             var restWebService = ServiceProvider.GetRequiredService<RestWebService>();
             await restWebService.StartAsync();
+
+            await LoggerService.LogMessageAsync("\nDone initializing!").ConfigureAwait(false);
 
             while (true)
             {

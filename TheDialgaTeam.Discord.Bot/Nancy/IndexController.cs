@@ -1,4 +1,5 @@
 ﻿using Nancy;
+using TheDialgaTeam.Discord.Bot.Model.SQLite.Table;
 using TheDialgaTeam.Discord.Bot.Service.SQLite;
 
 namespace TheDialgaTeam.Discord.Bot.Nancy
@@ -7,7 +8,11 @@ namespace TheDialgaTeam.Discord.Bot.Nancy
     {
         public IndexController(SQLiteService sqliteService)
         {
-            Get("/", args => Response.AsText("This is running :)"));
+            Get("/getDiscordAppTable", async args =>
+            {
+                var discordAppTables = await sqliteService.SQLiteAsyncConnection.Table<DiscordAppTable>().ToArrayAsync().ConfigureAwait(false);
+                return Response.AsJson(discordAppTables);
+            });
         }
     }
 }
