@@ -1,3 +1,7 @@
 [submodule "Discord.Net"]
 	path = Discord.Net
 	url = https://github.com/TheDialgaTeam/Discord.Net.git
+[submodule "TheDialgaTeam.Discord.Dashboard"]
+	path = TheDialgaTeam.Discord.Dashboard
+	url = https://github.com/TheDialgaTeam/TheDialgaTeam.Discord.Dashboard.git
+	branch = v2
