@@ -12,16 +12,31 @@ namespace TheDialgaTeam.Discord.Bot.Service.Nancy
 {
     public sealed class RestWebService
     {
-        private IWebHost WebHost { get; }
+        private Program Program { get; }
+
+        private IWebHost WebHost { get; set; }
 
         public RestWebService(Program program)
         {
+            Program = program;
+
             WebHost = new WebHostBuilder()
                       .UseContentRoot(Environment.CurrentDirectory)
                       .UseKestrel()
                       .ConfigureServices(a => { a.AddSingleton(program.ServiceProvider.GetRequiredService<SQLiteService>()); })
                       .UseStartup<Startup>()
                       .UseUrls("http://*:5000")
+                      .Build();
+        }
+
+        public void RebuildWebHost(ushort port)
+        {
+            WebHost = new WebHostBuilder()
+                      .UseContentRoot(Environment.CurrentDirectory)
+                      .UseKestrel()
+                      .ConfigureServices(a => { a.AddSingleton(Program.ServiceProvider.GetRequiredService<SQLiteService>()); })
+                      .UseStartup<Startup>()
+                      .UseUrls($"http://*:{port}")
                       .Build();
         }
 

@@ -13,6 +13,13 @@ namespace TheDialgaTeam.Discord.Bot.Nancy
                 var discordAppTables = await sqliteService.SQLiteAsyncConnection.Table<DiscordAppTable>().ToArrayAsync().ConfigureAwait(false);
                 return Response.AsJson(discordAppTables);
             });
+
+            Get("/getDiscordAppTable/clientId/{clientId}", async args =>
+            {
+                string clientId = args["clientId"];
+                var discordAppTables = await sqliteService.SQLiteAsyncConnection.Table<DiscordAppTable>().Where(a => a.ClientId == clientId).ToArrayAsync().ConfigureAwait(false);
+                return Response.AsJson(discordAppTables);
+            });
         }
     }
 }

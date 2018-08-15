@@ -26,6 +26,8 @@ namespace TheDialgaTeam.Discord.Bot
 
         private DiscordAppService DiscordAppService { get; set; }
 
+        private RestWebService RestWebService { get; set; }
+
         public static void Main()
         {
             var program = new Program();
@@ -55,16 +57,23 @@ namespace TheDialgaTeam.Discord.Bot
             await LoggerService.LogMessageAsync("==================================================").ConfigureAwait(false);
             await LoggerService.LogMessageAsync("Please wait while the bot is initializing...\n").ConfigureAwait(false);
 
-            SQLiteService = ServiceProvider.GetRequiredService<SQLiteService>();
-            await SQLiteService.InitializeDatabaseAsync().ConfigureAwait(false);
+            try
+            {
+                SQLiteService = ServiceProvider.GetRequiredService<SQLiteService>();
+                await SQLiteService.InitializeDatabaseAsync().ConfigureAwait(false);
 
-            DiscordAppService = ServiceProvider.GetRequiredService<DiscordAppService>();
-            await StartDiscordAppsAsync().ConfigureAwait(false);
+                DiscordAppService = ServiceProvider.GetRequiredService<DiscordAppService>();
+                await StartDiscordAppsAsync().ConfigureAwait(false);
 
-            var restWebService = ServiceProvider.GetRequiredService<RestWebService>();
-            await restWebService.StartAsync();
+                RestWebService = ServiceProvider.GetRequiredService<RestWebService>();
+                await RestWebService.StartAsync();
 
-            await LoggerService.LogMessageAsync("\nDone initializing!").ConfigureAwait(false);
+                await LoggerService.LogMessageAsync("\nDone initializing!").ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                await LoggerService.LogErrorMessageAsync(ex);
+            }
 
             while (true)
             {
@@ -88,6 +97,12 @@ namespace TheDialgaTeam.Discord.Bot
                     await AddGlobalAdminAsync().ConfigureAwait(false);
                 else if (commandInput.Equals("RemoveGlobalAdmin", StringComparison.OrdinalIgnoreCase))
                     await RemoveGlobalAdminAsync().ConfigureAwait(false);
+                else if (commandInput.Equals("StartNancyService", StringComparison.OrdinalIgnoreCase))
+                    await StartNancyService().ConfigureAwait(false);
+                else if (commandInput.Equals("StopNancyService", StringComparison.OrdinalIgnoreCase))
+                    await StopNancyService().ConfigureAwait(false);
+                else if (commandInput.Equals("SetNancyPort", StringComparison.OrdinalIgnoreCase))
+                    await SetNancyPort().ConfigureAwait(false);
                 else if (!string.IsNullOrEmpty(commandInput))
                     await LoggerService.LogMessageAsync("Unknown command. Please try again.", ConsoleColor.Red).ConfigureAwait(false);
             }
@@ -97,7 +112,7 @@ namespace TheDialgaTeam.Discord.Bot
             foreach (var discordAppTable in discordApps)
                 await DiscordAppService.StopDiscordAppAsync(Convert.ToUInt64(discordAppTable.ClientId)).ConfigureAwait(false);
 
-            await restWebService.StopAsync();
+            await RestWebService.StopAsync();
         }
 
         private async Task ShowHelpMenuAsync()
@@ -113,6 +128,9 @@ namespace TheDialgaTeam.Discord.Bot
             await LoggerService.LogMessageAsync("StopDiscordApps - Start all discord app.").ConfigureAwait(false);
             await LoggerService.LogMessageAsync("AddGlobalAdmin - Add a user as a global admin.").ConfigureAwait(false);
             await LoggerService.LogMessageAsync("RemoveGlobalAdmin - Remove a user as a global admin.").ConfigureAwait(false);
+            await LoggerService.LogMessageAsync("StartNancyService - Start nancy gateway service.").ConfigureAwait(false);
+            await LoggerService.LogMessageAsync("StopNancyService - Stop nancy gateway service.").ConfigureAwait(false);
+            await LoggerService.LogMessageAsync("SetNancyPort - Set nancy gateway service port.").ConfigureAwait(false);
             await LoggerService.LogMessageAsync("==================================================").ConfigureAwait(false);
         }
 
@@ -353,6 +371,58 @@ namespace TheDialgaTeam.Discord.Bot
                 if (commandInput.Equals("n", StringComparison.OrdinalIgnoreCase))
                 {
                     await LoggerService.LogMessageAsync("User will remain as a global admin.", ConsoleColor.Red);
+                    break;
+                }
+
+                await LoggerService.LogMessageAsync("Invalid input, try again!", ConsoleColor.Red);
+            }
+        }
+
+        private async Task StartNancyService()
+        {
+            await RestWebService.StartAsync();
+            await LoggerService.LogMessageAsync("Nancy service started.", ConsoleColor.Green).ConfigureAwait(false);
+        }
+
+        private async Task StopNancyService()
+        {
+            await RestWebService.StopAsync();
+            await LoggerService.LogMessageAsync("Nancy service stopped.", ConsoleColor.Green).ConfigureAwait(false);
+        }
+
+        private async Task SetNancyPort()
+        {
+            ushort port;
+
+            do
+            {
+                await LoggerService.LogMessageAsync("Enter the port you wish to use for nancy (0-65535):").ConfigureAwait(false);
+                var commandInput = await LoggerService.ReadLineAsync().ConfigureAwait(false);
+                commandInput = commandInput.Trim();
+
+                if (!ushort.TryParse(commandInput, out port))
+                    await LoggerService.LogMessageAsync("Invalid port number, try again!", ConsoleColor.Red).ConfigureAwait(false);
+            } while (port == 0);
+
+            while (true)
+            {
+                await LoggerService.LogMessageAsync("Do you wish to change the nancy port with the following information:").ConfigureAwait(false);
+                await LoggerService.LogMessageAsync($"Nancy Port: {port}").ConfigureAwait(false);
+                await LoggerService.LogMessageAsync("Y/n?").ConfigureAwait(false);
+
+                var commandInput = await LoggerService.ReadLineAsync().ConfigureAwait(false);
+                commandInput = commandInput.Trim();
+
+                if (string.IsNullOrEmpty(commandInput) || commandInput.Equals("y", StringComparison.OrdinalIgnoreCase))
+                {
+                    RestWebService.RebuildWebHost(port);
+                    await LoggerService.LogMessageAsync("Nancy port have been changed.", ConsoleColor.Green);
+                    break;
+                }
+
+                if (commandInput.Equals("n", StringComparison.OrdinalIgnoreCase))
+                {
+                    await LoggerService.LogMessageAsync("Nancy port will not be changed.", ConsoleColor.Red);
                     break;
                 }
 

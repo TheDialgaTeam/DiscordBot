@@ -204,6 +204,8 @@ namespace TheDialgaTeam.Discord.Bot.Service.Discord
                                 await LoggerService.LogErrorMessageAsync(ex);
                             }
                         }
+
+                        discordAppInstance.NextCheck = DateTimeOffset.Now.AddMinutes(15);
                     }
 
                     await WaitForNextSecondAsync().ConfigureAwait(false);
