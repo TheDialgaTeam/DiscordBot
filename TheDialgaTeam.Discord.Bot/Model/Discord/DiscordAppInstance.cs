@@ -89,7 +89,7 @@ namespace TheDialgaTeam.Discord.Bot.Model.Discord
 
         public bool IsVerified { get; set; }
 
-        public DateTimeOffset NextCheck { get; set; }
+        public DateTimeOffset? NextCheck { get; set; }
 
         private string BotToken { get; }
 

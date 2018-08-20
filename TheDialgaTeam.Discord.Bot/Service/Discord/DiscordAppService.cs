@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
@@ -22,11 +21,7 @@ namespace TheDialgaTeam.Discord.Bot.Service.Discord
 
         private Program Program { get; }
 
-        private Task BackgroundTask { get; }
-
         private List<DiscordAppInstance> DiscordAppInstances { get; } = new List<DiscordAppInstance>();
-
-        private Stopwatch Stopwatch { get; } = new Stopwatch();
 
         private ConcurrentQueue<(ulong clientId, Action<CommandExecuteResult> callbackAction)> StartDiscordAppQueue { get; } = new ConcurrentQueue<(ulong clientId, Action<CommandExecuteResult> callbackAction)>();
 
@@ -39,7 +34,7 @@ namespace TheDialgaTeam.Discord.Bot.Service.Discord
             LoggerService = loggerService;
             SQLiteService = sqliteService;
             Program = program;
-            BackgroundTask = DiscordAppServiceTask();
+            DiscordAppServiceTask();
         }
 
         public async Task<CommandExecuteResult> StartDiscordAppAsync(ulong clientId)
@@ -90,139 +85,132 @@ namespace TheDialgaTeam.Discord.Bot.Service.Discord
         {
             return Task.Factory.StartNew(async () =>
             {
-                Stopwatch.Start();
-
-                while (true)
+                try
                 {
-                    // Process stop discord app queue.
-                    while (StopDiscordAppQueue.Count > 0)
+                    while (true)
                     {
-                        if (StopDiscordAppQueue.TryDequeue(out var item))
-                            await StopDiscordAppInstanceAsync(item.clientId, item.callbackAction);
-                        else
-                            await WaitForNextSecondAsync().ConfigureAwait(false);
-                    }
-
-                    // Process start discord app queue.
-                    while (StartDiscordAppQueue.Count > 0)
-                    {
-                        if (StartDiscordAppQueue.TryDequeue(out var item))
-                            await StartDiscordAppInstanceAsync(item.clientId, item.callbackAction);
-                        else
-                            await WaitForNextSecondAsync().ConfigureAwait(false);
-                    }
-
-                    // Process discord app to remove.
-                    for (var i = DiscordAppInstances.Count - 1; i >= 0; i--)
-                    {
-                        var discordAppInstance = DiscordAppInstances[i];
-
-                        if (discordAppInstance.IsStarted || discordAppInstance.IsLoggedIn)
-                            continue;
-
-                        discordAppInstance.Dispose();
-                        DiscordAppInstances.RemoveAt(i);
-                    }
-
-                    // Process General Task on queue.
-                    while (GeneralQueue.Count > 0)
-                    {
-                        if (GeneralQueue.TryDequeue(out var item))
+                        // Process stop discord app queue.
+                        while (StopDiscordAppQueue.Count > 0)
                         {
+                            if (StopDiscordAppQueue.TryDequeue(out var item))
+                                await StopDiscordAppInstanceAsync(item.clientId, item.callbackAction);
+                            else
+                                await Task.Delay(1).ConfigureAwait(false);
+                        }
+
+                        // Process start discord app queue.
+                        while (StartDiscordAppQueue.Count > 0)
+                        {
+                            if (StartDiscordAppQueue.TryDequeue(out var item))
+                                await StartDiscordAppInstanceAsync(item.clientId, item.callbackAction);
+                            else
+                                await Task.Delay(1).ConfigureAwait(false);
+                        }
+
+                        // Process discord app to remove.
+                        for (var i = DiscordAppInstances.Count - 1; i >= 0; i--)
+                        {
+                            var discordAppInstance = DiscordAppInstances[i];
+
+                            if (discordAppInstance.IsStarted || discordAppInstance.IsLoggedIn)
+                                continue;
+
+                            discordAppInstance.Dispose();
+                            DiscordAppInstances.RemoveAt(i);
+                        }
+
+                        // Process General Task on queue.
+                        while (GeneralQueue.Count > 0)
+                        {
+                            if (GeneralQueue.TryDequeue(out var item))
+                            {
+                                try
+                                {
+                                    await item.callbackFunc.Invoke(DiscordAppInstances).ConfigureAwait(false);
+                                }
+                                catch (Exception ex)
+                                {
+                                    await LoggerService.LogErrorMessageAsync(ex);
+                                }
+
+                                item.callbackAction?.Invoke(true);
+                            }
+                            else
+                                await Task.Delay(1).ConfigureAwait(false);
+                        }
+
+                        foreach (var discordAppInstance in DiscordAppInstances)
+                        {
+                            // check if discord app is verified.
+                            if (!discordAppInstance.IsVerified)
+                            {
+                                if (discordAppInstance.DiscordShardedClient.CurrentUser == null)
+                                    continue;
+
+                                var clientIdString = discordAppInstance.ClientId.ToString();
+
+                                if (discordAppInstance.ClientId != discordAppInstance.DiscordShardedClient.CurrentUser.Id)
+                                {
+                                    await LoggerService.LogMessageAsync(discordAppInstance.DiscordShardedClient, new LogMessage(LogSeverity.Error, "", "Discord App client id mismatch found! Forced application to stop!")).ConfigureAwait(false);
+                                    await StopDiscordAppInstanceAsync(discordAppInstance.ClientId).ConfigureAwait(false);
+                                    await SQLiteService.SQLiteAsyncConnection.Table<DiscordAppTable>().DeleteAsync(a => a.ClientId == clientIdString).ConfigureAwait(false);
+                                    continue;
+                                }
+
+                                var discordAppTable = await SQLiteService.SQLiteAsyncConnection.Table<DiscordAppTable>().Where(a => a.ClientId == clientIdString).FirstOrDefaultAsync().ConfigureAwait(false);
+                                var discordAppInstanceInfo = await discordAppInstance.DiscordShardedClient.GetApplicationInfoAsync().ConfigureAwait(false);
+
+                                discordAppTable.AppName = discordAppInstanceInfo.Name;
+                                discordAppTable.AppDescription = discordAppInstanceInfo.Description;
+                                discordAppTable.LastUpdateCheck = DateTimeOffset.Now;
+
+                                await SQLiteService.SQLiteAsyncConnection.UpdateAsync(discordAppTable).ConfigureAwait(false);
+
+                                discordAppInstance.IsVerified = true;
+                            }
+
+                            if (discordAppInstance.NextCheck == null)
+                                discordAppInstance.NextCheck = DateTimeOffset.Now.AddMinutes(15);
+
+                            if (DateTimeOffset.Now < discordAppInstance.NextCheck)
+                                continue;
+
+                            // Check if discord app is logged in.
                             try
                             {
-                                await item.callbackFunc.Invoke(DiscordAppInstances).ConfigureAwait(false);
+                                if (discordAppInstance.DiscordShardedClient.LoginState == LoginState.LoggingOut || discordAppInstance.DiscordShardedClient.LoginState == LoginState.LoggedOut)
+                                    await discordAppInstance.DiscordAppLoginAsync().ConfigureAwait(false);
                             }
                             catch (Exception ex)
                             {
                                 await LoggerService.LogErrorMessageAsync(ex);
                             }
 
-                            item.callbackAction?.Invoke(true);
-                        }
-                        else
-                            await WaitForNextSecondAsync().ConfigureAwait(false);
-                    }
-
-                    foreach (var discordAppInstance in DiscordAppInstances)
-                    {
-                        // check if discord app is verified.
-                        if (!discordAppInstance.IsVerified)
-                        {
-                            if (discordAppInstance.DiscordShardedClient.CurrentUser == null)
-                                continue;
-
-                            var clientIdString = discordAppInstance.ClientId.ToString();
-
-                            if (discordAppInstance.ClientId != discordAppInstance.DiscordShardedClient.CurrentUser.Id)
+                            // Check if discord app is connected.
+                            foreach (var discordSocketClient in discordAppInstance.DiscordShardedClient.Shards)
                             {
-                                await LoggerService.LogMessageAsync(discordAppInstance.DiscordShardedClient, new LogMessage(LogSeverity.Error, "", "Discord App client id mismatch found! Forced application to stop!")).ConfigureAwait(false);
-                                await StopDiscordAppInstanceAsync(discordAppInstance.ClientId).ConfigureAwait(false);
-                                await SQLiteService.SQLiteAsyncConnection.Table<DiscordAppTable>().DeleteAsync(a => a.ClientId == clientIdString).ConfigureAwait(false);
-                                continue;
+                                try
+                                {
+                                    if (discordSocketClient.ConnectionState == ConnectionState.Disconnected || discordSocketClient.ConnectionState == ConnectionState.Disconnecting)
+                                        await discordSocketClient.StartAsync().ConfigureAwait(false);
+                                }
+                                catch (Exception ex)
+                                {
+                                    await LoggerService.LogErrorMessageAsync(ex);
+                                }
                             }
 
-                            var discordAppTable = await SQLiteService.SQLiteAsyncConnection.Table<DiscordAppTable>().Where(a => a.ClientId == clientIdString).FirstOrDefaultAsync().ConfigureAwait(false);
-                            var discordAppInstanceInfo = await discordAppInstance.DiscordShardedClient.GetApplicationInfoAsync().ConfigureAwait(false);
-
-                            discordAppTable.AppName = discordAppInstanceInfo.Name;
-                            discordAppTable.AppDescription = discordAppInstanceInfo.Description;
-                            discordAppTable.LastUpdateCheck = DateTimeOffset.Now;
-
-                            await SQLiteService.SQLiteAsyncConnection.UpdateAsync(discordAppTable).ConfigureAwait(false);
-
-                            discordAppInstance.IsVerified = true;
-                        }
-
-                        if (discordAppInstance.NextCheck == null)
                             discordAppInstance.NextCheck = DateTimeOffset.Now.AddMinutes(15);
-
-                        if (DateTimeOffset.Now < discordAppInstance.NextCheck)
-                            continue;
-
-                        // Check if discord app is logged in.
-                        try
-                        {
-                            if (discordAppInstance.DiscordShardedClient.LoginState == LoginState.LoggingOut || discordAppInstance.DiscordShardedClient.LoginState == LoginState.LoggedOut)
-                                await discordAppInstance.DiscordAppLoginAsync().ConfigureAwait(false);
-                        }
-                        catch (Exception ex)
-                        {
-                            await LoggerService.LogErrorMessageAsync(ex);
                         }
 
-                        // Check if discord app is connected.
-                        foreach (var discordSocketClient in discordAppInstance.DiscordShardedClient.Shards)
-                        {
-                            try
-                            {
-                                if (discordSocketClient.ConnectionState == ConnectionState.Disconnected || discordSocketClient.ConnectionState == ConnectionState.Disconnecting)
-                                    await discordSocketClient.StartAsync().ConfigureAwait(false);
-                            }
-                            catch (Exception ex)
-                            {
-                                await LoggerService.LogErrorMessageAsync(ex);
-                            }
-                        }
-
-                        discordAppInstance.NextCheck = DateTimeOffset.Now.AddMinutes(15);
+                        await Task.Delay(1).ConfigureAwait(false);
                     }
-
-                    await WaitForNextSecondAsync().ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    await LoggerService.LogErrorMessageAsync(ex);
                 }
             }, TaskCreationOptions.LongRunning);
-        }
-
-        private async Task WaitForNextSecondAsync()
-        {
-            Stopwatch.Stop();
-
-            if (Stopwatch.Elapsed > TimeSpan.FromSeconds(1))
-                await Task.Delay(1).ConfigureAwait(false);
-            else
-                await Task.Delay(TimeSpan.FromSeconds(1) - Stopwatch.Elapsed).ConfigureAwait(false);
-
-            Stopwatch.Restart();
         }
 
         private async Task StartDiscordAppInstanceAsync(ulong clientId, Action<CommandExecuteResult> callbackAction = null)
