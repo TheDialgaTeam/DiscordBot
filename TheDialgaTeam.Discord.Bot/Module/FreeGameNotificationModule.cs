@@ -28,9 +28,9 @@ namespace TheDialgaTeam.Discord.Bot.Module
                               .WithColor(Color.Orange)
                               .WithDescription($@"Free Game Notification is a feature that will notify users about any potential free game that you can grab before the promotion expires.
 
-This is run by our community. You can also help us by joining <https://discord.me/TheDialgaTeam> and report any potential free game that are not listed.
+This is run by our community. You can also help us by joining <https://discord.aggressivegaming.org/invite/TheDialgaTeam> and report any potential free game that are not listed.
 
-Blurgaro#1337 manage and announce the free game. You can find him at <https://discord.me/bptavern>.
+Blurgaro#1337 manage and announce the free game. You can find him at <https://discord.aggressivegaming.org/invite/bptavern>.
 
 To enable this module, use `{Context.Client.CurrentUser.Mention} EnableFreeGameNotificationModule`.");
 

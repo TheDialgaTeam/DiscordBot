@@ -142,7 +142,7 @@ s: Optional seconds, ranging from 0 to 59.");
                 }
                 else if (commandInfoParameter.Type.Name == typeof(IEmote).Name && !ignoredTypes.Contains(typeof(IEmote)))
                 {
-                    stringBuilder.AppendLine($"{typeof(IEmote).Name} arguments is discord emoji.\n");
+                    stringBuilder.AppendLine($"{typeof(IEmote).Name} arguments is discord emojis.\n");
                     ignoredTypes.Add(typeof(IEmote));
                 }
             }

@@ -70,7 +70,7 @@ namespace TheDialgaTeam.Discord.Bot.Module
             discordGuild.DeleteCommandAfterUse = active;
 
             await SqliteService.SQLiteAsyncConnection.UpdateAsync(discordGuild).ConfigureAwait(false);
-            await ReplyAsync(CommandExecuteResult.FromSuccess($"Delete command after use is `{(active ? "active" : "deactive")}`.").BuildDiscordTextResponse()).ConfigureAwait(false);
+            await ReplyAsync(CommandExecuteResult.FromSuccess($"Delete command after use is `{(active ? "active" : "not active")}`.").BuildDiscordTextResponse()).ConfigureAwait(false);
         }
     }
 }

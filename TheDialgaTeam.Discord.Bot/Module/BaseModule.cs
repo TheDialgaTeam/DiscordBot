@@ -40,11 +40,11 @@ namespace TheDialgaTeam.Discord.Bot.Module
 
 I am owned by **{applicationInfo.Owner}**.
 
-Type `{Context.Client.CurrentUser.Mention} help` to see my command. You can also type `help` in this DM to see my command as well.
+Type `@{Context.Client.CurrentUser.Username} help` to see my command. You can also type `help` in this DM to see any command that can be used in this DM.
 
 You can invite this bot by using this link: <https://discordapp.com/api/oauth2/authorize?client_id={Context.Client.CurrentUser.Id}&permissions=0&scope=bot>
 
-If you want to have a custom avatar and bot name, feel free to join our bot discord server <https://discord.me/TheDialgaTeam> and read the invite section.");
+If you want to have a custom avatar and bot name, feel free to join our bot discord server <https://discord.aggressivegaming.org/invite/TheDialgaTeam> and read the invite section.");
 
             await ReplyDMAsync("", false, helpMessage.Build()).ConfigureAwait(false);
         }
