@@ -7,10 +7,28 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Migrations\20181016154913_CreateSqliteDB.cs" />
+    <Compile Remove="Migrations\20181016155151_CreateSqliteDb.cs" />
+    <Compile Remove="Migrations\20181016161017_1.0.0.cs" />
+    <Compile Remove="Migrations\20181016165531_1.0.0.cs" />
+    <Compile Remove="Migrations\20181016165726_1.0.0.cs" />
+    <Compile Remove="Migrations\20181016170303_1.0.0.cs" />
+    <Compile Remove="Migrations\20181016171530_1.0.0.cs" />
+    <Compile Remove="Migrations\20181016172137_1.0.1.cs" />
+    <Compile Remove="Migrations\20181016173142_1.0.2.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Owin" Version="2.1.1" />
-    <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.1.2" />
+    <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.1.3" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="2.1.4" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="2.1.4">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Nancy" Version="2.0.0-clinteastwood" />
-    <PackageReference Include="sqlite-net-pcl" Version="1.5.166-beta" />
+    <PackageReference Include="sqlite-net-pcl" Version="1.5.231" />
+    <PackageReference Include="System.ServiceModel.Primitives" Version="4.5.3" />
   </ItemGroup>
 
   <ItemGroup>
@@ -18,6 +36,7 @@
     <ProjectReference Include="..\Discord.Net\src\Discord.Net.Core\Discord.Net.Core.csproj" />
     <ProjectReference Include="..\Discord.Net\src\Discord.Net.Rest\Discord.Net.Rest.csproj" />
     <ProjectReference Include="..\Discord.Net\src\Discord.Net.WebSocket\Discord.Net.WebSocket.csproj" />
+    <ProjectReference Include="..\TheDialgaTeam.DependencyInjection\TheDialgaTeam.DependencyInjection.csproj" />
   </ItemGroup>
 
 </Project>
