@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
+using TheDialgaTeam.Discord.Bot.Models.Discord.Command;
 using TheDialgaTeam.Discord.Bot.Old.Model.Discord.Command;
 using TheDialgaTeam.Discord.Bot.Old.Model.SQLite.Table;
 using TheDialgaTeam.Discord.Bot.Old.Service.Discord;

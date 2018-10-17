@@ -22,19 +22,26 @@ namespace TheDialgaTeam.Discord.Bot.Services.EntityFramework
 
         private FilePathService FilePathService { get; }
 
+        private bool ReadOnly { get; }
+
         public SqliteContext()
         {
         }
 
-        public SqliteContext(FilePathService filePathService)
+        public SqliteContext(FilePathService filePathService, bool readOnly = false)
         {
             FilePathService = filePathService;
+            ReadOnly = readOnly;
+
             Database.Migrate();
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.UseSqlite(FilePathService == null ? "Data Source=Application.db" : $"Data Source={FilePathService.SQLiteDatabaseFilePath}");
+
+            if (ReadOnly)
+                optionsBuilder.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
         }
     }
 }

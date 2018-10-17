@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TheDialgaTeam.Discord.Bot.Models.EntityFramework
 {
@@ -7,8 +8,10 @@ namespace TheDialgaTeam.Discord.Bot.Models.EntityFramework
         [Key]
         public ulong? Id { get; set; }
 
-        public ulong? UserId { get; set; }
+        [Required]
+        public ulong UserId { get; set; }
 
+        [ForeignKey(nameof(DiscordApp))]
         public ulong? DiscordAppId { get; set; }
 
         public DiscordAppTable DiscordApp { get; set; }

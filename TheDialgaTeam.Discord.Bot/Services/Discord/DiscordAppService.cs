@@ -1,43 +1,38 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Discord;
-using Discord.Commands;
 using Discord.WebSocket;
+using Microsoft.EntityFrameworkCore;
 using TheDialgaTeam.DependencyInjection.ProgramLoop;
 using TheDialgaTeam.Discord.Bot.Models.Discord;
 using TheDialgaTeam.Discord.Bot.Models.Discord.Command;
-using TheDialgaTeam.Discord.Bot.Old.Model.Discord;
-using TheDialgaTeam.Discord.Bot.Old.Model.Discord.Command;
-using TheDialgaTeam.Discord.Bot.Old.Model.SQLite.Table;
-using TheDialgaTeam.Discord.Bot.Old.Service.SQLite;
 using TheDialgaTeam.Discord.Bot.Services.Console;
+using TheDialgaTeam.Discord.Bot.Services.EntityFramework;
 
-namespace TheDialgaTeam.Discord.Bot.Old.Service.Discord
+namespace TheDialgaTeam.Discord.Bot.Services.Discord
 {
     public sealed class DiscordAppService : IInitializableAsync, ITickableAsync, IDisposableAsync
     {
         private LoggerService LoggerService { get; }
 
-        private SQLiteService SQLiteService { get; }
-
-        private Program Program { get; }
+        private SqliteDatabaseService SqliteDatabaseService { get; }
 
         private SynchronizedCollection<DiscordAppInstance> DiscordAppInstances { get; } = new SynchronizedCollection<DiscordAppInstance>();
 
-        public DiscordAppService(LoggerService loggerService, SQLiteService sqliteService, Program program)
+        public DiscordAppService(LoggerService loggerService, SqliteDatabaseService sqliteDatabaseService)
         {
             LoggerService = loggerService;
-            SQLiteService = sqliteService;
-            Program = program;
+            SqliteDatabaseService = sqliteDatabaseService;
         }
 
         public async Task InitializeAsync()
         {
-            var discordApps = await SQLiteService.SQLiteAsyncConnection.Table<DiscordAppTable>().ToArrayAsync().ConfigureAwait(false);
-
-            foreach (var discordAppTable in discordApps)
-                await StartDiscordAppAsync(Convert.ToUInt64(discordAppTable.ClientId)).ConfigureAwait(false);
+            using (var context = SqliteDatabaseService.GetContext(true))
+            {
+                await context.DiscordAppTable.ForEachAsync(async a => await StartDiscordAppAsync(a.ClientId).ConfigureAwait(false)).ConfigureAwait(false);
+            }
         }
 
         public async Task TickAsync()
@@ -53,24 +48,30 @@ namespace TheDialgaTeam.Discord.Bot.Old.Service.Discord
                     if (discordAppInstance.DiscordShardedClient.CurrentUser == null)
                         continue;
 
-                    var clientIdString = discordAppInstance.ClientId.ToString();
-
-                    if (discordAppInstance.ClientId != discordAppInstance.DiscordShardedClient.CurrentUser.Id)
+                    using (var context = SqliteDatabaseService.GetContext())
                     {
-                        LoggerService.LogMessage(discordAppInstance.DiscordShardedClient, new LogMessage(LogSeverity.Error, "", "Discord App client id mismatch found! Forced application to stop!"));
-                        await StopDiscordAppAsync(discordAppInstance.ClientId).ConfigureAwait(false);
-                        await SQLiteService.SQLiteAsyncConnection.Table<DiscordAppTable>().DeleteAsync(a => a.ClientId == clientIdString).ConfigureAwait(false);
-                        continue;
+                        var discordApp = await context.DiscordAppTable.Where(a => a.ClientId == discordAppInstance.ClientId).FirstOrDefaultAsync().ConfigureAwait(false);
+
+                        if (discordAppInstance.ClientId != discordAppInstance.DiscordShardedClient.CurrentUser.Id)
+                        {
+                            LoggerService.LogMessage(discordAppInstance.DiscordShardedClient, new LogMessage(LogSeverity.Error, "", "Discord App client id mismatch found! Forced application to stop!"));
+                            await StopDiscordAppAsync(discordAppInstance.ClientId).ConfigureAwait(false);
+
+                            context.DiscordAppTable.Remove(discordApp);
+                            await context.SaveChangesAsync().ConfigureAwait(false);
+
+                            continue;
+                        }
+
+                        var discordAppInstanceInfo = await discordAppInstance.DiscordShardedClient.GetApplicationInfoAsync().ConfigureAwait(false);
+
+                        discordApp.AppName = discordAppInstanceInfo.Name;
+                        discordApp.AppDescription = discordAppInstanceInfo.Description;
+                        discordApp.LastUpdateCheck = DateTimeOffset.Now;
+
+                        context.DiscordAppTable.Update(discordApp);
+                        await context.SaveChangesAsync().ConfigureAwait(false);
                     }
-
-                    var discordAppTable = await SQLiteService.SQLiteAsyncConnection.Table<DiscordAppTable>().Where(a => a.ClientId == clientIdString).FirstOrDefaultAsync().ConfigureAwait(false);
-                    var discordAppInstanceInfo = await discordAppInstance.DiscordShardedClient.GetApplicationInfoAsync().ConfigureAwait(false);
-
-                    discordAppTable.AppName = discordAppInstanceInfo.Name;
-                    discordAppTable.AppDescription = discordAppInstanceInfo.Description;
-                    discordAppTable.LastUpdateCheck = DateTimeOffset.Now;
-
-                    await SQLiteService.SQLiteAsyncConnection.UpdateAsync(discordAppTable).ConfigureAwait(false);
 
                     discordAppInstance.IsVerified = true;
                 }
@@ -114,47 +115,49 @@ namespace TheDialgaTeam.Discord.Bot.Old.Service.Discord
         {
             await StopDiscordAppAsync(clientId).ConfigureAwait(false);
 
-            var clientIdString = clientId.ToString();
-            var discordAppTable = await SQLiteService.SQLiteAsyncConnection.Table<DiscordAppTable>().Where(a => a.ClientId == clientIdString).FirstOrDefaultAsync().ConfigureAwait(false);
-
-            if (string.IsNullOrEmpty(discordAppTable?.BotToken))
-                return CommandExecuteResult.FromError("Discord App is not registered in the database.");
-
-            var discordApp = new DiscordAppInstance(Convert.ToUInt64(discordAppTable.ClientId), discordAppTable.BotToken);
-
-            AddListener(discordApp);
-
-            try
+            using (var context = SqliteDatabaseService.GetContext(true))
             {
-                await discordApp.DiscordAppLoginAsync().ConfigureAwait(false);
-            }
-            catch (Exception ex)
-            {
-                await discordApp.DiscordAppLogoutAsync().ConfigureAwait(false);
-                LoggerService.LogErrorMessage(ex);
-            }
+                var discordApp = await context.DiscordAppTable.Where(a => a.ClientId == clientId).FirstOrDefaultAsync();
 
-            if (!discordApp.IsLoggedIn)
-                return CommandExecuteResult.FromError("Discord App encountered an error while trying to authenticate.");
+                if (discordApp == null)
+                    return CommandExecuteResult.FromError("Discord App is not registered in the database.");
 
-            try
-            {
-                await discordApp.DiscordAppStartAsync().ConfigureAwait(false);
+                var discordAppInstance = new DiscordAppInstance(discordApp.ClientId, discordApp.BotToken);
+
+                AddListener(discordAppInstance);
+
+                try
+                {
+                    await discordAppInstance.DiscordAppLoginAsync().ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    await discordAppInstance.DiscordAppLogoutAsync().ConfigureAwait(false);
+                    LoggerService.LogErrorMessage(ex);
+                }
+
+                if (!discordAppInstance.IsLoggedIn)
+                    return CommandExecuteResult.FromError("Discord App encountered an error while trying to authenticate.");
+
+                try
+                {
+                    await discordAppInstance.DiscordAppStartAsync().ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    LoggerService.LogErrorMessage(ex);
+                }
+
+                if (!discordAppInstance.IsStarted)
+                {
+                    RemoveListener(discordAppInstance);
+                    return CommandExecuteResult.FromError("Discord App encountered an error while trying to connect to the discord gateway server.");
+                }
+
+                DiscordAppInstances.Add(discordAppInstance);
+
+                return CommandExecuteResult.FromSuccess("Discord App is now starting!");
             }
-            catch (Exception ex)
-            {
-                LoggerService.LogErrorMessage(ex);
-            }
-
-            if (!discordApp.IsStarted)
-            {
-                RemoveListener(discordApp);
-                return CommandExecuteResult.FromError("Discord App encountered an error while trying to connect to the discord gateway server.");
-            }
-
-            DiscordAppInstances.Add(discordApp);
-
-            return CommandExecuteResult.FromSuccess("Discord App is now starting!");
         }
 
         public async Task<CommandExecuteResult> StopDiscordAppAsync(ulong clientId)
@@ -201,12 +204,13 @@ namespace TheDialgaTeam.Discord.Bot.Old.Service.Discord
         {
             discordAppInstance.Log += DiscordAppInstanceOnLog;
             discordAppInstance.ShardReady += DiscordAppInstanceOnShardReady;
-            discordAppInstance.MessageReceived += DiscordAppInstanceOnMessageReceived;
+
+            //discordAppInstance.MessageReceived += DiscordAppInstanceOnMessageReceived;
         }
 
         private void RemoveListener(DiscordAppInstance discordAppInstance)
         {
-            discordAppInstance.MessageReceived -= DiscordAppInstanceOnMessageReceived;
+            //discordAppInstance.MessageReceived -= DiscordAppInstanceOnMessageReceived;
             discordAppInstance.ShardReady -= DiscordAppInstanceOnShardReady;
             discordAppInstance.Log -= DiscordAppInstanceOnLog;
         }
@@ -224,38 +228,6 @@ namespace TheDialgaTeam.Discord.Bot.Old.Service.Discord
             {
                 await discordSocketClient.SetGameAsync($"@{discordAppInstance.DiscordShardedClient.CurrentUser.Username} help").ConfigureAwait(false);
                 LoggerService.LogMessage($"{discordAppInstance.DiscordShardedClient.CurrentUser}: Shard {discordSocketClient.ShardId + 1}/{discordAppInstance.DiscordShardedClient.Shards.Count} is ready!", ConsoleColor.Green);
-            }).ConfigureAwait(false);
-
-            return Task.CompletedTask;
-        }
-
-        private Task DiscordAppInstanceOnMessageReceived(DiscordAppInstance discordAppInstance, SocketMessage socketMessage)
-        {
-            Task.Run(async () =>
-            {
-                if (!(socketMessage is SocketUserMessage socketUserMessage))
-                    return;
-
-                ICommandContext context = new ShardedCommandContext(discordAppInstance.DiscordShardedClient, socketUserMessage);
-                var argPos = 0;
-
-                if (socketUserMessage.Channel is SocketDMChannel)
-                    socketUserMessage.HasMentionPrefix(discordAppInstance.DiscordShardedClient.CurrentUser, ref argPos);
-                else
-                {
-                    var discordAppId = await SQLiteService.GetDiscordAppIdAsync(context.Client.CurrentUser.Id).ConfigureAwait(false);
-                    var guildId = context.Guild.Id.ToString();
-                    var discordGuild = await SQLiteService.SQLiteAsyncConnection.Table<DiscordGuildTable>().Where(a => a.DiscordAppId == discordAppId && a.GuildId == guildId).FirstOrDefaultAsync().ConfigureAwait(false);
-
-                    if (discordGuild == null && !socketUserMessage.HasMentionPrefix(discordAppInstance.DiscordShardedClient.CurrentUser, ref argPos))
-                        return;
-
-                    if (!socketUserMessage.HasMentionPrefix(discordAppInstance.DiscordShardedClient.CurrentUser, ref argPos) &&
-                        !socketUserMessage.HasStringPrefix(discordGuild?.Prefix ?? "", ref argPos, StringComparison.OrdinalIgnoreCase))
-                        return;
-                }
-
-                await Program.CommandService.ExecuteAsync(context, argPos, Program.ServiceProvider).ConfigureAwait(false);
             }).ConfigureAwait(false);
 
             return Task.CompletedTask;

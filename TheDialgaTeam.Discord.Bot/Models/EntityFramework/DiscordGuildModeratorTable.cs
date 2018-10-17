@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TheDialgaTeam.Discord.Bot.Models.EntityFramework
 {
@@ -14,11 +15,15 @@ namespace TheDialgaTeam.Discord.Bot.Models.EntityFramework
         [Key]
         public ulong? Id { get; set; }
 
+        [Required]
         public DiscordGuildModeratorType Type { get; set; }
 
-        public ulong? Value { get; set; }
+        [Required]
+        public ulong Value { get; set; }
 
-        public ulong? DiscordGuildId { get; set; }
+        [Required]
+        [ForeignKey(nameof(DiscordGuild))]
+        public ulong DiscordGuildId { get; set; }
 
         public DiscordGuildTable DiscordGuild { get; set; }
     }

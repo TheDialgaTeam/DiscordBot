@@ -23,7 +23,7 @@ namespace TheDialgaTeam.Discord.Bot.Migrations
 
                     b.Property<ulong?>("DiscordAppId");
 
-                    b.Property<ulong?>("UserId");
+                    b.Property<ulong>("UserId");
 
                     b.HasKey("Id");
 
@@ -41,13 +41,15 @@ namespace TheDialgaTeam.Discord.Bot.Migrations
 
                     b.Property<string>("AppName");
 
-                    b.Property<string>("BotToken");
+                    b.Property<string>("BotToken")
+                        .IsRequired();
 
-                    b.Property<ulong?>("ClientId");
+                    b.Property<ulong>("ClientId");
 
-                    b.Property<string>("ClientSecret");
+                    b.Property<string>("ClientSecret")
+                        .IsRequired();
 
-                    b.Property<DateTime?>("LastUpdateCheck");
+                    b.Property<DateTimeOffset?>("LastUpdateCheck");
 
                     b.HasKey("Id");
 
@@ -59,11 +61,11 @@ namespace TheDialgaTeam.Discord.Bot.Migrations
                     b.Property<ulong?>("Id")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<ulong?>("DiscordChannelId");
+                    b.Property<ulong>("DiscordChannelId");
 
                     b.Property<int>("Type");
 
-                    b.Property<ulong?>("Value");
+                    b.Property<ulong>("Value");
 
                     b.HasKey("Id");
 
@@ -77,9 +79,9 @@ namespace TheDialgaTeam.Discord.Bot.Migrations
                     b.Property<ulong?>("Id")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<ulong?>("ChannelId");
+                    b.Property<ulong>("ChannelId");
 
-                    b.Property<ulong?>("DiscordGuildId");
+                    b.Property<ulong>("DiscordGuildId");
 
                     b.HasKey("Id");
 
@@ -93,11 +95,11 @@ namespace TheDialgaTeam.Discord.Bot.Migrations
                     b.Property<ulong?>("Id")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<ulong?>("DiscordGuildId");
+                    b.Property<ulong>("DiscordGuildId");
 
                     b.Property<int>("Type");
 
-                    b.Property<ulong?>("Value");
+                    b.Property<ulong>("Value");
 
                     b.HasKey("Id");
 
@@ -111,11 +113,12 @@ namespace TheDialgaTeam.Discord.Bot.Migrations
                     b.Property<ulong?>("Id")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<bool?>("Active");
+                    b.Property<bool>("Active");
 
-                    b.Property<ulong?>("DiscordGuildId");
+                    b.Property<ulong>("DiscordGuildId");
 
-                    b.Property<string>("Module");
+                    b.Property<string>("Module")
+                        .IsRequired();
 
                     b.HasKey("Id");
 
@@ -129,9 +132,9 @@ namespace TheDialgaTeam.Discord.Bot.Migrations
                     b.Property<ulong?>("Id")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<ulong?>("DiscordAppId");
+                    b.Property<ulong>("DiscordAppId");
 
-                    b.Property<ulong?>("GuildId");
+                    b.Property<ulong>("GuildId");
 
                     b.Property<string>("Prefix");
 
@@ -153,35 +156,40 @@ namespace TheDialgaTeam.Discord.Bot.Migrations
                 {
                     b.HasOne("TheDialgaTeam.Discord.Bot.Models.EntityFramework.DiscordChannelTable", "DiscordChannel")
                         .WithMany("DiscordChannelModerators")
-                        .HasForeignKey("DiscordChannelId");
+                        .HasForeignKey("DiscordChannelId")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("TheDialgaTeam.Discord.Bot.Models.EntityFramework.DiscordChannelTable", b =>
                 {
                     b.HasOne("TheDialgaTeam.Discord.Bot.Models.EntityFramework.DiscordGuildTable", "DiscordGuild")
                         .WithMany("DiscordChannels")
-                        .HasForeignKey("DiscordGuildId");
+                        .HasForeignKey("DiscordGuildId")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("TheDialgaTeam.Discord.Bot.Models.EntityFramework.DiscordGuildModeratorTable", b =>
                 {
                     b.HasOne("TheDialgaTeam.Discord.Bot.Models.EntityFramework.DiscordGuildTable", "DiscordGuild")
                         .WithMany("DiscordGuildModerators")
-                        .HasForeignKey("DiscordGuildId");
+                        .HasForeignKey("DiscordGuildId")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("TheDialgaTeam.Discord.Bot.Models.EntityFramework.DiscordGuildModuleTable", b =>
                 {
                     b.HasOne("TheDialgaTeam.Discord.Bot.Models.EntityFramework.DiscordGuildTable", "DiscordGuild")
                         .WithMany("DiscordGuildModules")
-                        .HasForeignKey("DiscordGuildId");
+                        .HasForeignKey("DiscordGuildId")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("TheDialgaTeam.Discord.Bot.Models.EntityFramework.DiscordGuildTable", b =>
                 {
                     b.HasOne("TheDialgaTeam.Discord.Bot.Models.EntityFramework.DiscordAppTable", "DiscordApp")
                         .WithMany("DiscordGuilds")
-                        .HasForeignKey("DiscordAppId");
+                        .HasForeignKey("DiscordAppId")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 #pragma warning restore 612, 618
         }

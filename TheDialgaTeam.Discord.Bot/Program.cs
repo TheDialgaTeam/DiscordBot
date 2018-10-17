@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using TheDialgaTeam.DependencyInjection;
 using TheDialgaTeam.DependencyInjection.ProgramLoop;
 using TheDialgaTeam.Discord.Bot.Services.Console;
+using TheDialgaTeam.Discord.Bot.Services.Discord;
 using TheDialgaTeam.Discord.Bot.Services.EntityFramework;
 using TheDialgaTeam.Discord.Bot.Services.IO;
 
@@ -29,16 +30,24 @@ namespace TheDialgaTeam.Discord.Bot
             serviceCollection.BindInterfacesAndSelfAsSingleton<FramesPerSecondService>();
             serviceCollection.BindInterfacesAndSelfAsSingleton<FilePathService>();
             serviceCollection.BindInterfacesAndSelfAsSingleton<LoggerService>();
-            serviceCollection.AddDbContext<SqliteContext>();
+            serviceCollection.BindInterfacesAndSelfAsSingleton<SqliteDatabaseService>();
+            serviceCollection.BindInterfacesAndSelfAsSingleton<DiscordAppService>();
 
             ServiceProvider = serviceCollection.BuildServiceProvider();
 
             ProgramLoopManager = new ProgramLoopManager(ServiceProvider);
             await ProgramLoopManager.StartProgramLoopAsync().ConfigureAwait(false);
 
-            ServiceProvider.GetService<SqliteContext>().Database.EnsureCreated();
+            while (true)
+            {
+                var commandInput = await Console.In.ReadLineAsync().ConfigureAwait(false);
+                commandInput = commandInput.Trim();
 
-            await Task.Delay(-1);
+                if (commandInput.Equals("Exit", StringComparison.OrdinalIgnoreCase))
+                    break;
+            }
+
+            await ProgramLoopManager.StopProgramLoopAsync();
         }
     }
 }

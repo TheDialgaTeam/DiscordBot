@@ -9,9 +9,12 @@ namespace TheDialgaTeam.Discord.Bot.Models.EntityFramework
         [Key]
         public ulong? Id { get; set; }
 
-        public ulong? ChannelId { get; set; }
+        [Required]
+        public ulong ChannelId { get; set; }
 
-        public ulong? DiscordGuildId { get; set; }
+        [Required]
+        [ForeignKey(nameof(DiscordGuild))]
+        public ulong DiscordGuildId { get; set; }
 
         public DiscordGuildTable DiscordGuild { get; set; }
 

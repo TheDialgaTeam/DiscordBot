@@ -1,6 +1,6 @@
 ﻿using Discord;
 
-namespace TheDialgaTeam.Discord.Bot.Old.Model.Discord.Command
+namespace TheDialgaTeam.Discord.Bot.Models.Discord.Command
 {
     public sealed class CommandExecuteResult
     {

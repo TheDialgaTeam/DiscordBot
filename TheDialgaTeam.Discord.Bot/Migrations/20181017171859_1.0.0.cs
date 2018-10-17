@@ -13,12 +13,12 @@ namespace TheDialgaTeam.Discord.Bot.Migrations
                 {
                     Id = table.Column<ulong>(nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    ClientId = table.Column<ulong>(nullable: true),
-                    ClientSecret = table.Column<string>(nullable: true),
+                    ClientId = table.Column<ulong>(nullable: false),
+                    ClientSecret = table.Column<string>(nullable: false),
                     AppName = table.Column<string>(nullable: true),
                     AppDescription = table.Column<string>(nullable: true),
-                    BotToken = table.Column<string>(nullable: true),
-                    LastUpdateCheck = table.Column<DateTime>(nullable: true)
+                    BotToken = table.Column<string>(nullable: false),
+                    LastUpdateCheck = table.Column<DateTimeOffset>(nullable: true)
                 },
                 constraints: table =>
                 {
@@ -31,7 +31,7 @@ namespace TheDialgaTeam.Discord.Bot.Migrations
                 {
                     Id = table.Column<ulong>(nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    UserId = table.Column<ulong>(nullable: true),
+                    UserId = table.Column<ulong>(nullable: false),
                     DiscordAppId = table.Column<ulong>(nullable: true)
                 },
                 constraints: table =>
@@ -51,9 +51,9 @@ namespace TheDialgaTeam.Discord.Bot.Migrations
                 {
                     Id = table.Column<ulong>(nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    GuildId = table.Column<ulong>(nullable: true),
+                    GuildId = table.Column<ulong>(nullable: false),
                     Prefix = table.Column<string>(nullable: true),
-                    DiscordAppId = table.Column<ulong>(nullable: true)
+                    DiscordAppId = table.Column<ulong>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -63,7 +63,7 @@ namespace TheDialgaTeam.Discord.Bot.Migrations
                         column: x => x.DiscordAppId,
                         principalTable: "DiscordAppTable",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -72,8 +72,8 @@ namespace TheDialgaTeam.Discord.Bot.Migrations
                 {
                     Id = table.Column<ulong>(nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    ChannelId = table.Column<ulong>(nullable: true),
-                    DiscordGuildId = table.Column<ulong>(nullable: true)
+                    ChannelId = table.Column<ulong>(nullable: false),
+                    DiscordGuildId = table.Column<ulong>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -83,7 +83,7 @@ namespace TheDialgaTeam.Discord.Bot.Migrations
                         column: x => x.DiscordGuildId,
                         principalTable: "DiscordGuildTable",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -93,8 +93,8 @@ namespace TheDialgaTeam.Discord.Bot.Migrations
                     Id = table.Column<ulong>(nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
                     Type = table.Column<int>(nullable: false),
-                    Value = table.Column<ulong>(nullable: true),
-                    DiscordGuildId = table.Column<ulong>(nullable: true)
+                    Value = table.Column<ulong>(nullable: false),
+                    DiscordGuildId = table.Column<ulong>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -104,7 +104,7 @@ namespace TheDialgaTeam.Discord.Bot.Migrations
                         column: x => x.DiscordGuildId,
                         principalTable: "DiscordGuildTable",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -113,9 +113,9 @@ namespace TheDialgaTeam.Discord.Bot.Migrations
                 {
                     Id = table.Column<ulong>(nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    Module = table.Column<string>(nullable: true),
-                    Active = table.Column<bool>(nullable: true),
-                    DiscordGuildId = table.Column<ulong>(nullable: true)
+                    Module = table.Column<string>(nullable: false),
+                    Active = table.Column<bool>(nullable: false),
+                    DiscordGuildId = table.Column<ulong>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -125,7 +125,7 @@ namespace TheDialgaTeam.Discord.Bot.Migrations
                         column: x => x.DiscordGuildId,
                         principalTable: "DiscordGuildTable",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -135,8 +135,8 @@ namespace TheDialgaTeam.Discord.Bot.Migrations
                     Id = table.Column<ulong>(nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
                     Type = table.Column<int>(nullable: false),
-                    Value = table.Column<ulong>(nullable: true),
-                    DiscordChannelId = table.Column<ulong>(nullable: true)
+                    Value = table.Column<ulong>(nullable: false),
+                    DiscordChannelId = table.Column<ulong>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -146,7 +146,7 @@ namespace TheDialgaTeam.Discord.Bot.Migrations
                         column: x => x.DiscordChannelId,
                         principalTable: "DiscordChannelTable",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(

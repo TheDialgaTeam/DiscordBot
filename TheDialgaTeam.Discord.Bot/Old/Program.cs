@@ -5,6 +5,7 @@ using Discord;
 using Discord.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using TheDialgaTeam.DependencyInjection.ProgramLoop;
+using TheDialgaTeam.Discord.Bot.Models.Discord.Command;
 using TheDialgaTeam.Discord.Bot.Old.Model.Discord.Command;
 using TheDialgaTeam.Discord.Bot.Old.Service.Discord;
 using TheDialgaTeam.Discord.Bot.Old.Service.Nancy;

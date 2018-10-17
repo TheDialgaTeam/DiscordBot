@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
 
-namespace TheDialgaTeam.Discord.Bot.Old.Model.Discord
+namespace TheDialgaTeam.Discord.Bot.Models.Discord
 {
     public sealed class DiscordAppInstance : IDisposable
     {

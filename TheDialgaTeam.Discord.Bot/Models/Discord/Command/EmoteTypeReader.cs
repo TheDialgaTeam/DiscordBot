@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 
-namespace TheDialgaTeam.Discord.Bot.Old.Model.Discord.Command
+namespace TheDialgaTeam.Discord.Bot.Models.Discord.Command
 {
     public sealed class EmoteTypeReader : TypeReader
     {

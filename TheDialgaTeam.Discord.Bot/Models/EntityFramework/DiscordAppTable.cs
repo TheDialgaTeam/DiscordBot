@@ -10,17 +10,20 @@ namespace TheDialgaTeam.Discord.Bot.Models.EntityFramework
         [Key]
         public ulong? Id { get; set; }
 
-        public ulong? ClientId { get; set; }
+        [Required]
+        public ulong ClientId { get; set; }
 
+        [Required]
         public string ClientSecret { get; set; }
 
         public string AppName { get; set; }
 
         public string AppDescription { get; set; }
 
+        [Required]
         public string BotToken { get; set; }
 
-        public DateTime? LastUpdateCheck { get; set; }
+        public DateTimeOffset? LastUpdateCheck { get; set; }
 
         [InverseProperty(nameof(DiscordAppOwnerTable.DiscordApp))]
         public List<DiscordAppOwnerTable> DiscordAppOwners { get; set; }
