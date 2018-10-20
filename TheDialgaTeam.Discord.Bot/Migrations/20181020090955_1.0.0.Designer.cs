@@ -9,7 +9,7 @@ using TheDialgaTeam.Discord.Bot.Services.EntityFramework;
 namespace TheDialgaTeam.Discord.Bot.Migrations
 {
     [DbContext(typeof(SqliteContext))]
-    [Migration("20181017171859_1.0.0")]
+    [Migration("20181020090955_1.0.0")]
     partial class _100
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -54,6 +54,9 @@ namespace TheDialgaTeam.Discord.Bot.Migrations
                     b.Property<DateTimeOffset?>("LastUpdateCheck");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ClientId")
+                        .IsUnique();
 
                     b.ToTable("DiscordAppTable");
                 });
@@ -133,6 +136,8 @@ namespace TheDialgaTeam.Discord.Bot.Migrations
                 {
                     b.Property<ulong?>("Id")
                         .ValueGeneratedOnAdd();
+
+                    b.Property<bool>("DeleteCommandAfterUse");
 
                     b.Property<ulong>("DiscordAppId");
 

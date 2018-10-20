@@ -53,6 +53,9 @@ namespace TheDialgaTeam.Discord.Bot.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ClientId")
+                        .IsUnique();
+
                     b.ToTable("DiscordAppTable");
                 });
 
@@ -131,6 +134,8 @@ namespace TheDialgaTeam.Discord.Bot.Migrations
                 {
                     b.Property<ulong?>("Id")
                         .ValueGeneratedOnAdd();
+
+                    b.Property<bool>("DeleteCommandAfterUse");
 
                     b.Property<ulong>("DiscordAppId");
 

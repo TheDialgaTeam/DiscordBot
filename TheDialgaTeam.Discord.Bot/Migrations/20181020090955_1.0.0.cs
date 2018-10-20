@@ -53,6 +53,7 @@ namespace TheDialgaTeam.Discord.Bot.Migrations
                         .Annotation("Sqlite:Autoincrement", true),
                     GuildId = table.Column<ulong>(nullable: false),
                     Prefix = table.Column<string>(nullable: true),
+                    DeleteCommandAfterUse = table.Column<bool>(nullable: false),
                     DiscordAppId = table.Column<ulong>(nullable: false)
                 },
                 constraints: table =>
@@ -153,6 +154,12 @@ namespace TheDialgaTeam.Discord.Bot.Migrations
                 name: "IX_DiscordAppOwnerTable_DiscordAppId",
                 table: "DiscordAppOwnerTable",
                 column: "DiscordAppId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DiscordAppTable_ClientId",
+                table: "DiscordAppTable",
+                column: "ClientId",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_DiscordChannelModeratorTable_DiscordChannelId",

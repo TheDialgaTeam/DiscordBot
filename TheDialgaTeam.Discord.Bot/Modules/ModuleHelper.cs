@@ -1,18 +1,20 @@
-﻿using System.Threading.Tasks;
+﻿using System.Linq;
+using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
-using TheDialgaTeam.Discord.Bot.Old.Service.SQLite;
+using Microsoft.EntityFrameworkCore;
+using TheDialgaTeam.Discord.Bot.Services.EntityFramework;
 
-namespace TheDialgaTeam.Discord.Bot.Old.Module
+namespace TheDialgaTeam.Discord.Bot.Modules
 {
     public abstract class ModuleHelper : ModuleBase<ShardedCommandContext>
     {
-        protected SQLiteService SqliteService { get; }
+        protected SqliteDatabaseService SqliteDatabaseService { get; }
 
-        protected ModuleHelper(SQLiteService sqliteService)
+        protected ModuleHelper(SqliteDatabaseService sqliteDatabaseService)
         {
-            SqliteService = sqliteService;
+            SqliteDatabaseService = sqliteDatabaseService;
         }
 
         protected override async Task<IUserMessage> ReplyAsync(string message = null, bool isTTS = false, Embed embed = null, RequestOptions options = null)
@@ -31,10 +33,19 @@ namespace TheDialgaTeam.Discord.Bot.Old.Module
             if (Context.Message.Channel is SocketDMChannel || Context.Message.Channel is SocketGroupChannel)
                 return;
 
-            var discordGuild = await SqliteService.GetOrCreateDiscordGuildTableAsync(Context.Client.CurrentUser.Id, Context.Guild.Id).ConfigureAwait(false);
+            using (var databaseContext = SqliteDatabaseService.GetContext(true))
+            {
+                var deleteCommandAfterUse = (await databaseContext.DiscordAppTable.Where(a => a.ClientId == Context.Client.CurrentUser.Id)
+                                                                  .Select(a => new
+                                                                  {
+                                                                      discordGuild = a.DiscordGuilds.Where(b => b.GuildId == Context.Guild.Id)
+                                                                                      .Select(b => b.DeleteCommandAfterUse).FirstOrDefault()
+                                                                  }).ToListAsync().ConfigureAwait(false))
+                                            .Select(a => a.discordGuild).FirstOrDefault();
 
-            if ((discordGuild?.DeleteCommandAfterUse ?? false) && GetChannelPermissions().ManageMessages)
-                await Context.Message.DeleteAsync().ConfigureAwait(false);
+                if (deleteCommandAfterUse && GetChannelPermissions().ManageMessages)
+                    await Context.Message.DeleteAsync().ConfigureAwait(false);
+            }
         }
 
         protected async Task<IUserMessage> ReplyDMAsync(string text, bool isTTS = false, Embed embed = null, RequestOptions options = null)

@@ -14,6 +14,8 @@ namespace TheDialgaTeam.Discord.Bot.Models.EntityFramework
 
         public string Prefix { get; set; }
 
+        public bool DeleteCommandAfterUse { get; set; }
+
         [Required]
         [ForeignKey(nameof(DiscordApp))]
         public ulong DiscordAppId { get; set; }

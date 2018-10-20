@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
+using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.EntityFrameworkCore;
 using TheDialgaTeam.DependencyInjection.ProgramLoop;
@@ -15,24 +16,33 @@ namespace TheDialgaTeam.Discord.Bot.Services.Discord
 {
     public sealed class DiscordAppService : IInitializableAsync, ITickableAsync, IDisposableAsync
     {
+        public SynchronizedCollection<DiscordAppInstance> DiscordAppInstances { get; } = new SynchronizedCollection<DiscordAppInstance>();
+
         private LoggerService LoggerService { get; }
 
         private SqliteDatabaseService SqliteDatabaseService { get; }
 
-        private SynchronizedCollection<DiscordAppInstance> DiscordAppInstances { get; } = new SynchronizedCollection<DiscordAppInstance>();
+        private Program Program { get; }
 
-        public DiscordAppService(LoggerService loggerService, SqliteDatabaseService sqliteDatabaseService)
+        public DiscordAppService(LoggerService loggerService, SqliteDatabaseService sqliteDatabaseService, Program program)
         {
             LoggerService = loggerService;
             SqliteDatabaseService = sqliteDatabaseService;
+            Program = program;
         }
 
         public async Task InitializeAsync()
         {
             using (var context = SqliteDatabaseService.GetContext(true))
             {
-                await context.DiscordAppTable.ForEachAsync(async a => await StartDiscordAppAsync(a.ClientId).ConfigureAwait(false)).ConfigureAwait(false);
+                await context.DiscordAppTable.ForEachAsync(async a =>
+                {
+                    var result = await StartDiscordAppAsync(a.ClientId).ConfigureAwait(false);
+                    LoggerService.LogMessage(result.BuildDiscordTextResponse(), ConsoleColor.Green);
+                }).ConfigureAwait(false);
             }
+
+            LoggerService.LogMessage("All discord apps have been started.", ConsoleColor.Green);
         }
 
         public async Task TickAsync()
@@ -204,13 +214,22 @@ namespace TheDialgaTeam.Discord.Bot.Services.Discord
         {
             discordAppInstance.Log += DiscordAppInstanceOnLog;
             discordAppInstance.ShardReady += DiscordAppInstanceOnShardReady;
-
-            //discordAppInstance.MessageReceived += DiscordAppInstanceOnMessageReceived;
+            discordAppInstance.MessageReceived += DiscordAppInstanceOnMessageReceived;
+            discordAppInstance.GuildAvailable += DiscordAppInstanceOnGuildAvailable;
+            discordAppInstance.JoinedGuild += DiscordAppInstanceOnJoinedGuild;
+            discordAppInstance.LeftGuild += DiscordAppInstanceOnLeftGuild;
+            discordAppInstance.ChannelCreated += DiscordAppInstanceOnChannelCreated;
+            discordAppInstance.ChannelDestroyed += DiscordAppInstanceOnChannelDestroyed;
         }
 
         private void RemoveListener(DiscordAppInstance discordAppInstance)
         {
-            //discordAppInstance.MessageReceived -= DiscordAppInstanceOnMessageReceived;
+            discordAppInstance.ChannelDestroyed -= DiscordAppInstanceOnChannelDestroyed;
+            discordAppInstance.ChannelCreated -= DiscordAppInstanceOnChannelCreated;
+            discordAppInstance.LeftGuild -= DiscordAppInstanceOnLeftGuild;
+            discordAppInstance.JoinedGuild -= DiscordAppInstanceOnJoinedGuild;
+            discordAppInstance.GuildAvailable -= DiscordAppInstanceOnGuildAvailable;
+            discordAppInstance.MessageReceived -= DiscordAppInstanceOnMessageReceived;
             discordAppInstance.ShardReady -= DiscordAppInstanceOnShardReady;
             discordAppInstance.Log -= DiscordAppInstanceOnLog;
         }
@@ -229,6 +248,81 @@ namespace TheDialgaTeam.Discord.Bot.Services.Discord
                 await discordSocketClient.SetGameAsync($"@{discordAppInstance.DiscordShardedClient.CurrentUser.Username} help").ConfigureAwait(false);
                 LoggerService.LogMessage($"{discordAppInstance.DiscordShardedClient.CurrentUser}: Shard {discordSocketClient.ShardId + 1}/{discordAppInstance.DiscordShardedClient.Shards.Count} is ready!", ConsoleColor.Green);
             }).ConfigureAwait(false);
+
+            return Task.CompletedTask;
+        }
+
+        private Task DiscordAppInstanceOnMessageReceived(DiscordAppInstance discordAppInstance, SocketMessage socketMessage)
+        {
+            Task.Run(async () =>
+            {
+                if (!(socketMessage is SocketUserMessage socketUserMessage))
+                    return;
+
+                ICommandContext context = new ShardedCommandContext(discordAppInstance.DiscordShardedClient, socketUserMessage);
+                var argPos = 0;
+
+                if (socketUserMessage.Channel is SocketDMChannel)
+                    socketUserMessage.HasMentionPrefix(discordAppInstance.DiscordShardedClient.CurrentUser, ref argPos);
+                else
+                {
+                    using (var databaseContext = SqliteDatabaseService.GetContext(true))
+                    {
+                        var discordGuild = (await databaseContext.DiscordAppTable.Where(a => a.ClientId == context.Client.CurrentUser.Id)
+                                                                 .Select(a => new
+                                                                 {
+                                                                     discordGuild = a.DiscordGuilds.FirstOrDefault(b => b.GuildId == context.Guild.Id)
+                                                                 }).ToListAsync().ConfigureAwait(false))
+                                           .Select(a => a.discordGuild).FirstOrDefault();
+
+                        if (discordGuild == null && !socketUserMessage.HasMentionPrefix(discordAppInstance.DiscordShardedClient.CurrentUser, ref argPos))
+                            return;
+
+                        if (!socketUserMessage.HasMentionPrefix(discordAppInstance.DiscordShardedClient.CurrentUser, ref argPos) &&
+                            !socketUserMessage.HasStringPrefix(discordGuild?.Prefix ?? "", ref argPos, StringComparison.OrdinalIgnoreCase))
+                            return;
+                    }
+                }
+
+                await Program.CommandService.ExecuteAsync(context, argPos, Program.ServiceProvider).ConfigureAwait(false);
+            }).ConfigureAwait(false);
+
+            return Task.CompletedTask;
+        }
+
+        private Task DiscordAppInstanceOnGuildAvailable(DiscordAppInstance discordAppInstance, SocketGuild socketGuild)
+        {
+            Task.Run(async () => await SqliteDatabaseService.RebuildGuildChannelTableAsync(discordAppInstance, socketGuild).ConfigureAwait(false)).ConfigureAwait(false);
+
+            return Task.CompletedTask;
+        }
+
+        private Task DiscordAppInstanceOnJoinedGuild(DiscordAppInstance discordAppInstance, SocketGuild socketGuild)
+        {
+            Task.Run(async () => await SqliteDatabaseService.RebuildGuildChannelTableAsync(discordAppInstance, socketGuild).ConfigureAwait(false)).ConfigureAwait(false);
+
+            return Task.CompletedTask;
+        }
+
+        private Task DiscordAppInstanceOnLeftGuild(DiscordAppInstance discordAppInstance, SocketGuild socketGuild)
+        {
+            Task.Run(async () => await SqliteDatabaseService.RemoveGuildChannelAsync(discordAppInstance, socketGuild).ConfigureAwait(false)).ConfigureAwait(false);
+
+            return Task.CompletedTask;
+        }
+
+        private Task DiscordAppInstanceOnChannelCreated(DiscordAppInstance discordAppInstance, SocketChannel socketChannel)
+        {
+            if (socketChannel is SocketTextChannel socketTextChannel)
+                Task.Run(async () => await SqliteDatabaseService.RebuildGuildChannelTableAsync(discordAppInstance, socketTextChannel.Guild).ConfigureAwait(false)).ConfigureAwait(false);
+
+            return Task.CompletedTask;
+        }
+
+        private Task DiscordAppInstanceOnChannelDestroyed(DiscordAppInstance discordAppInstance, SocketChannel socketChannel)
+        {
+            if (socketChannel is SocketTextChannel socketTextChannel)
+                Task.Run(async () => await SqliteDatabaseService.RebuildGuildChannelTableAsync(discordAppInstance, socketTextChannel.Guild).ConfigureAwait(false)).ConfigureAwait(false);
 
             return Task.CompletedTask;
         }

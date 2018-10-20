@@ -4,10 +4,10 @@ using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
-using TheDialgaTeam.Discord.Bot.Old.Model.Discord.Command;
-using TheDialgaTeam.Discord.Bot.Old.Service.SQLite;
+using TheDialgaTeam.Discord.Bot.Models.Discord.Command;
+using TheDialgaTeam.Discord.Bot.Services.EntityFramework;
 
-namespace TheDialgaTeam.Discord.Bot.Old.Module
+namespace TheDialgaTeam.Discord.Bot.Modules
 {
     [Name("Help")]
     public sealed class HelpModule : ModuleHelper
@@ -16,7 +16,7 @@ namespace TheDialgaTeam.Discord.Bot.Old.Module
 
         private CommandService CommandService { get; }
 
-        public HelpModule(Program program, SQLiteService sqliteService) : base(sqliteService)
+        public HelpModule(Program program, SqliteDatabaseService sqliteDatabaseService) : base(sqliteDatabaseService)
         {
             ServiceProvider = program.ServiceProvider;
             CommandService = program.CommandService;
@@ -27,9 +27,9 @@ namespace TheDialgaTeam.Discord.Bot.Old.Module
             if (command.Name.Equals(commandName, StringComparison.OrdinalIgnoreCase))
                 return true;
 
-            foreach (var commandAliase in command.Aliases)
+            foreach (var commandAlias in command.Aliases)
             {
-                if (commandAliase.Equals(commandName, StringComparison.OrdinalIgnoreCase))
+                if (commandAlias.Equals(commandName, StringComparison.OrdinalIgnoreCase))
                     return true;
             }
 
@@ -156,7 +156,7 @@ s: Optional seconds, ranging from 0 to 59.");
             var helpMessage = new EmbedBuilder()
                               .WithTitle("Available Command:")
                               .WithColor(Color.Orange)
-                              .WithDescription($"To find out more about each command, use `{Context.Client.CurrentUser.Mention} help <CommandName>`\nIn DM, you can use `help <CommandName>`")
+                              .WithDescription($"To find out more about each command, use `@{Context.Client.CurrentUser} help <CommandName>`\nIn DM, you can use `help <CommandName>`")
                               .WithThumbnailUrl(Context.Client.CurrentUser.GetAvatarUrl());
 
             foreach (var module in CommandService.Modules)
@@ -179,10 +179,10 @@ s: Optional seconds, ranging from 0 to 59.");
 
                     if (command.Aliases.Count > 0)
                     {
-                        foreach (var commandAliase in command.Aliases)
+                        foreach (var commandAlias in command.Aliases)
                         {
-                            if (!commandAliase.Equals(command.Name, StringComparison.OrdinalIgnoreCase))
-                                commandInfo.Append($" `{commandAliase}`");
+                            if (!commandAlias.Equals(command.Name, StringComparison.OrdinalIgnoreCase))
+                                commandInfo.Append($" `{commandAlias}`");
                         }
                     }
 
@@ -193,7 +193,7 @@ s: Optional seconds, ranging from 0 to 59.");
                     helpMessage = helpMessage.AddField(moduleName, commandInfo.ToString());
             }
 
-            await ReplyDMAsync("", false, helpMessage.Build()).ConfigureAwait(false);
+            await ReplyAsync("", false, helpMessage.Build()).ConfigureAwait(false);
         }
 
         [Command("Help")]
@@ -214,11 +214,10 @@ s: Optional seconds, ranging from 0 to 59.");
                     var helpMessage = new EmbedBuilder()
                                       .WithTitle("Command Info:")
                                       .WithColor(Color.Orange)
-                                      .WithDescription($"To find out more about each command, use `{Context.Client.CurrentUser.Mention} help <CommandName>`\nIn DM, you can use `help <CommandName>`");
+                                      .WithDescription($"To find out more about each command, use `@{Context.Client.CurrentUser} help <CommandName>`\nIn DM, you can use `help <CommandName>`");
 
                     var requiredPermission = RequiredPermission.GuildMember;
                     var requiredContext = ContextType.Guild | ContextType.DM | ContextType.Group;
-                    string requiredContextString;
 
                     foreach (var commandAttribute in command.Preconditions)
                     {
@@ -234,39 +233,18 @@ s: Optional seconds, ranging from 0 to 59.");
                         }
                     }
 
-                    switch (requiredContext)
-                    {
-                        case ContextType.Guild | ContextType.DM | ContextType.Group:
-                            requiredContextString = $"{ContextType.Guild}, {ContextType.DM}, {ContextType.Group}";
-                            break;
+                    var requiredContexts = new List<string>();
 
-                        case ContextType.Guild | ContextType.DM:
-                            requiredContextString = $"{ContextType.Guild}, {ContextType.DM}";
-                            break;
+                    if ((requiredContext & ContextType.Guild) == ContextType.Guild)
+                        requiredContexts.Add(ContextType.Guild.ToString());
 
-                        case ContextType.Guild | ContextType.Group:
-                            requiredContextString = $"{ContextType.Guild}, {ContextType.Group}";
-                            break;
+                    if ((requiredContext & ContextType.DM) == ContextType.DM)
+                        requiredContexts.Add(ContextType.DM.ToString());
 
-                        case ContextType.DM | ContextType.Group:
-                            requiredContextString = $"{ContextType.DM}, {ContextType.Group}";
-                            break;
+                    if ((requiredContext & ContextType.Group) == ContextType.Group)
+                        requiredContexts.Add(ContextType.Group.ToString());
 
-                        case ContextType.Guild:
-                            requiredContextString = $"{ContextType.Guild}";
-                            break;
-
-                        case ContextType.DM:
-                            requiredContextString = $"{ContextType.DM}";
-                            break;
-
-                        case ContextType.Group:
-                            requiredContextString = $"{ContextType.Group}";
-                            break;
-
-                        default:
-                            throw new ArgumentOutOfRangeException();
-                    }
+                    var requiredContextString = string.Join(", ", requiredContexts);
 
                     var commandInfo = new StringBuilder($"Usage: {Context.Client.CurrentUser.Mention} {command.Name}");
                     var argsInfo = new StringBuilder();

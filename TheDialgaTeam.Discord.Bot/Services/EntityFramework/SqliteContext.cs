@@ -43,5 +43,10 @@ namespace TheDialgaTeam.Discord.Bot.Services.EntityFramework
             if (ReadOnly)
                 optionsBuilder.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
         }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<DiscordAppTable>().HasIndex(a => a.ClientId).IsUnique();
+        }
     }
 }
