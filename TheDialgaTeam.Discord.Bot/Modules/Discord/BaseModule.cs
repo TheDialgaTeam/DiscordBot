@@ -3,7 +3,7 @@ using Discord;
 using Discord.Commands;
 using TheDialgaTeam.Discord.Bot.Services.EntityFramework;
 
-namespace TheDialgaTeam.Discord.Bot.Modules
+namespace TheDialgaTeam.Discord.Bot.Modules.Discord
 {
     [Name("Base")]
     public sealed class BaseModule : ModuleHelper

@@ -3,7 +3,7 @@ using Discord.Commands;
 using TheDialgaTeam.Discord.Bot.Models.Discord.Command;
 using TheDialgaTeam.Discord.Bot.Services.EntityFramework;
 
-namespace TheDialgaTeam.Discord.Bot.Modules
+namespace TheDialgaTeam.Discord.Bot.Modules.Discord
 {
     [Name("Guild")]
     [RequireContext(ContextType.Guild)]

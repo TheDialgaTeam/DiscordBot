@@ -7,7 +7,7 @@ using TheDialgaTeam.Discord.Bot.Models.EntityFramework;
 using TheDialgaTeam.Discord.Bot.Services.Discord;
 using TheDialgaTeam.Discord.Bot.Services.EntityFramework;
 
-namespace TheDialgaTeam.Discord.Bot.Modules
+namespace TheDialgaTeam.Discord.Bot.Modules.Discord
 {
     [Name("Bot Administration")]
     [RequirePermission(RequiredPermission.GlobalDiscordAppOwner)]

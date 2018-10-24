@@ -6,7 +6,7 @@ using Discord.WebSocket;
 using Microsoft.EntityFrameworkCore;
 using TheDialgaTeam.Discord.Bot.Services.EntityFramework;
 
-namespace TheDialgaTeam.Discord.Bot.Modules
+namespace TheDialgaTeam.Discord.Bot.Modules.Discord
 {
     public abstract class ModuleHelper : ModuleBase<ShardedCommandContext>
     {

@@ -15,6 +15,7 @@ using TheDialgaTeam.Discord.Bot.Services.Console;
 using TheDialgaTeam.Discord.Bot.Services.Discord;
 using TheDialgaTeam.Discord.Bot.Services.EntityFramework;
 using TheDialgaTeam.Discord.Bot.Services.IO;
+using TheDialgaTeam.Discord.Bot.Services.Nancy;
 
 namespace TheDialgaTeam.Discord.Bot
 {
@@ -55,6 +56,7 @@ namespace TheDialgaTeam.Discord.Bot
             serviceCollection.BindInterfacesAndSelfAsSingleton<LoggerService>();
             serviceCollection.BindInterfacesAndSelfAsSingleton<SqliteDatabaseService>();
             serviceCollection.BindInterfacesAndSelfAsSingleton<DiscordAppService>();
+            serviceCollection.BindInterfacesAndSelfAsSingleton<RestWebService>();
 
             ServiceProvider = serviceCollection.BuildServiceProvider();
 

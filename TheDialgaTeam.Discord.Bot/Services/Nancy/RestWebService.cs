@@ -6,12 +6,11 @@ using Microsoft.Extensions.DependencyInjection;
 using Nancy;
 using Nancy.Owin;
 using Nancy.TinyIoc;
-using TheDialgaTeam.DependencyInjection;
 using TheDialgaTeam.DependencyInjection.ProgramLoop;
-using TheDialgaTeam.Discord.Bot.Old.Service.Discord;
-using TheDialgaTeam.Discord.Bot.Old.Service.SQLite;
+using TheDialgaTeam.Discord.Bot.Services.Discord;
+using TheDialgaTeam.Discord.Bot.Services.EntityFramework;
 
-namespace TheDialgaTeam.Discord.Bot.Old.Service.Nancy
+namespace TheDialgaTeam.Discord.Bot.Services.Nancy
 {
     public sealed class RestWebService : IDisposableAsync
     {
@@ -31,8 +30,8 @@ namespace TheDialgaTeam.Discord.Bot.Old.Service.Nancy
                       .UseKestrel()
                       .ConfigureServices(a =>
                       {
-                          a.AddSingleton(Program.ServiceProvider.GetRequiredService<SQLiteService>());
-                          a.AddSingleton(Program.ServiceProvider.GetRequiredService<DiscordAppService>());
+                          a.AddSingleton(Program.ServiceProvider.GetService<SqliteDatabaseService>());
+                          a.AddSingleton(Program.ServiceProvider.GetService<DiscordAppService>());
                       })
                       .UseStartup<Startup>()
                       .UseUrls($"http://*:{port}")
@@ -56,38 +55,38 @@ namespace TheDialgaTeam.Discord.Bot.Old.Service.Nancy
 
     internal sealed class Startup
     {
-        private SQLiteService SQLiteService { get; }
+        private SqliteDatabaseService SqliteDatabaseService { get; }
 
         private DiscordAppService DiscordAppService { get; }
 
-        public Startup(SQLiteService sqliteService, DiscordAppService discordAppService)
+        public Startup(SqliteDatabaseService sqliteDatabaseService, DiscordAppService discordAppService)
         {
-            SQLiteService = sqliteService;
+            SqliteDatabaseService = sqliteDatabaseService;
             DiscordAppService = discordAppService;
         }
 
         public void Configure(IApplicationBuilder app)
         {
-            app.UseOwin(x => x.UseNancy(a => a.Bootstrapper = new Bootstrapper(SQLiteService, DiscordAppService)));
+            app.UseOwin(x => x.UseNancy(a => a.Bootstrapper = new Bootstrapper(SqliteDatabaseService, DiscordAppService)));
         }
     }
 
     internal sealed class Bootstrapper : DefaultNancyBootstrapper
     {
-        private SQLiteService SQLiteService { get; }
+        private SqliteDatabaseService SqliteDatabaseService { get; }
 
         private DiscordAppService DiscordAppService { get; }
 
-        public Bootstrapper(SQLiteService sqliteService, DiscordAppService discordAppService)
+        public Bootstrapper(SqliteDatabaseService sqliteDatabaseService, DiscordAppService discordAppService)
         {
-            SQLiteService = sqliteService;
+            SqliteDatabaseService = sqliteDatabaseService;
             DiscordAppService = discordAppService;
         }
 
         protected override void ConfigureApplicationContainer(TinyIoCContainer container)
         {
             base.ConfigureApplicationContainer(container);
-            container.Register(SQLiteService);
+            container.Register(SqliteDatabaseService);
             container.Register(DiscordAppService);
         }
     }

@@ -49,4 +49,8 @@
     <ProjectReference Include="..\TheDialgaTeam.DependencyInjection\TheDialgaTeam.DependencyInjection.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Modules\Nancy\" />
+  </ItemGroup>
+
 </Project>
