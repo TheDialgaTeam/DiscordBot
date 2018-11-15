@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
+using Discord;
 using Discord.Commands;
 using Microsoft.EntityFrameworkCore;
 using TheDialgaTeam.Discord.Bot.Models.Discord.Command;
@@ -23,16 +24,15 @@ namespace TheDialgaTeam.Discord.Bot.Modules.Discord
         [Command("AddDiscordApp")]
         [Summary("Add a new bot instance.")]
         public async Task AddDiscordAppAsync([Summary("Discord bot client id.")] ulong clientId, [Summary("Discord bot client secret.")]
-                                             string clientSecret,
-                                             [Summary("Bot secret token.")] string botToken)
+            string clientSecret, [Summary("Bot secret token.")] string botToken)
         {
             using (var context = SqliteDatabaseService.GetContext())
             {
-                var discordApp = await context.DiscordAppTable.Where(a => a.ClientId == clientId).FirstOrDefaultAsync().ConfigureAwait(false);
+                var discordApp = await context.GetDiscordAppTableAsync(clientId).ConfigureAwait(false);
 
                 if (discordApp == null)
                 {
-                    discordApp = new DiscordAppTable { ClientId = clientId, ClientSecret = clientSecret, BotToken = botToken };
+                    discordApp = new DiscordApp { ClientId = clientId, ClientSecret = clientSecret, BotToken = botToken };
 
                     context.DiscordAppTable.Add(discordApp);
                 }
@@ -62,7 +62,7 @@ namespace TheDialgaTeam.Discord.Bot.Modules.Discord
 
             using (var context = SqliteDatabaseService.GetContext())
             {
-                var discordApp = await context.DiscordAppTable.Where(a => a.ClientId == clientId).FirstOrDefaultAsync().ConfigureAwait(false);
+                var discordApp = await context.GetDiscordAppTableAsync(clientId).ConfigureAwait(false);
 
                 if (discordApp == null)
                 {
@@ -80,7 +80,7 @@ namespace TheDialgaTeam.Discord.Bot.Modules.Discord
         }
 
         [Command("StartDiscordApp")]
-        [Summary("Start a new bot instance")]
+        [Summary("Start a new bot instance.")]
         public async Task StartDiscordAppAsync([Summary("Discord bot client id.")] ulong clientId)
         {
             var result = await DiscordAppService.StartDiscordAppAsync(clientId).ConfigureAwait(false);
@@ -88,11 +88,65 @@ namespace TheDialgaTeam.Discord.Bot.Modules.Discord
         }
 
         [Command("StopDiscordApp")]
-        [Summary("Stop a bot instance")]
+        [Summary("Stop a bot instance.")]
         public async Task StopDiscordAppAsync([Summary("Discord bot client id.")] ulong clientId)
         {
             var result = await DiscordAppService.StopDiscordAppAsync(clientId).ConfigureAwait(false);
             await ReplyAsync(result.BuildDiscordTextResponse()).ConfigureAwait(false);
+        }
+
+        [Command("AddGlobalAdmin")]
+        [Summary("Add a global administrator.")]
+        public async Task AddGlobalAdminAsync([Summary("User to add.")] IUser user)
+        {
+            if (user == null)
+            {
+                await ReplyAsync(CommandExecuteResult.FromError("Invalid user.").BuildDiscordTextResponse()).ConfigureAwait(false);
+                return;
+            }
+
+            using (var context = SqliteDatabaseService.GetContext())
+            {
+                var discordAppOwner = await context.DiscordAppOwnerTable.Where(a => a.DiscordAppId == null && a.UserId == user.Id).FirstOrDefaultAsync().ConfigureAwait(false);
+
+                if (discordAppOwner == null)
+                {
+                    discordAppOwner = new DiscordAppOwner { UserId = user.Id };
+
+                    context.DiscordAppOwnerTable.Add(discordAppOwner);
+                    await context.SaveChangesAsync().ConfigureAwait(false);
+
+                    await ReplyAsync(CommandExecuteResult.FromSuccess($"Successfully added {user} as a global admin.").BuildDiscordTextResponse()).ConfigureAwait(false);
+                }
+                else
+                    await ReplyAsync(CommandExecuteResult.FromError($"{user} is already a global admin.").BuildDiscordTextResponse()).ConfigureAwait(false);
+            }
+        }
+
+        [Command("RemoveGlobalAdmin")]
+        [Summary("Remove a global administrator.")]
+        public async Task RemoveGlobalAdminAsync([Summary("User to remove.")] IUser user)
+        {
+            if (user == null)
+            {
+                await ReplyAsync(CommandExecuteResult.FromError("Invalid user.").BuildDiscordTextResponse()).ConfigureAwait(false);
+                return;
+            }
+
+            using (var context = SqliteDatabaseService.GetContext())
+            {
+                var discordAppOwner = await context.DiscordAppOwnerTable.Where(a => a.DiscordAppId == null && a.UserId == user.Id).FirstOrDefaultAsync().ConfigureAwait(false);
+
+                if (discordAppOwner == null)
+                    await ReplyAsync(CommandExecuteResult.FromError($"{user} is not a global admin.").BuildDiscordTextResponse()).ConfigureAwait(false);
+                else
+                {
+                    context.DiscordAppOwnerTable.Remove(discordAppOwner);
+                    await context.SaveChangesAsync().ConfigureAwait(false);
+
+                    await ReplyAsync(CommandExecuteResult.FromSuccess($"Successfully removed {user} as a global admin.").BuildDiscordTextResponse()).ConfigureAwait(false);
+                }
+            }
         }
     }
 }

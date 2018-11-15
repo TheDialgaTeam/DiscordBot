@@ -3,28 +3,23 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TheDialgaTeam.Discord.Bot.Models.EntityFramework
 {
+    public sealed class DiscordGuildModerator
+    {
+        [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public ulong DiscordGuildModeratorId { get; set; }
+
+        public DiscordGuildModeratorType Type { get; set; }
+
+        public ulong Value { get; set; }
+
+        public ulong DiscordGuildId { get; set; }
+        public DiscordGuild DiscordGuild { get; set; }
+    }
+
     public enum DiscordGuildModeratorType
     {
         Role = 0,
-
         User = 1
-    }
-
-    public sealed class DiscordGuildModeratorTable
-    {
-        [Key]
-        public ulong? Id { get; set; }
-
-        [Required]
-        public DiscordGuildModeratorType Type { get; set; }
-
-        [Required]
-        public ulong Value { get; set; }
-
-        [Required]
-        [ForeignKey(nameof(DiscordGuild))]
-        public ulong DiscordGuildId { get; set; }
-
-        public DiscordGuildTable DiscordGuild { get; set; }
     }
 }

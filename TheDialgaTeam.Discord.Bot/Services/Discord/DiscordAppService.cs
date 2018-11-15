@@ -268,12 +268,7 @@ namespace TheDialgaTeam.Discord.Bot.Services.Discord
                 {
                     using (var databaseContext = SqliteDatabaseService.GetContext(true))
                     {
-                        var discordGuild = (await databaseContext.DiscordAppTable.Where(a => a.ClientId == context.Client.CurrentUser.Id)
-                                                                 .Select(a => new
-                                                                 {
-                                                                     discordGuild = a.DiscordGuilds.FirstOrDefault(b => b.GuildId == context.Guild.Id)
-                                                                 }).ToListAsync().ConfigureAwait(false))
-                                           .Select(a => a.discordGuild).FirstOrDefault();
+                        var discordGuild = await databaseContext.GetDiscordGuildTableAsync(context.Client.CurrentUser.Id, context.Guild.Id).ConfigureAwait(false);
 
                         if (discordGuild == null && !socketUserMessage.HasMentionPrefix(discordAppInstance.DiscordShardedClient.CurrentUser, ref argPos))
                             return;

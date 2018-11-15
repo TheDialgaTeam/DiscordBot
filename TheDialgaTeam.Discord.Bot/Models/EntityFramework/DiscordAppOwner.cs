@@ -3,17 +3,15 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TheDialgaTeam.Discord.Bot.Models.EntityFramework
 {
-    public sealed class DiscordAppOwnerTable
+    public sealed class DiscordAppOwner
     {
         [Key]
-        public ulong? Id { get; set; }
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public ulong DiscordAppOwnerId { get; set; }
 
-        [Required]
         public ulong UserId { get; set; }
 
-        [ForeignKey(nameof(DiscordApp))]
         public ulong? DiscordAppId { get; set; }
-
-        public DiscordAppTable DiscordApp { get; set; }
+        public DiscordApp DiscordApp { get; set; }
     }
 }

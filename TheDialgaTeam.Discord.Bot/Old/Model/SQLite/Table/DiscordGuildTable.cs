@@ -2,7 +2,7 @@
 
 namespace TheDialgaTeam.Discord.Bot.Old.Model.SQLite.Table
 {
-    [Table("DiscordGuild")]
+    [Table("DiscordGuildTable")]
     public sealed class DiscordGuildTable : IDatabaseTable
     {
         [PrimaryKey]

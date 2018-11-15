@@ -1,9 +1,7 @@
-﻿using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
-using Microsoft.EntityFrameworkCore;
 using TheDialgaTeam.Discord.Bot.Services.EntityFramework;
 
 namespace TheDialgaTeam.Discord.Bot.Modules.Discord
@@ -35,13 +33,7 @@ namespace TheDialgaTeam.Discord.Bot.Modules.Discord
 
             using (var databaseContext = SqliteDatabaseService.GetContext(true))
             {
-                var deleteCommandAfterUse = (await databaseContext.DiscordAppTable.Where(a => a.ClientId == Context.Client.CurrentUser.Id)
-                                                                  .Select(a => new
-                                                                  {
-                                                                      discordGuild = a.DiscordGuilds.Where(b => b.GuildId == Context.Guild.Id)
-                                                                                      .Select(b => b.DeleteCommandAfterUse).FirstOrDefault()
-                                                                  }).ToListAsync().ConfigureAwait(false))
-                                            .Select(a => a.discordGuild).FirstOrDefault();
+                var deleteCommandAfterUse = (await databaseContext.GetDiscordGuildTableAsync(Context.Client.CurrentUser.Id, Context.Guild.Id).ConfigureAwait(false)).DeleteCommandAfterUse;
 
                 if (deleteCommandAfterUse && GetChannelPermissions().ManageMessages)
                     await Context.Message.DeleteAsync().ConfigureAwait(false);

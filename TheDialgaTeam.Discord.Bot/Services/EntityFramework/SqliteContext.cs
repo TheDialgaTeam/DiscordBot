@@ -6,19 +6,25 @@ namespace TheDialgaTeam.Discord.Bot.Services.EntityFramework
 {
     public sealed class SqliteContext : DbContext
     {
-        public DbSet<DiscordAppTable> DiscordAppTable { get; set; }
+        public DbSet<DiscordApp> DiscordAppTable { get; set; }
 
-        public DbSet<DiscordAppOwnerTable> DiscordAppOwnerTable { get; set; }
+        public DbSet<DiscordAppOwner> DiscordAppOwnerTable { get; set; }
 
-        public DbSet<DiscordGuildTable> DiscordGuildTable { get; set; }
+        public DbSet<DiscordAppModule> DiscordAppModuleTable { get; set; }
 
-        public DbSet<DiscordGuildModeratorTable> DiscordGuildModeratorTable { get; set; }
+        public DbSet<DiscordGuild> DiscordGuildTable { get; set; }
 
-        public DbSet<DiscordGuildModuleTable> DiscordGuildModuleTable { get; set; }
+        public DbSet<DiscordGuildModerator> DiscordGuildModeratorTable { get; set; }
 
-        public DbSet<DiscordChannelTable> DiscordChannelTable { get; set; }
+        public DbSet<DiscordGuildModule> DiscordGuildModuleTable { get; set; }
 
-        public DbSet<DiscordChannelModeratorTable> DiscordChannelModeratorTable { get; set; }
+        public DbSet<DiscordChannel> DiscordChannelTable { get; set; }
+
+        public DbSet<DiscordChannelModerator> DiscordChannelModeratorTable { get; set; }
+
+        public DbSet<DiscordModule> DiscordModuleTable { get; set; }
+
+        public DbSet<DiscordModuleRequirement> DiscordModuleRequirementTable { get; set; }
 
         private FilePathService FilePathService { get; }
 
@@ -46,7 +52,7 @@ namespace TheDialgaTeam.Discord.Bot.Services.EntityFramework
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<DiscordAppTable>().HasIndex(a => a.ClientId).IsUnique();
+            modelBuilder.Entity<DiscordApp>().HasIndex(a => a.ClientId).IsUnique();
         }
     }
 }

@@ -1,10 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Discord;
 using Discord.WebSocket;
-using Microsoft.EntityFrameworkCore;
 using TheDialgaTeam.Discord.Bot.Models.Discord;
 using TheDialgaTeam.Discord.Bot.Models.EntityFramework;
+using TheDialgaTeam.Discord.Bot.Services.Console;
 using TheDialgaTeam.Discord.Bot.Services.IO;
 
 namespace TheDialgaTeam.Discord.Bot.Services.EntityFramework
@@ -13,9 +14,12 @@ namespace TheDialgaTeam.Discord.Bot.Services.EntityFramework
     {
         private FilePathService FilePathService { get; }
 
-        public SqliteDatabaseService(FilePathService filePathService)
+        private LoggerService LoggerService { get; }
+
+        public SqliteDatabaseService(FilePathService filePathService, LoggerService loggerService)
         {
             FilePathService = filePathService;
+            LoggerService = loggerService;
         }
 
         public SqliteContext GetContext(bool readOnly = false)
@@ -27,63 +31,38 @@ namespace TheDialgaTeam.Discord.Bot.Services.EntityFramework
         {
             using (var context = GetContext())
             {
-                var data = (await context.DiscordAppTable.Where(a => a.ClientId == discordAppInstance.ClientId)
-                                         .Select(a => new
-                                         {
-                                             discordAppId = a.Id,
-                                             discordGuild = a.DiscordGuilds.Where(b => b.GuildId == socketGuild.Id)
-                                                             .Select(b => new
-                                                             {
-                                                                 discordGuild = b,
-                                                                 discordChannel = b.DiscordChannels
-                                                             })
-                                         }).ToListAsync().ConfigureAwait(false))
-                           .Select(a => new
-                           {
-                               a.discordAppId,
-                               discordGuild = a.discordGuild.Select(b => b.discordGuild).FirstOrDefault(),
-                               discordChannel = a.discordGuild.Select(b => b.discordChannel).FirstOrDefault()
-                           }).FirstOrDefault();
+                var discordAppTable = await context.GetDiscordAppTableAsync(discordAppInstance.ClientId).ConfigureAwait(false);
+                var discordGuildTable = await context.GetDiscordGuildTableAsync(discordAppInstance.ClientId, socketGuild.Id, DiscordGuildTableIncludedEntities.DiscordChannelTable).ConfigureAwait(false);
 
-                var discordGuildTable = data?.discordGuild;
-                var discordChannelTables = data?.discordChannel;
-
-                // Check if guild exist.
                 if (discordGuildTable == null)
                 {
-                    if (discordChannelTables?.Count > 0)
-                        context.DiscordChannelTable.RemoveRange(discordChannelTables);
+                    discordGuildTable = new DiscordGuild { GuildId = socketGuild.Id, DiscordAppId = discordAppTable?.DiscordAppId ?? 0, DiscordChannels = new List<DiscordChannel>() };
 
-                    discordGuildTable = new DiscordGuildTable { GuildId = socketGuild.Id, DiscordAppId = data?.discordAppId ?? 0 };
-                    discordChannelTables = new List<DiscordChannelTable>();
-
-                    foreach (var socketGuildChannel in socketGuild.Channels.Where(a => a is SocketTextChannel))
-                        discordChannelTables.Add(new DiscordChannelTable { ChannelId = socketGuildChannel.Id });
-
-                    discordGuildTable.DiscordChannels = discordChannelTables;
+                    foreach (var socketGuildChannel in socketGuild.Channels)
+                        discordGuildTable.DiscordChannels.Add(new DiscordChannel { ChannelId = socketGuildChannel.Id });
 
                     context.DiscordGuildTable.Add(discordGuildTable);
                 }
                 else
                 {
-                    discordGuildTable.DiscordChannels = new List<DiscordChannelTable>();
-
-                    if (discordChannelTables != null)
+                    if (discordGuildTable.DiscordChannels != null)
                     {
-                        context.DiscordChannelTable.RemoveRange(discordChannelTables.Where(a => !socketGuild.Channels.Where(b => b is SocketTextChannel).Select(b => b.Id).Contains(a.ChannelId)));
+                        context.DiscordChannelTable.RemoveRange(discordGuildTable.DiscordChannels.Where(a => !socketGuild.Channels.Where(b => b is SocketTextChannel).Select(b => b.Id).Contains(a.ChannelId)));
 
                         foreach (var socketGuildChannel in socketGuild.Channels.Where(a => a is SocketTextChannel))
                         {
-                            if (discordChannelTables.Any(a => a.ChannelId == socketGuildChannel.Id))
+                            if (discordGuildTable.DiscordChannels.Any(a => a.ChannelId == socketGuildChannel.Id))
                                 continue;
 
-                            discordGuildTable.DiscordChannels.Add(new DiscordChannelTable { ChannelId = socketGuildChannel.Id });
+                            discordGuildTable.DiscordChannels.Add(new DiscordChannel { ChannelId = socketGuildChannel.Id });
                         }
                     }
                     else
                     {
+                        discordGuildTable.DiscordChannels = new List<DiscordChannel>();
+
                         foreach (var socketGuildChannel in socketGuild.Channels.Where(a => a is SocketTextChannel))
-                            discordGuildTable.DiscordChannels.Add(new DiscordChannelTable { ChannelId = socketGuildChannel.Id });
+                            discordGuildTable.DiscordChannels.Add(new DiscordChannel { ChannelId = socketGuildChannel.Id });
                     }
 
                     context.DiscordGuildTable.Update(discordGuildTable);
@@ -91,18 +70,15 @@ namespace TheDialgaTeam.Discord.Bot.Services.EntityFramework
 
                 await context.SaveChangesAsync().ConfigureAwait(false);
             }
+
+            LoggerService.LogMessage(discordAppInstance.DiscordShardedClient, new LogMessage(LogSeverity.Info, "", $"{socketGuild} have been synced into the database."));
         }
 
         public async Task RemoveGuildChannelAsync(DiscordAppInstance discordAppInstance, SocketGuild socketGuild)
         {
             using (var context = GetContext())
             {
-                var discordGuild = (await context.DiscordAppTable.Where(a => a.ClientId == discordAppInstance.ClientId)
-                                                 .Select(a => new
-                                                 {
-                                                     discordGuild = a.DiscordGuilds.FirstOrDefault(b => b.GuildId == socketGuild.Id)
-                                                 }).ToListAsync().ConfigureAwait(false))
-                                   .Select(a => a.discordGuild).FirstOrDefault();
+                var discordGuild = await context.GetDiscordGuildTableAsync(discordAppInstance.ClientId, socketGuild.Id).ConfigureAwait(false);
 
                 if (discordGuild != null)
                     context.Remove(discordGuild);

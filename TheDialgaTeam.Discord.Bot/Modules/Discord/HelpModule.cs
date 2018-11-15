@@ -154,10 +154,10 @@ s: Optional seconds, ranging from 0 to 59.");
         public async Task HelpAsync()
         {
             var helpMessage = new EmbedBuilder()
-                              .WithTitle("Available Command:")
-                              .WithColor(Color.Orange)
-                              .WithDescription($"To find out more about each command, use `@{Context.Client.CurrentUser} help <CommandName>`\nIn DM, you can use `help <CommandName>`")
-                              .WithThumbnailUrl(Context.Client.CurrentUser.GetAvatarUrl());
+                .WithTitle("Available Command:")
+                .WithColor(Color.Orange)
+                .WithDescription($"To find out more about each command, use `@{Context.Client.CurrentUser} help <CommandName>`\nIn DM, you can use `help <CommandName>`")
+                .WithThumbnailUrl(Context.Client.CurrentUser.GetAvatarUrl());
 
             foreach (var module in CommandService.Modules)
             {
@@ -212,9 +212,9 @@ s: Optional seconds, ranging from 0 to 59.");
                         continue;
 
                     var helpMessage = new EmbedBuilder()
-                                      .WithTitle("Command Info:")
-                                      .WithColor(Color.Orange)
-                                      .WithDescription($"To find out more about each command, use `@{Context.Client.CurrentUser} help <CommandName>`\nIn DM, you can use `help <CommandName>`");
+                        .WithTitle("Command Info:")
+                        .WithColor(Color.Orange)
+                        .WithDescription($"To find out more about each command, use `@{Context.Client.CurrentUser} help <CommandName>`\nIn DM, you can use `help <CommandName>`");
 
                     var requiredPermission = RequiredPermission.GuildMember;
                     var requiredContext = ContextType.Guild | ContextType.DM | ContextType.Group;

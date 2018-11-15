@@ -2,7 +2,7 @@
 
 namespace TheDialgaTeam.Discord.Bot.Old.Model.SQLite.Table
 {
-    [Table("DiscordAppOwner")]
+    [Table("DiscordAppOwnerTable")]
     public sealed class DiscordAppOwnerTable : IDatabaseTable
     {
         [PrimaryKey]

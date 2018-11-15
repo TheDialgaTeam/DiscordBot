@@ -48,21 +48,21 @@
 //                                                         IChannel channel, [Summary("Role to mention for the free game announcement.")]
 //                                                         IRole role = null)
 //        {
-//            var discordChannelId = await SqliteService.GetDiscordChannelIdAsync(Context.Client.CurrentUser.Id, Context.Guild.Id, channel.Id).ConfigureAwait(false);
+//            var discordChannelId = await SqliteService.GetDiscordChannelIdAsync(Context.Client.CurrentUser.DiscordAppId, Context.Guild.DiscordAppId, channel.DiscordAppId).ConfigureAwait(false);
 //            var freeGameNotification = await SqliteService.SQLiteAsyncConnection.Table<FreeGameNotificationTable>().Where(a => a.DiscordChannelId == discordChannelId).FirstOrDefaultAsync().ConfigureAwait(false);
 
 //            if (freeGameNotification == null)
-//                await SqliteService.SQLiteAsyncConnection.InsertAsync(new FreeGameNotificationTable { DiscordChannelId = discordChannelId, Active = true, RoleId = role?.Id.ToString() });
+//                await SqliteService.SQLiteAsyncConnection.InsertAsync(new FreeGameNotificationTable { DiscordChannelId = discordChannelId, Active = true, RoleId = role?.DiscordAppId.ToString() });
 //            else
 //            {
-//                freeGameNotification.RoleId = role?.Id.ToString();
+//                freeGameNotification.RoleId = role?.DiscordAppId.ToString();
 //                freeGameNotification.Active = true;
 //                freeGameNotification.DiscordChannelId = discordChannelId;
 
 //                await SqliteService.SQLiteAsyncConnection.UpdateAsync(freeGameNotification);
 //            }
 
-//            await ReplyAsync(CommandExecuteResult.FromSuccess($"Successfully setup free game notification in {MentionUtils.MentionChannel(channel.Id)}{(role == null ? "." : $" with {role.Mention}.")}").BuildDiscordTextResponse()).ConfigureAwait(false);
+//            await ReplyAsync(CommandExecuteResult.FromSuccess($"Successfully setup free game notification in {MentionUtils.MentionChannel(channel.DiscordAppId)}{(role == null ? "." : $" with {role.Mention}.")}").BuildDiscordTextResponse()).ConfigureAwait(false);
 //        }
 
 //        [Command("FreeGameNotificationAnnounce")]
@@ -78,9 +78,9 @@
 
 //            //    foreach (var freeGameNotificationTable in freeGameNotificationTables)
 //            //    {
-//            //        var discordChannelTable = await SqliteService.SQLiteAsyncConnection.Table<DiscordChannelTable>().Where(a => a.Id == freeGameNotificationTable.DiscordChannelId).FirstOrDefaultAsync().ConfigureAwait(false);
-//            //        var discordGuildTable = await SqliteService.SQLiteAsyncConnection.Table<DiscordGuildTable>().Where(a => a.Id == discordChannelTable.DiscordGuildId).FirstOrDefaultAsync().ConfigureAwait(false);
-//            //        var discordAppTable = await SqliteService.SQLiteAsyncConnection.Table<DiscordAppTable>().Where(a => a.Id == discordGuildTable.DiscordAppId).FirstOrDefaultAsync().ConfigureAwait(false);
+//            //        var discordChannelTable = await SqliteService.SQLiteAsyncConnection.Table<DiscordChannel>().Where(a => a.DiscordAppId == freeGameNotificationTable.DiscordChannelId).FirstOrDefaultAsync().ConfigureAwait(false);
+//            //        var discordGuildTable = await SqliteService.SQLiteAsyncConnection.Table<DiscordGuildTable>().Where(a => a.DiscordAppId == discordChannelTable.DiscordGuildId).FirstOrDefaultAsync().ConfigureAwait(false);
+//            //        var discordAppTable = await SqliteService.SQLiteAsyncConnection.Table<DiscordAppTable>().Where(a => a.DiscordAppId == discordGuildTable.DiscordAppId).FirstOrDefaultAsync().ConfigureAwait(false);
 
 //            //        if (discordAppTable == null)
 //            //            continue;
@@ -104,7 +104,7 @@
 //            //            if (!user.GetPermissions(textChannel).SendMessages)
 //            //                break;
 
-//            //            if (freeGameNotificationTable.RoleId == guild.Id.ToString())
+//            //            if (freeGameNotificationTable.RoleId == guild.DiscordAppId.ToString())
 //            //                await textChannel.SendMessageAsync($"@everyone {message}").ConfigureAwait(false);
 //            //            else if (!string.IsNullOrEmpty(freeGameNotificationTable.RoleId))
 //            //                await textChannel.SendMessageAsync($"{MentionUtils.MentionRole(Convert.ToUInt64(freeGameNotificationTable.RoleId))} {message}").ConfigureAwait(false);
@@ -126,7 +126,7 @@
 //        {
 //            //await DiscordAppService.RequestDiscordAppInstanceAsync(async discordAppInstances =>
 //            //{
-//            //    var discordChannelId = await SqliteService.GetDiscordChannelIdAsync(Context.Client.CurrentUser.Id, Context.Guild.Id, Context.Channel.Id).ConfigureAwait(false);
+//            //    var discordChannelId = await SqliteService.GetDiscordChannelIdAsync(Context.Client.CurrentUser.DiscordAppId, Context.Guild.DiscordAppId, Context.Channel.DiscordAppId).ConfigureAwait(false);
 //            //    var freeGameNotificationTable = await SqliteService.SQLiteAsyncConnection.Table<FreeGameNotificationTable>().Where(a => a.Active == true && a.DiscordChannelId == discordChannelId).FirstOrDefaultAsync().ConfigureAwait(false);
 
 //            //    if (freeGameNotificationTable == null)
@@ -134,10 +134,10 @@
 
 //            //    foreach (var discordAppInstance in discordAppInstances)
 //            //    {
-//            //        if (discordAppInstance.ClientId != Context.Client.CurrentUser.Id)
+//            //        if (discordAppInstance.ClientId != Context.Client.CurrentUser.DiscordAppId)
 //            //            continue;
 
-//            //        var guild = discordAppInstance.DiscordShardedClient.GetGuild(Context.Guild.Id);
+//            //        var guild = discordAppInstance.DiscordShardedClient.GetGuild(Context.Guild.DiscordAppId);
 //            //        var user = guild?.GetUser(Convert.ToUInt64(discordAppInstance.ClientId));
 
 //            //        if (user == null)
@@ -151,7 +151,7 @@
 //            //        if (!user.GetPermissions(textChannel).SendMessages)
 //            //            break;
 
-//            //        if (freeGameNotificationTable.RoleId == guild.Id.ToString())
+//            //        if (freeGameNotificationTable.RoleId == guild.DiscordAppId.ToString())
 //            //            await textChannel.SendMessageAsync($"@everyone {message}").ConfigureAwait(false);
 //            //        else if (!string.IsNullOrEmpty(freeGameNotificationTable.RoleId))
 //            //            await textChannel.SendMessageAsync($"{MentionUtils.MentionRole(Convert.ToUInt64(freeGameNotificationTable.RoleId))} {message}").ConfigureAwait(false);
@@ -160,20 +160,20 @@
 //            //    }
 //            //}).ConfigureAwait(false);
 
-//            //var clientId = Context.Client.CurrentUser.Id.ToString();
-//            //var guildId = Context.Guild.Id.ToString();
+//            //var clientId = Context.Client.CurrentUser.DiscordAppId.ToString();
+//            //var guildId = Context.Guild.DiscordAppId.ToString();
 
 //            //var freeGameNotificationModel = await SQLiteService.SQLiteAsyncConnection.Table<FreeGameNotificationModel>().Where(a => a.ClientId == clientId && a.GuildId == guildId).FirstOrDefaultAsync();
 
 //            //if (freeGameNotificationModel == null)
 //            //    return;
 
-//            //if (!Context.Guild.GetUser(Context.Client.CurrentUser.Id).GuildPermissions.SendMessages)
+//            //if (!Context.Guild.GetUser(Context.Client.CurrentUser.DiscordAppId).GuildPermissions.SendMessages)
 //            //    return;
 
 //            //var textChannel = Context.Guild.GetTextChannel(Convert.ToUInt64(freeGameNotificationModel.ChannelId));
 
-//            //if (freeGameNotificationModel.RoleId == Context.Guild.Id.ToString())
+//            //if (freeGameNotificationModel.RoleId == Context.Guild.DiscordAppId.ToString())
 //            //    await textChannel.SendMessageAsync($"@everyone {message}");
 //            //else if (!string.IsNullOrEmpty(freeGameNotificationModel.RoleId))
 //            //    await textChannel.SendMessageAsync($"{MentionUtils.MentionRole(Convert.ToUInt64(freeGameNotificationModel.RoleId))} {message}");

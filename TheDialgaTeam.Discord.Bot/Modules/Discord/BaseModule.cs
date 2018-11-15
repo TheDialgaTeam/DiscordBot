@@ -26,18 +26,18 @@ namespace TheDialgaTeam.Discord.Bot.Modules.Discord
             var applicationInfo = await Context.Client.GetApplicationInfoAsync().ConfigureAwait(false);
 
             var helpMessage = new EmbedBuilder()
-                              .WithTitle("The Dialga Team Discord Bot:")
-                              .WithThumbnailUrl(Context.Client.CurrentUser.GetAvatarUrl())
-                              .WithColor(Color.Orange)
-                              .WithDescription($@"Hello, I am **{Context.Client.CurrentUser.Username}**, a multipurpose bot that is created by jianmingyong#4964.
+                .WithTitle("The Dialga Team Discord Bot:")
+                .WithThumbnailUrl(Context.Client.CurrentUser.GetAvatarUrl())
+                .WithColor(Color.Orange)
+                .WithDescription($@"Hello, I am **{Context.Client.CurrentUser.Username}**, a multipurpose bot that is created by jianmingyong#4964.
 
-        I am owned by **{applicationInfo.Owner}**.
+I am owned by **{applicationInfo.Owner}**.
 
-        Type `@{Context.Client.CurrentUser} help` to see my command. You can also type `help` in this DM to see any command that can be used in this DM.
+Type `@{Context.Client.CurrentUser} help` to see my command. You can also type `help` in this DM to see any command that can be used in this DM.
 
-        You can invite this bot by using this link: <https://discordapp.com/api/oauth2/authorize?client_id={Context.Client.CurrentUser.Id}&permissions=0&scope=bot>
+You can invite this bot by using this link: <https://discordapp.com/api/oauth2/authorize?client_id={Context.Client.CurrentUser.Id}&permissions=0&scope=bot>
 
-        If you want to have a custom avatar and bot name, feel free to join our bot discord server <https://discord.aggressivegaming.org/invite/TheDialgaTeam> and read the invite section.");
+If you want to have a custom avatar and bot name, feel free to join our bot discord server <https://discord.aggressivegaming.org/invite/TheDialgaTeam> and read the invite section.");
 
             await ReplyDMAsync("", false, helpMessage.Build()).ConfigureAwait(false);
         }

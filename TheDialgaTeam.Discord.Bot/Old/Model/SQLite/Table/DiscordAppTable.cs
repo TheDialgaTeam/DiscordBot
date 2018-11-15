@@ -3,7 +3,7 @@ using SQLite;
 
 namespace TheDialgaTeam.Discord.Bot.Old.Model.SQLite.Table
 {
-    [Table("DiscordApp")]
+    [Table("DiscordAppTable")]
     public sealed class DiscordAppTable : IDatabaseTable
     {
         [PrimaryKey]

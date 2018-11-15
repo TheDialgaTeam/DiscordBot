@@ -201,11 +201,11 @@ namespace TheDialgaTeam.Discord.Bot
                 {
                     using (var context = SqliteDatabaseService.GetContext())
                     {
-                        var discordApp = await context.DiscordAppTable.Where(a => a.ClientId == clientId).FirstOrDefaultAsync().ConfigureAwait(false);
+                        var discordApp = await context.GetDiscordAppTableAsync(clientId).ConfigureAwait(false);
 
                         if (discordApp == null)
                         {
-                            discordApp = new DiscordAppTable { ClientId = clientId, ClientSecret = clientSecret, BotToken = botToken };
+                            discordApp = new DiscordApp { ClientId = clientId, ClientSecret = clientSecret, BotToken = botToken };
 
                             context.DiscordAppTable.Add(discordApp);
                         }
@@ -239,7 +239,7 @@ namespace TheDialgaTeam.Discord.Bot
             using (var context = SqliteDatabaseService.GetContext())
             {
                 ulong clientId;
-                DiscordAppTable discordApp = null;
+                DiscordApp discordApp = null;
 
                 do
                 {
@@ -254,8 +254,7 @@ namespace TheDialgaTeam.Discord.Bot
                         LoggerService.LogMessage("Invalid ID, try again!", ConsoleColor.Red);
                     else
                     {
-                        var id = clientId;
-                        discordApp = await context.DiscordAppTable.Where(a => a.ClientId == id).FirstOrDefaultAsync().ConfigureAwait(false);
+                        discordApp = await context.GetDiscordAppTableAsync(clientId).ConfigureAwait(false);
 
                         if (discordApp != null)
                             continue;
@@ -308,7 +307,7 @@ namespace TheDialgaTeam.Discord.Bot
             {
                 await context.DiscordAppTable.ForEachAsync(async a =>
                 {
-                    var result = await DiscordAppService.StartDiscordAppAsync(Convert.ToUInt64(a.ClientId)).ConfigureAwait(false);
+                    var result = await DiscordAppService.StartDiscordAppAsync(a.ClientId).ConfigureAwait(false);
                     LoggerService.LogMessage(result.BuildDiscordTextResponse(), ConsoleColor.Green);
                 }).ConfigureAwait(false);
             }
@@ -322,7 +321,7 @@ namespace TheDialgaTeam.Discord.Bot
             {
                 await context.DiscordAppTable.ForEachAsync(async a =>
                 {
-                    var result = await DiscordAppService.StopDiscordAppAsync(Convert.ToUInt64(a.ClientId)).ConfigureAwait(false);
+                    var result = await DiscordAppService.StopDiscordAppAsync(a.ClientId).ConfigureAwait(false);
                     LoggerService.LogMessage(result.BuildDiscordTextResponse(), ConsoleColor.Green);
                 }).ConfigureAwait(false);
             }
@@ -366,7 +365,7 @@ namespace TheDialgaTeam.Discord.Bot
 
                         if (discordAppOwner == null)
                         {
-                            discordAppOwner = new DiscordAppOwnerTable { UserId = userId };
+                            discordAppOwner = new DiscordAppOwner { UserId = userId };
 
                             context.DiscordAppOwnerTable.Add(discordAppOwner);
                             await context.SaveChangesAsync().ConfigureAwait(false);
@@ -392,7 +391,7 @@ namespace TheDialgaTeam.Discord.Bot
             using (var context = SqliteDatabaseService.GetContext())
             {
                 ulong userId;
-                DiscordAppOwnerTable discordAppOwner = null;
+                DiscordAppOwner discordAppOwner = null;
 
                 do
                 {

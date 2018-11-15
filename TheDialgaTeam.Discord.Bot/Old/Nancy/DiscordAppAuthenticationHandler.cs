@@ -24,7 +24,7 @@
 
 //                //        foreach (var socketGuild in discordAppInstance.DiscordShardedClient.Guilds)
 //                //        {
-//                //            if (socketGuild.Id.ToString() != guildId)
+//                //            if (socketGuild.DiscordAppId.ToString() != guildId)
 //                //                continue;
 
 //                //            exists = true;

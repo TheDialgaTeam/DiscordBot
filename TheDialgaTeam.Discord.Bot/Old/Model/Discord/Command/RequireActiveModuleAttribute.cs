@@ -28,7 +28,7 @@
 
 //            var sqliteService = services.GetRequiredService<SQLiteService>();
 
-//            var discordGuildId = await sqliteService.GetDiscordGuildIdAsync(context.Client.CurrentUser.Id, context.Guild.Id).ConfigureAwait(false);
+//            var discordGuildId = await sqliteService.GetDiscordGuildIdAsync(context.Client.CurrentUser.DiscordAppId, context.Guild.DiscordAppId).ConfigureAwait(false);
 //            var discordGuildModule = await sqliteService.SQLiteAsyncConnection.Table<DiscordGuildModuleTable>().Where(a => a.DiscordGuildId == discordGuildId && a.Module == moduleName).FirstOrDefaultAsync().ConfigureAwait(false);
 
 //            if (discordGuildModule == null)

@@ -5,12 +5,12 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TheDialgaTeam.Discord.Bot.Models.EntityFramework
 {
-    public sealed class DiscordAppTable
+    public sealed class DiscordApp
     {
         [Key]
-        public ulong? Id { get; set; }
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public ulong DiscordAppId { get; set; }
 
-        [Required]
         public ulong ClientId { get; set; }
 
         [Required]
@@ -25,10 +25,10 @@ namespace TheDialgaTeam.Discord.Bot.Models.EntityFramework
 
         public DateTimeOffset? LastUpdateCheck { get; set; }
 
-        [InverseProperty(nameof(DiscordAppOwnerTable.DiscordApp))]
-        public List<DiscordAppOwnerTable> DiscordAppOwners { get; set; }
+        public List<DiscordAppOwner> DiscordAppOwners { get; set; }
 
-        [InverseProperty(nameof(DiscordGuildTable.DiscordApp))]
-        public List<DiscordGuildTable> DiscordGuilds { get; set; }
+        public List<DiscordAppModule> DiscordAppModules { get; set; }
+
+        public List<DiscordGuild> DiscordGuilds { get; set; }
     }
 }

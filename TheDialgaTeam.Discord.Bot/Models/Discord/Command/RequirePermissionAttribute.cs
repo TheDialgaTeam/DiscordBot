@@ -10,21 +10,6 @@ using TheDialgaTeam.Discord.Bot.Services.EntityFramework;
 
 namespace TheDialgaTeam.Discord.Bot.Models.Discord.Command
 {
-    public enum RequiredPermission
-    {
-        GlobalDiscordAppOwner = 5,
-
-        DiscordAppOwner = 4,
-
-        GuildAdministrator = 3,
-
-        GuildModerator = 2,
-
-        ChannelModerator = 1,
-
-        GuildMember = 0
-    }
-
     public sealed class RequirePermissionAttribute : PreconditionAttribute
     {
         public RequiredPermission RequiredPermission { get; }
@@ -44,41 +29,26 @@ namespace TheDialgaTeam.Discord.Bot.Models.Discord.Command
             {
                 if (context.Message.Channel is SocketGuildChannel)
                 {
+                    var discordChannelTable = await databaseContext.GetDiscordChannelTableAsync(context.Client.CurrentUser.Id, context.Guild.Id, context.Channel.Id, DiscordChannelTableIncludedEntities.DiscordGuildModeratorTable | DiscordChannelTableIncludedEntities.DiscordChannelModeratorTable).ConfigureAwait(false);
+
                     var guildUser = await context.Guild.GetUserAsync(context.Message.Author.Id).ConfigureAwait(false);
 
-                    var currentUser = (await databaseContext.DiscordAppTable.Where(a => a.ClientId == context.Client.CurrentUser.Id)
-                                                            .Select(a => new
-                                                            {
-                                                                discordGuild = a.DiscordGuilds.Where(b => b.GuildId == context.Guild.Id)
-                                                                                .Select(b => new
-                                                                                {
-                                                                                    discordChannel = b.DiscordChannels.Where(c => c.ChannelId == context.Channel.Id)
-                                                                                                      .Select(c => new
-                                                                                                      {
-                                                                                                          discordChannelModerator = c.DiscordChannelModerators.Count(d => d.Type == DiscordChannelModeratorType.Role && guildUser.RoleIds.Contains(d.Value) ||
-                                                                                                                                                                          d.Type == DiscordChannelModeratorType.User && d.Value == context.User.Id)
-                                                                                                      }),
-                                                                                    discordGuildModerator = b.DiscordGuildModerators.Count(c => c.Type == DiscordGuildModeratorType.Role && guildUser.RoleIds.Contains(c.Value) ||
-                                                                                                                                                c.Type == DiscordGuildModeratorType.User && c.Value == context.User.Id)
-                                                                                })
-                                                            }).ToListAsync().ConfigureAwait(false))
-                                      .Select(a => new
-                                      {
-                                          isAChannelModerator = a.discordGuild.FirstOrDefault()?.discordChannel.FirstOrDefault()?.discordChannelModerator > 0,
-                                          isAGuildModerator = a.discordGuild.FirstOrDefault()?.discordGuildModerator > 0
-                                      }).FirstOrDefault();
+                    if (discordChannelTable != null)
+                    {
+                        // Channel Moderator
+                        if (discordChannelTable.DiscordChannelModerators.Any(a => a.Type == DiscordChannelModeratorType.Role && guildUser.RoleIds.Contains(a.Value) ||
+                                                                                  a.Type == DiscordChannelModeratorType.User && a.Value == context.User.Id))
+                            currentUserPermission = RequiredPermission.ChannelModerator;
 
-                    // Channel Moderator
-                    if (currentUser?.isAChannelModerator ?? false)
-                        currentUserPermission = RequiredPermission.ChannelModerator;
+                        // Guild Moderator
+                        if (discordChannelTable.DiscordGuild.DiscordGuildModerators.Any(a => a.Type == DiscordGuildModeratorType.Role && guildUser.RoleIds.Contains(a.Value) ||
+                                                                                             a.Type == DiscordGuildModeratorType.User && a.Value == context.User.Id))
+                            currentUserPermission = RequiredPermission.GuildModerator;
 
-                    // Guild Moderator
-                    if (currentUser?.isAGuildModerator ?? false)
-                        currentUserPermission = RequiredPermission.GuildModerator;
-
-                    // Guild Administrator
-                    if (guildUser.GuildPermissions.Administrator)
-                        currentUserPermission = RequiredPermission.GuildAdministrator;
+                        // Guild Administrator
+                        if (guildUser.GuildPermissions.Administrator)
+                            currentUserPermission = RequiredPermission.GuildAdministrator;
+                    }
                 }
 
                 // Discord App Owner
@@ -89,18 +59,18 @@ namespace TheDialgaTeam.Discord.Bot.Models.Discord.Command
                 else
                 {
                     var isAnOwner = (await databaseContext.DiscordAppTable.Where(a => a.ClientId == context.Client.CurrentUser.Id)
-                                                          .Select(a => new
-                                                          {
-                                                              discordAppOwner = a.DiscordAppOwners.Count(b => b.UserId == context.User.Id)
-                                                          }).ToListAsync().ConfigureAwait(false))
-                                    .Select(a => a.discordAppOwner > 0).FirstOrDefault();
+                            .Select(a => new
+                            {
+                                discordAppOwner = a.DiscordAppOwners.Any(b => b.UserId == context.User.Id)
+                            }).ToListAsync().ConfigureAwait(false))
+                        .Select(a => a.discordAppOwner).FirstOrDefault();
 
                     if (isAnOwner)
                         currentUserPermission = RequiredPermission.DiscordAppOwner;
                 }
 
                 // Global Discord App Owner
-                var isAGlobalOwner = await databaseContext.DiscordAppOwnerTable.Where(a => a.DiscordAppId == null && a.UserId == context.User.Id).CountAsync().ConfigureAwait(false) > 0;
+                var isAGlobalOwner = await databaseContext.DiscordAppOwnerTable.Where(a => a.DiscordAppId == null && a.UserId == context.User.Id).AnyAsync().ConfigureAwait(false);
 
                 if (isAGlobalOwner)
                     currentUserPermission = RequiredPermission.GlobalDiscordAppOwner;
@@ -108,5 +78,20 @@ namespace TheDialgaTeam.Discord.Bot.Models.Discord.Command
 
             return currentUserPermission >= RequiredPermission ? PreconditionResult.FromSuccess() : PreconditionResult.FromError($"This command require {RequiredPermission.ToString()} permission and above.");
         }
+    }
+
+    public enum RequiredPermission
+    {
+        GlobalDiscordAppOwner = 5,
+
+        DiscordAppOwner = 4,
+
+        GuildAdministrator = 3,
+
+        GuildModerator = 2,
+
+        ChannelModerator = 1,
+
+        GuildMember = 0
     }
 }
