@@ -40,6 +40,10 @@
     <Compile Remove="Migrations\20181115164445_1.0.0.cs" />
     <Compile Remove="Migrations\20181115171252_1.0.0.cs" />
     <Compile Remove="Migrations\20181115171755_1.0.0.cs" />
+    <Compile Remove="Migrations\20181116155200_1.0.0.cs" />
+    <Compile Remove="Migrations\20181117170734_1.0.0.cs" />
+    <Compile Remove="Migrations\20181117171854_1.0.0.cs" />
+    <Compile Remove="Migrations\20181117173425_1.0.0.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -61,11 +65,8 @@
     <ProjectReference Include="..\Discord.Net\src\Discord.Net.Core\Discord.Net.Core.csproj" />
     <ProjectReference Include="..\Discord.Net\src\Discord.Net.Rest\Discord.Net.Rest.csproj" />
     <ProjectReference Include="..\Discord.Net\src\Discord.Net.WebSocket\Discord.Net.WebSocket.csproj" />
+    <ProjectReference Include="..\TheDialgaTeam.Commands\TheDialgaTeam.Commands.csproj" />
     <ProjectReference Include="..\TheDialgaTeam.DependencyInjection\TheDialgaTeam.DependencyInjection.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Migrations\" />
   </ItemGroup>
 
 </Project>

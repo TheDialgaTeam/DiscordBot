@@ -1,8 +1,9 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
+using Microsoft.EntityFrameworkCore;
+using TheDialgaTeam.DependencyInjection;
 using TheDialgaTeam.Discord.Bot.Models.Discord;
 using TheDialgaTeam.Discord.Bot.Models.EntityFramework;
 using TheDialgaTeam.Discord.Bot.Services.Console;
@@ -10,7 +11,7 @@ using TheDialgaTeam.Discord.Bot.Services.IO;
 
 namespace TheDialgaTeam.Discord.Bot.Services.EntityFramework
 {
-    public sealed class SqliteDatabaseService
+    public sealed class SqliteDatabaseService : IInitializableAsync
     {
         private FilePathService FilePathService { get; }
 
@@ -22,6 +23,12 @@ namespace TheDialgaTeam.Discord.Bot.Services.EntityFramework
             LoggerService = loggerService;
         }
 
+        public async Task InitializeAsync()
+        {
+            using (var context = GetContext(true))
+                await context.Database.MigrateAsync().ConfigureAwait(false);
+        }
+
         public SqliteContext GetContext(bool readOnly = false)
         {
             return new SqliteContext(FilePathService, readOnly);
@@ -29,61 +36,42 @@ namespace TheDialgaTeam.Discord.Bot.Services.EntityFramework
 
         public async Task RebuildGuildChannelTableAsync(DiscordAppInstance discordAppInstance, SocketGuild socketGuild)
         {
-            using (var context = GetContext())
+            try
             {
-                var discordAppTable = await context.GetDiscordAppTableAsync(discordAppInstance.ClientId).ConfigureAwait(false);
-                var discordGuildTable = await context.GetDiscordGuildTableAsync(discordAppInstance.ClientId, socketGuild.Id, DiscordGuildTableIncludedEntities.DiscordChannelTable).ConfigureAwait(false);
-
-                if (discordGuildTable == null)
+                using (var context = GetContext())
                 {
-                    discordGuildTable = new DiscordGuild { GuildId = socketGuild.Id, DiscordAppId = discordAppTable?.DiscordAppId ?? 0, DiscordChannels = new List<DiscordChannel>() };
+                    /*
+                     * Sync Database with the discord servers.
+                     *
+                     * DiscordGuildTable - Global Guild Settings
+                     * DiscordChannelTable - Global Channel Settings
+                     * DiscordAppGuildTable - Local Guild Settings
+                     * DiscordAppChannelTable - Local Channel Settings
+                     */
 
-                    foreach (var socketGuildChannel in socketGuild.Channels)
-                        discordGuildTable.DiscordChannels.Add(new DiscordChannel { ChannelId = socketGuildChannel.Id });
+                    // Sync Global Settings
+                    var discordGuild = await DiscordGuild.SyncTableAsync(context, socketGuild).ConfigureAwait(false);
+                    var discordChannels = await DiscordChannel.SyncTableAsync(context, socketGuild, discordGuild).ConfigureAwait(false);
 
-                    context.DiscordGuildTable.Add(discordGuildTable);
+                    await LoggerService.LogMessageAsync(discordAppInstance.DiscordShardedClient, new LogMessage(LogSeverity.Info, "", $"{socketGuild} have been synced into the database.")).ConfigureAwait(false);
                 }
-                else
-                {
-                    if (discordGuildTable.DiscordChannels != null)
-                    {
-                        context.DiscordChannelTable.RemoveRange(discordGuildTable.DiscordChannels.Where(a => !socketGuild.Channels.Where(b => b is SocketTextChannel).Select(b => b.Id).Contains(a.ChannelId)));
-
-                        foreach (var socketGuildChannel in socketGuild.Channels.Where(a => a is SocketTextChannel))
-                        {
-                            if (discordGuildTable.DiscordChannels.Any(a => a.ChannelId == socketGuildChannel.Id))
-                                continue;
-
-                            discordGuildTable.DiscordChannels.Add(new DiscordChannel { ChannelId = socketGuildChannel.Id });
-                        }
-                    }
-                    else
-                    {
-                        discordGuildTable.DiscordChannels = new List<DiscordChannel>();
-
-                        foreach (var socketGuildChannel in socketGuild.Channels.Where(a => a is SocketTextChannel))
-                            discordGuildTable.DiscordChannels.Add(new DiscordChannel { ChannelId = socketGuildChannel.Id });
-                    }
-
-                    context.DiscordGuildTable.Update(discordGuildTable);
-                }
-
-                await context.SaveChangesAsync().ConfigureAwait(false);
             }
-
-            LoggerService.LogMessage(discordAppInstance.DiscordShardedClient, new LogMessage(LogSeverity.Info, "", $"{socketGuild} have been synced into the database."));
+            catch (Exception ex)
+            {
+                await LoggerService.LogErrorMessageAsync(ex).ConfigureAwait(false);
+            }
         }
 
         public async Task RemoveGuildChannelAsync(DiscordAppInstance discordAppInstance, SocketGuild socketGuild)
         {
             using (var context = GetContext())
             {
-                var discordGuild = await context.GetDiscordGuildTableAsync(discordAppInstance.ClientId, socketGuild.Id).ConfigureAwait(false);
+                //var discordGuild = await context.GetDiscordGuildTableAsync(discordAppInstance.ClientId, socketGuild.Id).ConfigureAwait(false);
 
-                if (discordGuild != null)
-                    context.Remove(discordGuild);
+                //if (discordGuild != null)
+                //    context.Remove(discordGuild);
 
-                await context.SaveChangesAsync().ConfigureAwait(false);
+                //await context.SaveChangesAsync().ConfigureAwait(false);
             }
         }
     }

@@ -33,10 +33,10 @@ namespace TheDialgaTeam.Discord.Bot.Modules.Discord
 
             using (var databaseContext = SqliteDatabaseService.GetContext(true))
             {
-                var deleteCommandAfterUse = (await databaseContext.GetDiscordGuildTableAsync(Context.Client.CurrentUser.Id, Context.Guild.Id).ConfigureAwait(false)).DeleteCommandAfterUse;
+                //var deleteCommandAfterUse = (await databaseContext.GetDiscordGuildTableAsync(Context.Client.CurrentUser.Id, Context.Guild.Id).ConfigureAwait(false)).DeleteCommandAfterUse;
 
-                if (deleteCommandAfterUse && GetChannelPermissions().ManageMessages)
-                    await Context.Message.DeleteAsync().ConfigureAwait(false);
+                //if (deleteCommandAfterUse && GetChannelPermissions().ManageMessages)
+                //    await Context.Message.DeleteAsync().ConfigureAwait(false);
             }
         }
 

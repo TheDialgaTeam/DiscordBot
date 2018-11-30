@@ -8,23 +8,29 @@ namespace TheDialgaTeam.Discord.Bot.Services.EntityFramework
     {
         public DbSet<DiscordApp> DiscordAppTable { get; set; }
 
+        public DbSet<DiscordAppChannel> DiscordAppChannelTable { get; set; }
+
+        public DbSet<DiscordAppGlobalOwner> DiscordAppGlobalOwnerTable { get; set; }
+
+        public DbSet<DiscordAppGuild> DiscordAppGuildTable { get; set; }
+
+        public DbSet<DiscordAppGuildModule> DiscordAppGuildModuleTable { get; set; }
+
         public DbSet<DiscordAppOwner> DiscordAppOwnerTable { get; set; }
-
-        public DbSet<DiscordAppModule> DiscordAppModuleTable { get; set; }
-
-        public DbSet<DiscordGuild> DiscordGuildTable { get; set; }
-
-        public DbSet<DiscordGuildModerator> DiscordGuildModeratorTable { get; set; }
-
-        public DbSet<DiscordGuildModule> DiscordGuildModuleTable { get; set; }
 
         public DbSet<DiscordChannel> DiscordChannelTable { get; set; }
 
         public DbSet<DiscordChannelModerator> DiscordChannelModeratorTable { get; set; }
 
+        public DbSet<DiscordGuild> DiscordGuildTable { get; set; }
+
+        public DbSet<DiscordGuildModerator> DiscordGuildModeratorTable { get; set; }
+
         public DbSet<DiscordModule> DiscordModuleTable { get; set; }
 
         public DbSet<DiscordModuleRequirement> DiscordModuleRequirementTable { get; set; }
+
+        public DbSet<FreeGameNotification> FreeGameNotificationTable { get; set; }
 
         private FilePathService FilePathService { get; }
 
@@ -38,8 +44,6 @@ namespace TheDialgaTeam.Discord.Bot.Services.EntityFramework
         {
             FilePathService = filePathService;
             ReadOnly = readOnly;
-
-            Database.Migrate();
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -53,6 +57,8 @@ namespace TheDialgaTeam.Discord.Bot.Services.EntityFramework
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<DiscordApp>().HasIndex(a => a.ClientId).IsUnique();
+            modelBuilder.Entity<DiscordGuild>().HasIndex(a => a.GuildId).IsUnique();
+            modelBuilder.Entity<DiscordChannel>().HasIndex(a => a.ChannelId).IsUnique();
         }
     }
 }

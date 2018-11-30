@@ -9,26 +9,28 @@ namespace TheDialgaTeam.Discord.Bot.Models.EntityFramework
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public ulong DiscordAppId { get; set; }
+        public int DiscordAppId { get; set; }
 
         public ulong ClientId { get; set; }
 
         [Required]
+        [MaxLength(32)]
         public string ClientSecret { get; set; }
 
+        [MaxLength(32)]
         public string AppName { get; set; }
 
+        [MaxLength(400)]
         public string AppDescription { get; set; }
 
         [Required]
+        [MaxLength(59)]
         public string BotToken { get; set; }
 
         public DateTimeOffset? LastUpdateCheck { get; set; }
 
         public List<DiscordAppOwner> DiscordAppOwners { get; set; }
 
-        public List<DiscordAppModule> DiscordAppModules { get; set; }
-
-        public List<DiscordGuild> DiscordGuilds { get; set; }
+        public List<DiscordAppGuild> DiscordAppGuilds { get; set; }
     }
 }

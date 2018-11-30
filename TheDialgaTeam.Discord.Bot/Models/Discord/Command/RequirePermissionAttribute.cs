@@ -10,6 +10,21 @@ using TheDialgaTeam.Discord.Bot.Services.EntityFramework;
 
 namespace TheDialgaTeam.Discord.Bot.Models.Discord.Command
 {
+    public enum RequiredPermission
+    {
+        GlobalDiscordAppOwner = 5,
+
+        DiscordAppOwner = 4,
+
+        GuildAdministrator = 3,
+
+        GuildModerator = 2,
+
+        ChannelModerator = 1,
+
+        GuildMember = 0
+    }
+
     public sealed class RequirePermissionAttribute : PreconditionAttribute
     {
         public RequiredPermission RequiredPermission { get; }
@@ -29,26 +44,26 @@ namespace TheDialgaTeam.Discord.Bot.Models.Discord.Command
             {
                 if (context.Message.Channel is SocketGuildChannel)
                 {
-                    var discordChannelTable = await databaseContext.GetDiscordChannelTableAsync(context.Client.CurrentUser.Id, context.Guild.Id, context.Channel.Id, DiscordChannelTableIncludedEntities.DiscordGuildModeratorTable | DiscordChannelTableIncludedEntities.DiscordChannelModeratorTable).ConfigureAwait(false);
+                    //var discordChannelTable = await databaseContext.GetDiscordChannelTableAsync(context.Client.CurrentUser.Id, context.Guild.Id, context.Channel.Id, DiscordChannelTableIncludedEntities.DiscordGuildModeratorTable | DiscordChannelTableIncludedEntities.DiscordChannelModeratorTable).ConfigureAwait(false);
 
-                    var guildUser = await context.Guild.GetUserAsync(context.Message.Author.Id).ConfigureAwait(false);
+                    //var guildUser = await context.Guild.GetUserAsync(context.Message.Author.Id).ConfigureAwait(false);
 
-                    if (discordChannelTable != null)
-                    {
-                        // Channel Moderator
-                        if (discordChannelTable.DiscordChannelModerators.Any(a => a.Type == DiscordChannelModeratorType.Role && guildUser.RoleIds.Contains(a.Value) ||
-                                                                                  a.Type == DiscordChannelModeratorType.User && a.Value == context.User.Id))
-                            currentUserPermission = RequiredPermission.ChannelModerator;
+                    //if (discordChannelTable != null)
+                    //{
+                    //    // Channel Moderator
+                    //    if (discordChannelTable.DiscordChannelModerators.Any(a => a.Type == DiscordChannelModeratorType.Role && guildUser.RoleIds.Contains(a.Value) ||
+                    //                                                              a.Type == DiscordChannelModeratorType.User && a.Value == context.User.Id))
+                    //        currentUserPermission = RequiredPermission.ChannelModerator;
 
-                        // Guild Moderator
-                        if (discordChannelTable.DiscordGuild.DiscordGuildModerators.Any(a => a.Type == DiscordGuildModeratorType.Role && guildUser.RoleIds.Contains(a.Value) ||
-                                                                                             a.Type == DiscordGuildModeratorType.User && a.Value == context.User.Id))
-                            currentUserPermission = RequiredPermission.GuildModerator;
+                    //    // Guild Moderator
+                    //    if (discordChannelTable.DiscordGuild.DiscordGuildModerators.Any(a => a.Type == DiscordGuildModeratorType.Role && guildUser.RoleIds.Contains(a.Value) ||
+                    //                                                                         a.Type == DiscordGuildModeratorType.User && a.Value == context.User.Id))
+                    //        currentUserPermission = RequiredPermission.GuildModerator;
 
-                        // Guild Administrator
-                        if (guildUser.GuildPermissions.Administrator)
-                            currentUserPermission = RequiredPermission.GuildAdministrator;
-                    }
+                    //    // Guild Administrator
+                    //    if (guildUser.GuildPermissions.Administrator)
+                    //        currentUserPermission = RequiredPermission.GuildAdministrator;
+                    //}
                 }
 
                 // Discord App Owner
@@ -58,15 +73,15 @@ namespace TheDialgaTeam.Discord.Bot.Models.Discord.Command
                     currentUserPermission = RequiredPermission.DiscordAppOwner;
                 else
                 {
-                    var isAnOwner = (await databaseContext.DiscordAppTable.Where(a => a.ClientId == context.Client.CurrentUser.Id)
-                            .Select(a => new
-                            {
-                                discordAppOwner = a.DiscordAppOwners.Any(b => b.UserId == context.User.Id)
-                            }).ToListAsync().ConfigureAwait(false))
-                        .Select(a => a.discordAppOwner).FirstOrDefault();
+                    //var isAnOwner = Enumerable.FirstOrDefault((await databaseContext.DiscordAppTable.Where(a => a.ClientId == context.Client.CurrentUser.Id)
+                    //        .Select(a => new
+                    //        {
+                    //            discordAppOwner = a.DiscordAppOwners.Any(b => b.UserId == context.User.Id)
+                    //        }).ToListAsync().ConfigureAwait(false))
+                    //    .Select(a => a.discordAppOwner));
 
-                    if (isAnOwner)
-                        currentUserPermission = RequiredPermission.DiscordAppOwner;
+                    //if (isAnOwner)
+                    //    currentUserPermission = RequiredPermission.DiscordAppOwner;
                 }
 
                 // Global Discord App Owner
@@ -78,20 +93,5 @@ namespace TheDialgaTeam.Discord.Bot.Models.Discord.Command
 
             return currentUserPermission >= RequiredPermission ? PreconditionResult.FromSuccess() : PreconditionResult.FromError($"This command require {RequiredPermission.ToString()} permission and above.");
         }
-    }
-
-    public enum RequiredPermission
-    {
-        GlobalDiscordAppOwner = 5,
-
-        DiscordAppOwner = 4,
-
-        GuildAdministrator = 3,
-
-        GuildModerator = 2,
-
-        ChannelModerator = 1,
-
-        GuildMember = 0
     }
 }

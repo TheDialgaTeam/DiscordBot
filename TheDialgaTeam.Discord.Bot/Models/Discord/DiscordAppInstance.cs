@@ -1,11 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
 
 namespace TheDialgaTeam.Discord.Bot.Models.Discord
 {
-    public sealed class DiscordAppInstance : IDisposable
+    public sealed class DiscordAppInstance
     {
         public event Func<DiscordAppInstance, LogMessage, Task> Log;
 
@@ -81,6 +82,8 @@ namespace TheDialgaTeam.Discord.Bot.Models.Discord
 
         public DiscordShardedClient DiscordShardedClient { get; }
 
+        public List<Task> CurrentTasks { get; }
+
         public ulong ClientId { get; }
 
         public bool IsLoggedIn { get; private set; }
@@ -96,6 +99,8 @@ namespace TheDialgaTeam.Discord.Bot.Models.Discord
         public DiscordAppInstance(ulong clientId, string botToken, DiscordSocketConfig config = null)
         {
             DiscordShardedClient = new DiscordShardedClient(config ?? new DiscordSocketConfig { LogLevel = LogSeverity.Verbose });
+            CurrentTasks = new List<Task>();
+
             ClientId = clientId;
             BotToken = botToken;
 
@@ -116,6 +121,8 @@ namespace TheDialgaTeam.Discord.Bot.Models.Discord
 
         public async Task DiscordAppLogoutAsync()
         {
+            await Task.WhenAll(CurrentTasks).ConfigureAwait(false);
+
             try
             {
                 await DiscordShardedClient.LogoutAsync().ConfigureAwait(false);
@@ -140,6 +147,8 @@ namespace TheDialgaTeam.Discord.Bot.Models.Discord
 
         public async Task DiscordAppStopAsync()
         {
+            await Task.WhenAll(CurrentTasks).ConfigureAwait(false);
+
             try
             {
                 await DiscordShardedClient.StopAsync().ConfigureAwait(false);
@@ -148,6 +157,13 @@ namespace TheDialgaTeam.Discord.Bot.Models.Discord
             {
                 IsStarted = false;
             }
+        }
+
+        public async Task DisposeAsync()
+        {
+            await Task.WhenAll(CurrentTasks).ConfigureAwait(false);
+            RemoveListener();
+            DiscordShardedClient?.Dispose();
         }
 
         private void AddListener()
@@ -444,12 +460,6 @@ namespace TheDialgaTeam.Discord.Bot.Models.Discord
         {
             if (ShardLatencyUpdated != null)
                 await ShardLatencyUpdated.Invoke(this, arg1, arg2, arg3).ConfigureAwait(false);
-        }
-
-        public void Dispose()
-        {
-            RemoveListener();
-            DiscordShardedClient?.Dispose();
         }
     }
 }

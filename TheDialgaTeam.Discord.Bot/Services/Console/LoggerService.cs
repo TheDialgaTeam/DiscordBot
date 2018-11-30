@@ -1,69 +1,57 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
-using TheDialgaTeam.DependencyInjection.ProgramLoop;
+using TheDialgaTeam.DependencyInjection;
 using TheDialgaTeam.Discord.Bot.Services.IO;
 
 namespace TheDialgaTeam.Discord.Bot.Services.Console
 {
-    public sealed class LoggerService : IInitializable, ITickableAsync, IDisposableAsync, IErrorLogger
+    public sealed class LoggerService : IInitializableAsync, IErrorLogger, IDisposableAsync
     {
         private FilePathService FilePathService { get; }
 
-        private ConcurrentQueue<(TextWriter writer, ConsoleColor consoleColor, string message)> WriteToLogQueue { get; } = new ConcurrentQueue<(TextWriter writer, ConsoleColor consoleColor, string message)>();
-
         private StreamWriter StreamWriter { get; set; }
+
+        private SemaphoreSlim StreamWriterLock { get; set; }
 
         public LoggerService(FilePathService filePathService)
         {
             FilePathService = filePathService;
         }
 
-        public void Initialize()
+        public async Task InitializeAsync()
         {
             StreamWriter = new StreamWriter(new FileStream(FilePathService.ConsoleLogFilePath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite));
+            StreamWriterLock = new SemaphoreSlim(1, 1);
 
-            LogMessage("==================================================");
-            LogMessage("The Dialga Team Discord Bot (.NET Core)");
-            LogMessage("==================================================");
-            LogMessage("Initializing Application...\n");
+            await LogMessageAsync("==================================================").ConfigureAwait(false);
+            await LogMessageAsync("The Dialga Team Discord Bot (.NET Core)").ConfigureAwait(false);
+            await LogMessageAsync("==================================================").ConfigureAwait(false);
+            await LogMessageAsync("Initializing Application...\n").ConfigureAwait(false);
         }
 
-        public async Task TickAsync()
+        public async Task LogErrorMessageAsync(Exception exception)
         {
-            while (WriteToLogQueue.TryDequeue(out var item))
-            {
-                try
-                {
-                    System.Console.ForegroundColor = item.consoleColor;
-
-                    await item.writer.WriteLineAsync(item.message).ConfigureAwait(false);
-                    await item.writer.FlushAsync().ConfigureAwait(false);
-
-                    await StreamWriter.WriteLineAsync($"{DateTime.UtcNow:u} {item.message}").ConfigureAwait(false);
-                    await StreamWriter.FlushAsync().ConfigureAwait(false);
-                }
-                catch (Exception ex)
-                {
-                    System.Console.ForegroundColor = ConsoleColor.Red;
-                    await System.Console.Error.WriteLineAsync(ex.ToString()).ConfigureAwait(false);
-                }
-                finally
-                {
-                    System.Console.ResetColor();
-                }
-            }
+            await LogMessageAsync(System.Console.Error, ConsoleColor.Red, exception.ToString()).ConfigureAwait(false);
         }
 
-        public void LogMessage(string message, ConsoleColor consoleColor = ConsoleColor.White)
+        public Task DisposeAsync()
         {
-            WriteToLogQueue.Enqueue((System.Console.Out, consoleColor, message));
+            StreamWriter?.Dispose();
+            StreamWriterLock?.Dispose();
+
+            return Task.CompletedTask;
         }
 
-        public void LogMessage(DiscordShardedClient discordShardedClient, LogMessage logMessage)
+        public async Task LogMessageAsync(string message, ConsoleColor consoleColor = ConsoleColor.White)
+        {
+            await LogMessageAsync(System.Console.Out, consoleColor, message).ConfigureAwait(false);
+        }
+
+        public async Task LogMessageAsync(DiscordShardedClient discordShardedClient, LogMessage logMessage)
         {
             var botId = discordShardedClient?.CurrentUser?.Id;
             var botName = discordShardedClient?.CurrentUser?.ToString();
@@ -72,27 +60,27 @@ namespace TheDialgaTeam.Discord.Bot.Services.Console
             switch (logMessage.Severity)
             {
                 case LogSeverity.Critical:
-                    WriteToLogQueue.Enqueue((System.Console.Error, ConsoleColor.Red, message));
+                    await LogMessageAsync(System.Console.Error, ConsoleColor.Red, message).ConfigureAwait(false);
                     break;
 
                 case LogSeverity.Error:
-                    WriteToLogQueue.Enqueue((System.Console.Error, ConsoleColor.Red, message));
+                    await LogMessageAsync(System.Console.Error, ConsoleColor.Red, message).ConfigureAwait(false);
                     break;
 
                 case LogSeverity.Warning:
-                    WriteToLogQueue.Enqueue((System.Console.Out, ConsoleColor.Yellow, message));
+                    await LogMessageAsync(System.Console.Out, ConsoleColor.Yellow, message).ConfigureAwait(false);
                     break;
 
                 case LogSeverity.Info:
-                    WriteToLogQueue.Enqueue((System.Console.Out, ConsoleColor.White, message));
+                    await LogMessageAsync(System.Console.Out, ConsoleColor.White, message).ConfigureAwait(false);
                     break;
 
                 case LogSeverity.Verbose:
-                    WriteToLogQueue.Enqueue((System.Console.Out, ConsoleColor.White, message));
+                    await LogMessageAsync(System.Console.Out, ConsoleColor.White, message).ConfigureAwait(false);
                     break;
 
                 case LogSeverity.Debug:
-                    WriteToLogQueue.Enqueue((System.Console.Out, ConsoleColor.White, message));
+                    await LogMessageAsync(System.Console.Out, ConsoleColor.Cyan, message).ConfigureAwait(false);
                     break;
 
                 default:
@@ -100,15 +88,33 @@ namespace TheDialgaTeam.Discord.Bot.Services.Console
             }
         }
 
-        public void LogErrorMessage(Exception exception)
+        private async Task LogMessageAsync(TextWriter writer, ConsoleColor consoleColor, string message)
         {
-            WriteToLogQueue.Enqueue((System.Console.Error, ConsoleColor.Red, exception.ToString()));
-        }
+            if (message == null)
+                return;
 
-        public async Task DisposeAsync()
-        {
-            await TickAsync().ConfigureAwait(false);
-            StreamWriter?.Dispose();
+            await StreamWriterLock.WaitAsync();
+
+            try
+            {
+                System.Console.ForegroundColor = consoleColor;
+
+                await writer.WriteLineAsync(message).ConfigureAwait(false);
+                await writer.FlushAsync().ConfigureAwait(false);
+
+                await StreamWriter.WriteLineAsync($"{DateTime.UtcNow:u} {message}").ConfigureAwait(false);
+                await StreamWriter.FlushAsync().ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                System.Console.ForegroundColor = ConsoleColor.Red;
+                await System.Console.Error.WriteLineAsync(ex.ToString()).ConfigureAwait(false);
+            }
+            finally
+            {
+                System.Console.ResetColor();
+                StreamWriterLock.Release();
+            }
         }
     }
 }

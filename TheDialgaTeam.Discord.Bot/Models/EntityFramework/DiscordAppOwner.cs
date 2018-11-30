@@ -7,11 +7,11 @@ namespace TheDialgaTeam.Discord.Bot.Models.EntityFramework
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public ulong DiscordAppOwnerId { get; set; }
+        public int DiscordAppOwnerId { get; set; }
 
         public ulong UserId { get; set; }
 
-        public ulong? DiscordAppId { get; set; }
+        public int DiscordAppId { get; set; }
         public DiscordApp DiscordApp { get; set; }
     }
 }

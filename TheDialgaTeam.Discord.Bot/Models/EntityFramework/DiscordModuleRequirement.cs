@@ -7,11 +7,12 @@ namespace TheDialgaTeam.Discord.Bot.Models.EntityFramework
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public ulong DiscordModuleRequirementId { get; set; }
+        public int DiscordModuleRequirementId { get; set; }
 
-        public ulong GuildId { get; set; }
-
-        public ulong DiscordModuleId { get; set; }
+        public int DiscordModuleId { get; set; }
         public DiscordModule DiscordModule { get; set; }
+
+        public int DiscordGuildId { get; set; }
+        public DiscordGuild DiscordGuild { get; set; }
     }
 }

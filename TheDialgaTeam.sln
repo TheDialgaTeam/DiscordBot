@@ -19,7 +19,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TheDialgaTeam", "TheDialgaT
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TheDialgaTeam.Discord.Bot", "TheDialgaTeam.Discord.Bot\TheDialgaTeam.Discord.Bot.csproj", "{00FBDC35-98D0-4A63-A390-4C8961A6C05E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TheDialgaTeam.DependencyInjection", "TheDialgaTeam.DependencyInjection\TheDialgaTeam.DependencyInjection.csproj", "{4941DD83-D7DA-4EC7-845A-A2294E2C4098}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TheDialgaTeam.DependencyInjection", "TheDialgaTeam.DependencyInjection\TheDialgaTeam.DependencyInjection.csproj", "{4941DD83-D7DA-4EC7-845A-A2294E2C4098}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TheDialgaTeam.Commands", "TheDialgaTeam.Commands\TheDialgaTeam.Commands.csproj", "{90C8624A-F393-4DA3-A31D-F4324C718AC6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -55,6 +57,10 @@ Global
 		{4941DD83-D7DA-4EC7-845A-A2294E2C4098}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4941DD83-D7DA-4EC7-845A-A2294E2C4098}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4941DD83-D7DA-4EC7-845A-A2294E2C4098}.Release|Any CPU.Build.0 = Release|Any CPU
+		{90C8624A-F393-4DA3-A31D-F4324C718AC6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{90C8624A-F393-4DA3-A31D-F4324C718AC6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{90C8624A-F393-4DA3-A31D-F4324C718AC6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{90C8624A-F393-4DA3-A31D-F4324C718AC6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -67,6 +73,7 @@ Global
 		{ABC8E277-5592-4E3C-AFC1-DF822A11EDF5} = {4CE937D8-2CA2-4BDE-8165-8A0A33448DE9}
 		{00FBDC35-98D0-4A63-A390-4C8961A6C05E} = {371DDD9F-A1A4-4D90-9ABE-85EC81A30BE6}
 		{4941DD83-D7DA-4EC7-845A-A2294E2C4098} = {371DDD9F-A1A4-4D90-9ABE-85EC81A30BE6}
+		{90C8624A-F393-4DA3-A31D-F4324C718AC6} = {371DDD9F-A1A4-4D90-9ABE-85EC81A30BE6}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F4B7B4B8-AF60-4F30-808D-993508B5F16B}

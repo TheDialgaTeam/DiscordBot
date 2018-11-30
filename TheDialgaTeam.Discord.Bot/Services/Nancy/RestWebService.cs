@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Nancy;
 using Nancy.Owin;
 using Nancy.TinyIoc;
-using TheDialgaTeam.DependencyInjection.ProgramLoop;
+using TheDialgaTeam.DependencyInjection;
 using TheDialgaTeam.Discord.Bot.Services.Discord;
 using TheDialgaTeam.Discord.Bot.Services.EntityFramework;
 
@@ -25,6 +25,7 @@ namespace TheDialgaTeam.Discord.Bot.Services.Nancy
 
         public async Task StartAsync(ushort port = 5000)
         {
+            WebHost?.Dispose();
             WebHost = new WebHostBuilder()
                       .UseContentRoot(Environment.CurrentDirectory)
                       .UseKestrel()
